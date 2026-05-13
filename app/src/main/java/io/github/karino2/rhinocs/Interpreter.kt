@@ -3,6 +3,7 @@ package io.github.karino2.rhinocs
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.ContinuationPending
+import org.mozilla.javascript.ScriptableObject
 
 class Interpreter {
     val factory: ContextFactory = object : ContextFactory() {
@@ -40,7 +41,11 @@ class Interpreter {
         }
     }
 
-
+    fun setGlobalKey(strKey: String) {
+        withContext {
+            ScriptableObject.putProperty(global, $$"$key", strKey)
+        }
+    }
 
 
 
