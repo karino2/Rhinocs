@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import org.mozilla.javascript.Context as RhinoContext
 import kotlin.math.max
 
 class MainActivity : AppCompatActivity() {
@@ -47,6 +48,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
             grid.setOffset(grid.offset.copy(col= grid.offset.col+1))
             rview.invalidate()
+        }
+        findViewById<Button>(R.id.buttonDeb4).setOnClickListener {
+            val rhinoContext = RhinoContext.enter()
+            try {
+                rhinoContext.isGeneratingDebug = false
+                rhinoContext.isInterpretedMode = true
+                val scope = rhinoContext.initStandardObjects()
+                val script = "var x = 10; var y = 32; x + y"
+                val result = rhinoContext.evaluateString(scope, script, "JavaScript", 1, null)
+                println("JS Result: ${RhinoContext.toString(result)}")
+            } finally {
+                RhinoContext.exit()
+            }
         }
     }
 }
