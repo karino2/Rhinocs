@@ -43,6 +43,8 @@ class Grid {
     var numRows = 0
     var numCols = 0
 
+    var cursorPos = RowCol(0, 0)
+    
     val cells = ArrayList<Cell>()
     var bufferRef : BufferRef? = null
         set(value) {

@@ -21,6 +21,11 @@ class RView @JvmOverloads constructor(
         textAlign = Paint.Align.CENTER
     }
 
+    private val caretPaint = Paint().apply {
+        color = Color.parseColor("#4285F4") // Android標準に近い青色
+        style = Paint.Style.FILL
+    }
+
     private val margin = 10f
 
     val cellWidth: Float
@@ -71,6 +76,14 @@ class RView @JvmOverloads constructor(
                     canvas.drawText(cell.ch.toString(), x, y, textPaint)
                 }
             }
+        }
+
+        // Draw caret
+        if (grid.cursorPos.row in 0..<numRows && grid.cursorPos.col in 0..<numCols) {
+            val caretX = startX + grid.cursorPos.col * cellWidth
+            val caretY = margin + grid.cursorPos.row * cellHeight
+            // 2dp相当の幅の縦棒を描画
+            canvas.drawRect(caretX, caretY, caretX + 3f, caretY + cellHeight, caretPaint)
         }
     }
 }
