@@ -8,7 +8,7 @@ class GridTest {
     fun create(str: String) : Grid {
         return Grid().apply {
             setRowColNum(5, 5)
-            bufferRef = BufferRef(Buffer.fromText(str), 0, 0)
+            bufferRef = BufferRef(Buffer.fromText(str), RowCol(0, 0))
         }
     }
 
@@ -38,27 +38,27 @@ class GridTest {
     @Test
     fun updateGrid_roman() {
         val target = create("abc")
-        assertEquals(target.getCell(0, 0).ctype, CellType.HALF)
-        assertEquals(target.getCell(0, 1).ctype, CellType.HALF)
-        assertEquals(target.getCell(0, 2).ctype, CellType.HALF)
+        assertEquals(CellType.HALF, target.getCell(0, 0).ctype)
+        assertEquals(CellType.HALF, target.getCell(0, 1).ctype)
+        assertEquals(CellType.HALF, target.getCell(0, 2).ctype)
     }
 
     @Test
     fun updateGrid_zenkaku() {
         val target = create("aあb")
-        assertEquals(target.getCell(0, 0).ctype, CellType.HALF)
-        assertEquals(target.getCell(0, 1).ctype, CellType.FULL)
-        assertEquals(target.getCell(0, 2).ctype, CellType.EMPTY)
-        assertEquals(target.getCell(0, 3).ctype, CellType.HALF)
+        assertEquals(CellType.HALF, target.getCell(0, 0).ctype)
+        assertEquals(CellType.FULL, target.getCell(0, 1).ctype)
+        assertEquals(CellType.EMPTY, target.getCell(0, 2).ctype)
+        assertEquals(CellType.HALF, target.getCell(0, 3).ctype)
     }
 
     @Test
     fun updateGrid_offset() {
         val target = create("あab")
-        target.setOffset(0, 1)
-        assertEquals(target.getCell(0, 0).ctype, CellType.EMPTY)
-        assertEquals(target.getCell(0, 1).ctype, CellType.HALF)
-        assertEquals(target.getCell(0, 2).ctype, CellType.HALF)
-        assertEquals(target.getCell(0, 3).ctype, CellType.EMPTY)
+        target.setOffset(RowCol(0, 1))
+        assertEquals(CellType.EMPTY, target.getCell(0, 0).ctype)
+        assertEquals(CellType.HALF, target.getCell(0, 1).ctype)
+        assertEquals(CellType.HALF, target.getCell(0, 2).ctype)
+        assertEquals(CellType.EMPTY, target.getCell(0, 3).ctype)
     }
 }
