@@ -61,4 +61,11 @@ class GridTest {
         assertEquals(CellType.HALF, target.getCell(0, 2).ctype)
         assertEquals(CellType.EMPTY, target.getCell(0, 3).ctype)
     }
+
+    @Test
+    fun updateGrid_offsetZenkaku() {
+        val target = create("ああa")
+        target.setOffset(RowCol(0, 4))
+        assertEquals(CellType.HALF, target.getCell(0, 0).ctype)
+    }
 }

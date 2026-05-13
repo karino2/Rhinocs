@@ -71,9 +71,6 @@ class Grid {
                 if (!bref.isInside(row)) return
 
                 val line = bref.getLine(row)
-                if (line.length <= bref.offset.col)
-                    continue
-
                 var spos = 0
                 var nextEmpty = false
                 for (gcol in 0..<bref.offset.col + numCols) {
