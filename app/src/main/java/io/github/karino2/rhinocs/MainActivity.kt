@@ -41,11 +41,11 @@ class MainActivity : AppCompatActivity() {
             getFileUri.launch(arrayOf("text/*" /* "text/plain" */))
         }
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
-            grid.setOffset(grid.offsetRow, max(0, grid.offsetCol-1))
+            grid.setOffset(grid.offset.copy(col= max(0, grid.offset.col-1)))
             rview.invalidate()
         }
         findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
-            grid.setOffset(grid.offsetRow, grid.offsetCol+1)
+            grid.setOffset(grid.offset.copy(col= grid.offset.col+1))
             rview.invalidate()
         }
     }

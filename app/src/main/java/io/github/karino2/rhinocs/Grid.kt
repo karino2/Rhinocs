@@ -34,9 +34,9 @@ data class Cell(val ch: Char, val ctype: CellType) {
     }
 }
 
-data class BufferRef(val buffer: Buffer, var offsetRow: Int, var offsetCol: Int) {
-    fun getLine(row: Int) = buffer.lines[row+offsetRow]
-    fun isInside(row: Int) = row+offsetRow < buffer.numRows
+data class BufferRef(val buffer: Buffer, var offset: RowCol) {
+    fun getLine(row: Int) = buffer.lines[row + offset.row]
+    fun isInside(row: Int) = row + offset.row < buffer.numRows
 }
 
 class Grid {
@@ -50,11 +50,11 @@ class Grid {
             updateGrid()
         }
 
-    fun setCell(row: Int, col:Int, cell: Cell) {
-        cells[row*numCols+col] = cell
+    fun setCell(row: Int, col: Int, cell: Cell) {
+        cells[row * numCols + col] = cell
     }
 
-    fun getCell(row: Int, col:Int) = cells[row*numCols+col]
+    fun getCell(row: Int, col: Int) = cells[row * numCols + col]
 
     fun isFullWidth(c: Char) = Cell.isFullWidth(c)
     fun isHalfWidth(c: Char) = Cell.isHalfWidth(c)
@@ -64,18 +64,17 @@ class Grid {
         for(i in 0..<numRows*numCols) {
             cells.add(Cell.empty)
         }
-        bufferRef?.let { bref->
-            for(row in 0..<numRows) {
+        bufferRef?.let { bref ->
+            for (row in 0..<numRows) {
                 if (!bref.isInside(row)) return
 
                 val line = bref.getLine(row)
-                if (line.length <= bref.offsetCol)
-                    continue;
-
+                if (line.length <= bref.offset.col)
+                    continue
 
                 var spos = 0
                 var nextEmpty = false
-                for(gcol in 0..<bref.offsetCol+numCols) {
+                for (gcol in 0..<bref.offset.col + numCols) {
                     if (spos >= line.length)
                         break
 
@@ -85,13 +84,12 @@ class Grid {
                     }
 
                     val ch = line[spos]
-                    if (isFullWidth(ch)){
+                    if (isFullWidth(ch)) {
                         nextEmpty = true
                     }
 
-                    if (gcol >= bref.offsetCol)
-                    {
-                        setCell(row, gcol - bref.offsetCol, Cell.char(ch))
+                    if (gcol >= bref.offset.col) {
+                        setCell(row, gcol - bref.offset.col, Cell.char(ch))
                     }
                     spos += 1
                 }
@@ -105,16 +103,12 @@ class Grid {
         updateGrid()
     }
 
-    val offsetRow: Int
-        get() = bufferRef?.offsetRow ?: 0
+    val offset: RowCol
+        get() = bufferRef?.offset ?: RowCol(0, 0)
 
-    val offsetCol: Int
-        get() = bufferRef?.offsetCol ?: 0
-
-    fun setOffset(row: Int, col: Int) {
+    fun setOffset(newOffset: RowCol) {
         bufferRef?.let {
-            it.offsetRow = row
-            it.offsetCol = col
+            it.offset = newOffset
             updateGrid()
         }
     }

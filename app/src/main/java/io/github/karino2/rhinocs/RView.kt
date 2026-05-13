@@ -43,11 +43,11 @@ class RView @JvmOverloads constructor(
         grid.setRowColNum(numRows, numCols)
     }
 
-    val grid = Grid().apply { bufferRef = BufferRef(Buffer.fromText("Hello, Rhinocs!日本語\n二行目"), 0, 0)}
+    val grid = Grid().apply { bufferRef = BufferRef(Buffer.fromText("Hello, Rhinocs!日本語\n二行目"), RowCol(0, 0)) }
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         FastFile.fromDocUri(resolver, uri)?.let {
-            grid.bufferRef = BufferRef(Buffer.fromText(it.readText()), 0, 0)
+            grid.bufferRef = BufferRef(Buffer.fromText(it.readText()), RowCol(0, 0))
             invalidate()
         }
     }
@@ -60,15 +60,14 @@ class RView @JvmOverloads constructor(
         val startX = margin
         val startY = -fm.ascent + margin
 
-        for(row in 0..<numRows) {
-            for(col in 0..<numCols) {
+        for (row in 0..<numRows) {
+            for (col in 0..<numCols) {
                 val cell = grid.getCell(row, col)
-                if (!cell.isEmpty)
-                {
+                if (!cell.isEmpty) {
                     val numCells = cell.widthCount
                     // textAlign = Paint.Align.CENTER なので、中心座標を指定
                     val x = startX + (col * cellWidth) + (numCells * cellWidth / 2f)
-                    val y = startY + (row*cellHeight)
+                    val y = startY + (row * cellHeight)
                     canvas.drawText(cell.ch.toString(), x, y, textPaint)
                 }
             }
