@@ -1,10 +1,12 @@
 package io.github.karino2.rhinocs
 
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
 
@@ -42,6 +44,13 @@ class RView @JvmOverloads constructor(
     }
 
     val grid = Grid().apply { bufferRef = BufferRef(Buffer.fromText("Hello, Rhinocs!日本語\n二行目"), 0, 0)}
+
+    fun loadFile(resolver: ContentResolver, uri: Uri) {
+        FastFile.fromDocUri(resolver, uri)?.let {
+            grid.bufferRef = BufferRef(Buffer.fromText(it.readText()), 0, 0)
+            invalidate()
+        }
+    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
