@@ -41,8 +41,7 @@ class RView @JvmOverloads constructor(
         grid.setRowColNum(numRows, numCols)
     }
 
-    val buffer = Buffer().apply { load("Hello, Rhinocs!日本語\n二行目") }
-    val grid = Grid().apply { bufferRef = BufferRef(buffer, 0, 0)}
+    val grid = Grid().apply { bufferRef = BufferRef(Buffer.fromText("Hello, Rhinocs!日本語\n二行目"), 0, 0)}
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)

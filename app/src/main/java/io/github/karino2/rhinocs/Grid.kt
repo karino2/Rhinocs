@@ -20,15 +20,21 @@ data class Cell(val ch: Char, val ctype: CellType) {
         fun half(c: Char) = Cell(c, CellType.HALF)
         fun char(c: Char) = if(isFullWidth(c)) { full(c) } else { half(c) }
 
-        fun isHalfWidth(c: Char): Boolean {
-            return (c in '\u0000'..'\u007e') || (c in '\uff61'..'\uff9f')
+        fun isFullWidth(c: Char): Boolean {
+            return (c in '\u1100'..'\u11ff') || // Hangul Jamo
+                    (c in '\u2e80'..'\u9fff') || // CJK Radicals, Symbols, Hiragana, Katakana, Ideographs
+                    (c in '\uac00'..'\ud7af') || // Hangul Syllables
+                    (c in '\uf900'..'\ufaff') || // CJK Compatibility Ideographs
+                    (c in '\ufe30'..'\ufe4f') || // CJK Compatibility Forms
+                    (c in '\uff01'..'\uff60') || // Fullwidth ASCII variants
+                    (c in '\uffe0'..'\uffe6')    // Fullwidth Symbol variants
         }
 
-        fun isFullWidth(c: Char) = !isHalfWidth(c)
+        fun isHalfWidth(c: Char) = !isFullWidth(c)
     }
 }
 
-data class BufferRef(val buffer: Buffer, val offsetRow: Int, val offsetCol: Int) {
+data class BufferRef(val buffer: Buffer, var offsetRow: Int, var offsetCol: Int) {
     fun getLine(row: Int) = buffer.lines[row+offsetRow]
     fun isInside(row: Int) = row+offsetRow < buffer.numRows
 }
@@ -97,5 +103,13 @@ class Grid {
         numRows = row
         numCols = col
         updateGrid()
+    }
+
+    fun setOffset(row: Int, col: Int) {
+        bufferRef?.let {
+            it.offsetRow = row
+            it.offsetCol = col
+            updateGrid()
+        }
     }
 }

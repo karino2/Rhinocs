@@ -13,4 +13,8 @@ class Buffer {
             }
         }
     }
+
+    companion object {
+        fun fromText(text: String) = Buffer().apply { load(text) }
+    }
 }
