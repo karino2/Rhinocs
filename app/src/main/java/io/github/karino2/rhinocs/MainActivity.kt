@@ -8,8 +8,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import org.mozilla.javascript.ContinuationPending
 import org.mozilla.javascript.Context as RhinoContext
 import kotlin.math.max
+
+data class RequestArg(val requestId: Int, val arg: Any)
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,9 +22,21 @@ class MainActivity : AppCompatActivity() {
                 it,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            rview.loadFile(contentResolver, it)
+            pendingCC?.let { pcc->
+                interpreter.resume(pcc, it)
+            }
         }
     }
+
+    private val interpreter by lazy {
+        Interpreter().apply{
+            global.activity = this@MainActivity
+            global.rview = rview
+        }
+    }
+
+
+    var pendingCC: ContinuationPending? = null
 
     private val rview: RView
         get() = findViewById<RView>(R.id.rView)!!
@@ -39,7 +54,15 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         findViewById<Button>(R.id.buttonDeb1).setOnClickListener {
-            getFileUri.launch(arrayOf("text/*" /* "text/plain" */))
+            try {
+                interpreter.run("""let uri = select_file("text/*"); print(uri); open_uri(uri);""")
+            } catch(e: ContinuationPending) {
+                pendingCC = e
+                val rarg = e.applicationState as RequestArg
+                when(rarg.requestId) {
+                    GlobalObject.REQUEST_SELECT_FILE -> getFileUri.launch(rarg.arg as Array<String>)
+                }
+            }
         }
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
             grid.setOffset(grid.offset.copy(col= max(0, grid.offset.col-1)))
@@ -50,17 +73,6 @@ class MainActivity : AppCompatActivity() {
             rview.invalidate()
         }
         findViewById<Button>(R.id.buttonDeb4).setOnClickListener {
-            val rhinoContext = RhinoContext.enter()
-            try {
-                rhinoContext.isGeneratingDebug = false
-                rhinoContext.isInterpretedMode = true
-                val scope = rhinoContext.initStandardObjects()
-                val script = "var x = 10; var y = 32; x + y"
-                val result = rhinoContext.evaluateString(scope, script, "JavaScript", 1, null)
-                println("JS Result: ${RhinoContext.toString(result)}")
-            } finally {
-                RhinoContext.exit()
-            }
         }
     }
 }
