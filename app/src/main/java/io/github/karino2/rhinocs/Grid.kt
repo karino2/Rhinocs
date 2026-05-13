@@ -105,6 +105,12 @@ class Grid {
         updateGrid()
     }
 
+    val offsetRow: Int
+        get() = bufferRef?.offsetRow ?: 0
+
+    val offsetCol: Int
+        get() = bufferRef?.offsetCol ?: 0
+
     fun setOffset(row: Int, col: Int) {
         bufferRef?.let {
             it.offsetRow = row
