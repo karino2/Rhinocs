@@ -51,16 +51,15 @@ class RView @JvmOverloads constructor(
         numCols = ((w - margin) / cellWidth).toInt()
         numRows = ((h - margin) / cellHeight).toInt()
 
-        grid.setRowColNum(numRows, numCols)
+        window.numCols = numCols
+        window.numRows = numRows
     }
 
-    val grid = Grid().apply { bufferRef = BufferRef(Buffer.fromText("Hello, Rhinocs!日本語\n二行目"), RowCol(0, 0)) }
+    val window = Window().apply { buffer = Buffer.fromText("Hello, Rhinocs!日本語\n二行目") }
+
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
-        FastFile.fromDocUri(resolver, uri)?.let {
-            grid.bufferRef = BufferRef(Buffer.fromText(it.readText()), RowCol(0, 0))
-            invalidate()
-        }
+        window.loadFile(resolver, uri)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -71,9 +70,13 @@ class RView @JvmOverloads constructor(
         val startX = margin
         val startY = -fm.ascent + margin
 
+        val currentPos = window.pointRowCol
+        window.updateOffset(currentPos.col)
+
         for (row in 0..<numRows) {
+            val linfo = window.lineInfo(row)
             for (col in 0..<numCols) {
-                val cell = grid.getCell(row, col)
+                val cell = linfo[col]
                 if (!cell.isEmpty) {
                     val numCells = cell.widthCount
                     // textAlign = Paint.Align.CENTER なので、中心座標を指定
@@ -84,13 +87,16 @@ class RView @JvmOverloads constructor(
             }
         }
 
+        val rpos = currentPos.toRelative(window.lastOffset)
+
         // Draw caret
-        if (grid.cursorPos.row in 0..<numRows && grid.cursorPos.col in 0..<numCols) {
-            val caretX = startX + grid.cursorPos.col * cellWidth
-            val caretY = margin + grid.cursorPos.row * cellHeight
+        if (rpos.row in 0..<numRows && rpos.col in 0..<numCols) {
+            val caretX = startX + rpos.col * cellWidth
+            val caretY = margin + rpos.row * cellHeight
             // 2dp相当の幅の縦棒を描画
             canvas.drawRect(caretX, caretY, caretX + 3f, caretY + cellHeight, caretPaint)
         }
+
     }
 
     val keyMap = mapOf(

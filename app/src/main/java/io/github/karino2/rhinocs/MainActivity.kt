@@ -45,8 +45,8 @@ class MainActivity : AppCompatActivity() {
     private val rview: RView
         get() = findViewById<RView>(R.id.rView)!!
 
-    private val grid: Grid
-        get() = rview.grid
+    private val window: Window
+        get() = rview.window
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,11 +65,11 @@ class MainActivity : AppCompatActivity() {
             runScript("""let uri = select_file("text/*"); print(uri); open_uri(uri);""")
         }
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
-            grid.setOffset(grid.offset.copy(col= max(0, grid.offset.col-1)))
+            window.moveCharDelta(-1)
             rview.invalidate()
         }
         findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
-            grid.setOffset(grid.offset.copy(col= grid.offset.col+1))
+            window.moveCharDelta(1)
             rview.invalidate()
         }
         findViewById<Button>(R.id.buttonDeb4).setOnClickListener {

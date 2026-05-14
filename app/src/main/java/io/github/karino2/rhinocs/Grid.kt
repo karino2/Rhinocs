@@ -1,5 +1,7 @@
 package io.github.karino2.rhinocs
 
+import kotlin.collections.get
+
 enum class CellType {
     EMPTY, HALF, FULL
 }
@@ -34,81 +36,42 @@ data class Cell(val ch: Char, val ctype: CellType) {
     }
 }
 
-data class BufferRef(val buffer: Buffer, var offset: RowCol) {
-    fun getLine(row: Int) = buffer.lines[row + offset.row]
-    fun isInside(row: Int) = row + offset.row < buffer.numRows
-}
-
-class Grid {
-    var numRows = 0
-    var numCols = 0
-
-    var cursorPos = RowCol(0, 0)
-    
-    val cells = ArrayList<Cell>()
-    var bufferRef : BufferRef? = null
-        set(value) {
-            field = value
-            updateGrid()
-        }
-
-    fun setCell(row: Int, col: Int, cell: Cell) {
-        cells[row * numCols + col] = cell
+class GridLineBuilder {
+    fun pointToColumn(buf: Buffer, point: Point) : Int {
+        val line = buf.getLine(point.linenum)
+        return line.take(point.offset).map { if(isFullWidth(it)) { 2 } else { 1 } }.sum()
     }
 
-    fun getCell(row: Int, col: Int) = cells[row * numCols + col]
-
-    fun isFullWidth(c: Char) = Cell.isFullWidth(c)
-    fun isHalfWidth(c: Char) = Cell.isHalfWidth(c)
-
-    fun updateGrid() {
-        cells.clear()
-        for(i in 0..<numRows*numCols) {
+    fun build(line: String, colOffset: Int, numCols: Int) : ArrayList<Cell> {
+        val cells = ArrayList<Cell>()
+        for(i in 0..<numCols) {
             cells.add(Cell.empty)
         }
-        bufferRef?.let { bref ->
-            for (row in 0..<numRows) {
-                if (!bref.isInside(row)) return
 
-                val line = bref.getLine(row)
-                var spos = 0
-                var nextEmpty = false
-                for (gcol in 0..<bref.offset.col + numCols) {
-                    if (spos >= line.length)
-                        break
+        var spos = 0
+        var nextEmpty = false
+        for (gcol in 0..<colOffset + numCols) {
+            if (spos >= line.length)
+                break
 
-                    if (nextEmpty) {
-                        nextEmpty = false
-                        continue
-                    }
-
-                    val ch = line[spos]
-                    if (isFullWidth(ch)) {
-                        nextEmpty = true
-                    }
-
-                    if (gcol >= bref.offset.col) {
-                        setCell(row, gcol - bref.offset.col, Cell.char(ch))
-                    }
-                    spos += 1
-                }
+            if (nextEmpty) {
+                nextEmpty = false
+                continue
             }
+
+            val ch = line[spos]
+            if (isFullWidth(ch)) {
+                nextEmpty = true
+            }
+
+            if (gcol >= colOffset) {
+                cells[gcol - colOffset] = Cell.char(ch)
+            }
+            spos += 1
         }
+        return cells
     }
 
-    fun setRowColNum(row: Int, col: Int) {
-        numRows = row
-        numCols = col
-        updateGrid()
-    }
-
-    val offset: RowCol
-        get() = bufferRef?.offset ?: RowCol(0, 0)
-
-    fun setOffset(newOffset: RowCol) {
-        bufferRef?.let {
-            it.offset = newOffset
-            updateGrid()
-        }
-    }
+    fun isFullWidth(c: Char) = Cell.isFullWidth(c)
 }
+
