@@ -10,6 +10,7 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
@@ -19,6 +20,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "forward_char",
             "backward_char",
             "insert",
+            "default_self_insert_keys"
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -98,6 +100,14 @@ public class GlobalObject  extends ImporterTopLevel {
         glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
+
+    public static Object default_self_insert_keys(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        List<String> strs = glob.rview.selfInsertKeys();
+        return ctx.newArray(glob, strs.toArray());
+    }
+
+
     public void openUri(Uri uri) {
         rview.loadFile(activity.getContentResolver(), uri);
     }

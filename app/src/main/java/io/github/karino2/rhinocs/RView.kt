@@ -145,7 +145,6 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_MINUS to '-',
         KeyEvent.KEYCODE_EQUALS to '=',
         KeyEvent.KEYCODE_AT to '@',
-        KeyEvent.KEYCODE_SPACE to ' '
     )
 
     val shiftKeyMap = mapOf(
@@ -211,6 +210,10 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_TAB to "Tab",
         KeyEvent.KEYCODE_ESCAPE to "Escape"
     )
+
+    fun selfInsertKeys() : List<String> {
+        return keyMap.values.map { it.toString() } + shiftKeyMap.values.map { it.toString() }
+    }
 
     fun prefixStr(event: KeyEvent) : String {
         val isCtrl = event.isCtrlPressed

@@ -31,12 +31,22 @@ class MainActivity : AppCompatActivity() {
         Interpreter().apply{
             global.activity = this@MainActivity
             global.rview = rview
-            run("""
+            run($$"""
+                function self_insert() {
+                   insert($key);
+                }
+                
+                let defSelfKeys = default_self_insert_keys();
+                let keyMap = {};
+                defSelfKeys.forEach(k => keyMap[k] = self_insert);
+
+                keyMap["Left"] = backward_char;
+                keyMap["Right"] = forward_char;
+                keyMap["Space"] = ()=> { insert(" "); }
+                
                 function onKeyDown(str) {
                     print("deb:", str);
-                    if(str === "Left") { backward_char(); }
-                    else if(str == "Right") { forward_char(); }
-                    else if(str == "a") { insert("a"); }
+                    if (keyMap[str]) keyMap[str]()
                 }
             """.trimIndent())
         }
