@@ -197,6 +197,20 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_MINUS to '_',
         KeyEvent.KEYCODE_EQUALS to '+'
     )
+    val specialMap = mapOf(
+        KeyEvent.KEYCODE_DPAD_LEFT to "Left",
+        KeyEvent.KEYCODE_DPAD_RIGHT to "Right",
+        KeyEvent.KEYCODE_DPAD_UP to "Up",
+        KeyEvent.KEYCODE_DPAD_DOWN to "Down",
+        KeyEvent.KEYCODE_PAGE_UP to "PageUp",
+        KeyEvent.KEYCODE_PAGE_DOWN to "PageDown",
+        KeyEvent.KEYCODE_ENTER to "Return",
+        KeyEvent.KEYCODE_SPACE to "Space",
+        KeyEvent.KEYCODE_DEL to "Delete",
+        KeyEvent.KEYCODE_FORWARD_DEL to "Backspace",
+        KeyEvent.KEYCODE_TAB to "Tab",
+        KeyEvent.KEYCODE_ESCAPE to "Escape"
+    )
 
     fun prefixStr(event: KeyEvent) : String {
         val isCtrl = event.isCtrlPressed
@@ -208,11 +222,17 @@ class RView @JvmOverloads constructor(
         val unicodeChar = event.unicodeChar
         val isShift = event.isShiftPressed
         val prefix = prefixStr(event)
+        // 文字じゃない奴は特別扱い。
+        specialMap[keyCode]?.let { srep ->
+            return prefix+srep
+        }
+
         // unicodeCharはCtrlとの組み合わせがあると0になってしまう
         // だがそれ以外ならキーボードの特殊事情も正しく処理してくれるので、これがあるならこれを使う。
         if (unicodeChar != 0) {
             return prefix + unicodeChar.toChar().toString()
         }
+
 
         if (isShift) {
             val ch = shiftKeyMap[keyCode] ?: return ""
@@ -225,7 +245,20 @@ class RView @JvmOverloads constructor(
 
     var keyDownHandler : Function1<String, Unit>? = null
 
+    fun debPrint(keyCode: Int, event: KeyEvent) {
+        /*
+        val unicodeChar = event.unicodeChar
+        val charStr = if (unicodeChar != 0) unicodeChar.toChar().toString() else "None"
+        val isCtrl = event.isCtrlPressed
+        val isShift = event.isShiftPressed
+        val isAlt = event.isAltPressed
+        println("onKeyDown: keyCode=$keyCode, isShift=$isShift, isCtrl=$isCtrl, isAlt=$isAlt, metaState=${event.metaState}, unichar=$charStr, ")
+         */
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        debPrint(keyCode, event)
+
         val strRep = keyEventToString(keyCode, event)
         if (strRep.isEmpty())
             return super.onKeyDown(keyCode, event)
@@ -233,16 +266,6 @@ class RView @JvmOverloads constructor(
         keyDownHandler?.let {
             it(strRep)
         }
-        /*
-        val unicodeChar = event.unicodeChar
-        val charStr = if (unicodeChar != 0) unicodeChar.toChar().toString() else "None"
-        val isCtrl = event.isCtrlPressed
-        val isShift = event.isShiftPressed
-        val isAlt = event.isAltPressed
-        val ch = keyMap[keyCode] ?: ""
-        println("onKeyDown: keyCode=$keyCode, rep=$strRep, char=$ch, isShift=$isShift, isCtrl=$isCtrl, isAlt=$isAlt, metaState=${event.metaState}, unichar=$charStr, ")
-
-         */
-        return super.onKeyDown(keyCode, event)
+        return true
     }
 }
