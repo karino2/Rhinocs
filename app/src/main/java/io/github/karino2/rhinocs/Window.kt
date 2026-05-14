@@ -85,6 +85,12 @@ class Window {
         moveCharDelta(-delta)
     }
 
+    fun insert(content: String) {
+        buffer?.let { buf ->
+            point = buf.insert(point, content)
+        }
+    }
+
     fun moveCharDelta(delta: Int) {
         buffer?.let { buf->
             if(delta > 0)

@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
                     print("deb:", str);
                     if(str === "Left") { backward_char(); }
                     else if(str == "Right") { forward_char(); }
+                    else if(str == "a") { insert("a"); }
                 }
             """.trimIndent())
         }

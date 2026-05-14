@@ -17,13 +17,15 @@ public class GlobalObject  extends ImporterTopLevel {
             "select_file",
             "open_uri",
             "forward_char",
-            "backward_char"
+            "backward_char",
+            "insert",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
 
     public MainActivity activity;
     public RView rview;
+    public Window getWindow() { return rview.getWindow(); }
 
     public GlobalObject(Context ctx) {
         initStandardObjects(ctx, true);
@@ -87,6 +89,15 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
+    public static Object insert(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("non insert argument.");
+        String content = Context.toString(args[0]);
+        glob.getWindow().insert(content);
+        glob.rview.invalidate();
+        return Context.getUndefinedValue();
+    }
     public void openUri(Uri uri) {
         rview.loadFile(activity.getContentResolver(), uri);
     }

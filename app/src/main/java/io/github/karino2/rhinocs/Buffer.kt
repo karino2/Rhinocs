@@ -16,6 +16,11 @@ class Buffer {
 
     fun getLine(linenum: Int) = lines[linenum].toString()
 
+    fun insert(at: Point, content: String) : Point {
+        lines[at.linenum].insert(at.offset, content)
+        return forwardChar(at, content.length)
+    }
+
     fun forwardChar(from: Point, delta: Int) : Point {
         var rest = delta
         var offset = from.offset
