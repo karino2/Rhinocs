@@ -1,7 +1,5 @@
 package io.github.karino2.rhinocs
 
-import kotlin.collections.get
-
 enum class CellType {
     EMPTY, HALF, FULL
 }
@@ -36,13 +34,13 @@ data class Cell(val ch: Char, val ctype: CellType) {
     }
 }
 
-class GridLineBuilder {
+class LineAnalyzer {
     fun pointToColumn(buf: Buffer, point: Point) : Int {
         val line = buf.getLine(point.linenum)
         return line.take(point.offset).map { if(isFullWidth(it)) { 2 } else { 1 } }.sum()
     }
 
-    fun build(line: String, colOffset: Int, numCols: Int) : ArrayList<Cell> {
+    fun buildInfo(line: String, colOffset: Int, numCols: Int) : ArrayList<Cell> {
         val cells = ArrayList<Cell>()
         for(i in 0..<numCols) {
             cells.add(Cell.empty)

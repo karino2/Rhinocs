@@ -24,7 +24,7 @@ class Window {
         }
     }
 
-    val lineBuilder = GridLineBuilder()
+    val lineBuilder = LineAnalyzer()
 
     // 現在のpointを絶対Columnに変換したもの
     val pointColumn : Int
@@ -74,7 +74,7 @@ class Window {
                 ""
             }
         } ?: ""
-        return lineBuilder.build(line, lastOffset.col, numCols)
+        return lineBuilder.buildInfo(line, lastOffset.col, numCols)
     }
 
     fun moveCharDelta(delta: Int) {

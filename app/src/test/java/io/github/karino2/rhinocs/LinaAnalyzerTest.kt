@@ -4,10 +4,10 @@ import org.junit.Test
 
 import org.junit.Assert.*
 
-class GridTest {
-    val builder = GridLineBuilder()
+class LinaAnalyzerTest {
+    val builder = LineAnalyzer()
     fun create(str: String, offset: Int, numCol: Int) : ArrayList<Cell> {
-        return builder.build(str, offset, numCol)
+        return builder.buildInfo(str, offset, numCol)
     }
 
     fun create(str: String) : ArrayList<Cell> {

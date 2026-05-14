@@ -40,19 +40,16 @@ class RView @JvmOverloads constructor(
     val cellHeight: Float
         get() = textPaint.fontMetrics.let { it.descent - it.ascent }
 
-    var numRows: Int = 0
-        private set
-    var numCols: Int = 0
-        private set
+    val numRows: Int
+        get() = window.numRows
+    val numCols: Int
+        get() = window.numCols
 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        numCols = ((w - margin) / cellWidth).toInt()
-        numRows = ((h - margin) / cellHeight).toInt()
-
-        window.numCols = numCols
-        window.numRows = numRows
+        window.numCols = ((w - margin) / cellWidth).toInt()
+        window.numRows = ((h - margin) / cellHeight).toInt()
     }
 
     val window = Window().apply { buffer = Buffer.fromText("Hello, Rhinocs!日本語\n二行目") }
