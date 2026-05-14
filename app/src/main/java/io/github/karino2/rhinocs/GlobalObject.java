@@ -15,7 +15,9 @@ public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
             "print",
             "select_file",
-            "open_uri"
+            "open_uri",
+            "forward_char",
+            "backward_char"
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -60,9 +62,28 @@ public class GlobalObject  extends ImporterTopLevel {
     public static Object open_uri(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         if (args.length != 1)
-            throw new IllegalArgumentException("non GlobalObject func obj.");
+            throw new IllegalArgumentException("non uri argument.");
         String uriStr = Context.toString(args[0]);
         glob.openUri(Uri.parse(uriStr));
+        return Context.getUndefinedValue();
+    }
+    public static Object forward_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        int delta = 1;
+        if (args.length != 0)
+            delta = (int) Context.toNumber(args[0]);
+        glob.rview.getWindow().forwardChar(delta);
+        glob.rview.invalidate();
+        return Context.getUndefinedValue();
+    }
+
+    public static Object backward_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        int delta = 1;
+        if (args.length != 0)
+            delta = (int) Context.toNumber(args[0]);
+        glob.rview.getWindow().backwardChar(delta);
+        glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
 

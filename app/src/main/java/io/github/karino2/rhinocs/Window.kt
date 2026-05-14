@@ -77,6 +77,14 @@ class Window {
         return lineBuilder.buildInfo(line, lastOffset.col, numCols)
     }
 
+    fun forwardChar(delta: Int) {
+        moveCharDelta(delta)
+    }
+
+    fun backwardChar(delta: Int) {
+        moveCharDelta(-delta)
+    }
+
     fun moveCharDelta(delta: Int) {
         buffer?.let { buf->
             if(delta > 0)

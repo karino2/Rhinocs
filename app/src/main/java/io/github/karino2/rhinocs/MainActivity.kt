@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
             run("""
                 function onKeyDown(str) {
                     print("deb:", str);
+                    if(str === "Left") { backward_char(); }
+                    else if(str == "Right") { forward_char(); }
                 }
             """.trimIndent())
         }
