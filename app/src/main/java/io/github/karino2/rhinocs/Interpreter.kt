@@ -28,9 +28,9 @@ class Interpreter {
         withContext { GlobalObject(it) }
     }
 
-    fun run(script: String) {
+    fun run(script: String, fileName:String ="script") {
         withContext {
-            val script = it.compileString(script, "script", 1, null)
+            val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
         }
     }

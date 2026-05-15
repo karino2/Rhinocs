@@ -20,14 +20,14 @@ data class RequestArg(val requestId: Int, val arg: Any)
 
 class MainActivity : AppCompatActivity() {
     companion object {
-        const val  INIT_URI_KEY = "last_uri_path"
-        fun initUriStr(ctx: Context) = sharedPreferences(ctx).getString(INIT_URI_KEY, null)
-        fun writeInitUriStr(ctx: Context, path : String) = sharedPreferences(ctx).edit(commit = true) {
-            putString(INIT_URI_KEY, path)
+        const val  PACKAGE_DIR_URI_KEY = "last_uri_path"
+        fun packageDirUriStr(ctx: Context) = sharedPreferences(ctx).getString(PACKAGE_DIR_URI_KEY, null)
+        fun writePackageDirUriStr(ctx: Context, path : String) = sharedPreferences(ctx).edit(commit = true) {
+            putString(PACKAGE_DIR_URI_KEY, path)
         }
 
-        fun resetInitUriStr(ctx: Context) = sharedPreferences(ctx).edit(commit = true) {
-            putString(INIT_URI_KEY, null)
+        fun resetPackageDirUriStr(ctx: Context) = sharedPreferences(ctx).edit(commit = true) {
+            putString(PACKAGE_DIR_URI_KEY, null)
         }
 
         private fun sharedPreferences(ctx: Context) = ctx.getSharedPreferences("Rhinocs", Context.MODE_PRIVATE)
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
                 it,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            writeInitUriStr(this, it.toString())
+            writePackageDirUriStr(this, it.toString())
             loadInitScript()
         }
     }
@@ -96,8 +96,8 @@ class MainActivity : AppCompatActivity() {
     private val window: Window
         get() = rview.window
 
-    private val initUri: Uri?
-        get() = initUriStr(this)?.toUri()
+    private val packageDirUri: Uri?
+        get() = packageDirUriStr(this)?.toUri()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,15 +128,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitScript() {
-        initUri?.let { ini ->
-            val scripts = FastFile.fromTreeUri(this, ini).findFile("skk_all.js")?.readText() ?: return
-            runScript(scripts, "Init js load fail: ")
+        loadPackageJS("skk_all.js", "Init js load fail: ")
+    }
+
+    private fun loadPackageJS(fileName: String, errorLabel: String) {
+        packageDirUri?.let { ini ->
+            val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return
+            val scripts = file.readText()
+            runScript(scripts, file.name, errorLabel)
         }
     }
 
-    private fun runScript(script: String, errorLabel: String = "") {
+    private fun runScript(script: String, fileName: String="script", errorLabel: String = "") {
         try {
-            interpreter.run(script)
+            interpreter.run(script, fileName)
         } catch (e: ContinuationPending) {
             pendingCC = e
             val rarg = e.applicationState as RequestArg
