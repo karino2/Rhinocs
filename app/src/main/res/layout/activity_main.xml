@@ -32,7 +32,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Load" />
+            android:text="File" />
 
         <Button
             android:id="@+id/buttonDeb2"
@@ -40,7 +40,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Deb2" />
+            android:text="Dir" />
 
         <Button
             android:id="@+id/buttonDeb3"
@@ -48,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Deb3" />
+            android:text="Reload" />
 
         <Button
             android:id="@+id/buttonDeb4"

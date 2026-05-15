@@ -1,21 +1,41 @@
 package io.github.karino2.rhinocs
 
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import org.mozilla.javascript.ContinuationPending
-import kotlin.math.max
+import androidx.core.content.edit
+import androidx.core.net.toUri
+import org.mozilla.javascript.EcmaError
 
 data class RequestArg(val requestId: Int, val arg: Any)
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        const val  INIT_URI_KEY = "last_uri_path"
+        fun initUriStr(ctx: Context) = sharedPreferences(ctx).getString(INIT_URI_KEY, null)
+        fun writeInitUriStr(ctx: Context, path : String) = sharedPreferences(ctx).edit(commit = true) {
+            putString(INIT_URI_KEY, path)
+        }
 
-    private val getFileUri = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
+        fun resetInitUriStr(ctx: Context) = sharedPreferences(ctx).edit(commit = true) {
+            putString(INIT_URI_KEY, null)
+        }
+
+        private fun sharedPreferences(ctx: Context) = ctx.getSharedPreferences("Rhinocs", Context.MODE_PRIVATE)
+
+        fun showMessage(ctx: Context, msg : String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+    }
+
+    private val getFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         uri?.let {
             contentResolver.takePersistableUriPermission(
                 it,
@@ -24,6 +44,17 @@ class MainActivity : AppCompatActivity() {
             pendingCC?.let { pcc->
                 interpreter.resume(pcc, it)
             }
+        }
+    }
+
+    private val getPackageDirUri = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            writeInitUriStr(this, it.toString())
+            loadInitScript()
         }
     }
 
@@ -44,9 +75,13 @@ class MainActivity : AppCompatActivity() {
                 keyMap["Right"] = forward_char;
                 keyMap["Space"] = ()=> { insert(" "); }
                 
-                function onKeyDown(str) {
+                function defaultOnKeyDown(str) {
                     print("deb:", str);
-                    if (keyMap[str]) keyMap[str]()
+                    if (keyMap[str]) keyMap[str]();
+                }
+                
+                function onKeyDown(str) {
+                   defaultOnKeyDown(str);
                 }
             """.trimIndent())
         }
@@ -60,6 +95,9 @@ class MainActivity : AppCompatActivity() {
 
     private val window: Window
         get() = rview.window
+
+    private val initUri: Uri?
+        get() = initUriStr(this)?.toUri()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,29 +113,40 @@ class MainActivity : AppCompatActivity() {
             runScript($$"onKeyDown($key);")
         }
         findViewById<Button>(R.id.buttonDeb1).setOnClickListener {
-            runScript("""let uri = select_file("text/*"); print(uri); open_uri(uri);""")
+            runScript("""let uri = select_file("*/*"); print(uri); open_uri(uri);""")
         }
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
-            window.moveCharDelta(-1)
-            rview.invalidate()
+            getPackageDirUri.launch(null)
         }
         findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
-            window.moveCharDelta(1)
-            rview.invalidate()
+            loadInitScript()
         }
         findViewById<Button>(R.id.buttonDeb4).setOnClickListener {
         }
+
+        // loadInitScript()
     }
 
-    private fun runScript(script: String) {
+    private fun loadInitScript() {
+        initUri?.let { ini ->
+            val scripts = FastFile.fromTreeUri(this, ini).findFile("skk_all.js")?.readText() ?: return
+            runScript(scripts, "Init js load fail: ")
+        }
+    }
+
+    private fun runScript(script: String, errorLabel: String = "") {
         try {
             interpreter.run(script)
         } catch (e: ContinuationPending) {
             pendingCC = e
             val rarg = e.applicationState as RequestArg
             when (rarg.requestId) {
-                GlobalObject.REQUEST_SELECT_FILE -> getFileUri.launch(rarg.arg as Array<String>)
+                GlobalObject.REQUEST_SELECT_FILE -> getFileUriFromScript.launch(rarg.arg as Array<String>)
             }
+        } catch(e : EcmaError) {
+            val msg = "$errorLabel: $e"
+            showMessage(this, msg)
+            println(msg)
         }
     }
 }
