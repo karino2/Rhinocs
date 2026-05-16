@@ -128,8 +128,12 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         if (args.length != 2)
             throw new IllegalArgumentException("invalid delete region argument num.");
-        long start = (long)Context.toNumber(args[0]);
-        long end = (long)Context.toNumber(args[1]);
+
+        long p1 = (long)Context.toNumber(args[0]);
+        long p2 = (long)Context.toNumber(args[1]);
+        long start = Math.min(p1, p2);
+        long end = Math.max(p1, p2);
+
         return glob.getWindow().deleteRegion(start, end);
     }
 

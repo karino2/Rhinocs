@@ -67,6 +67,12 @@ class MainActivity : AppCompatActivity() {
                    insert($key);
                 }
                 
+                function delete_backward_char(n=1) {
+                   let end = point();
+                   backward_char(n);
+                   delete_region(point(), end);
+                }
+                
                 let defSelfKeys = default_self_insert_keys();
                 let keyMap = {};
                 defSelfKeys.forEach(k => keyMap[k] = self_insert);
@@ -75,6 +81,7 @@ class MainActivity : AppCompatActivity() {
                 keyMap["Right"] = forward_char;
                 keyMap["Space"] = ()=> { insert(" "); }
                 keyMap["Return"] = ()=> { insert("\n"); }
+                keyMap["Backspace"] = delete_backward_char;
                 
                 function defaultOnKeyDown(str) {
                     print("deb:", str);

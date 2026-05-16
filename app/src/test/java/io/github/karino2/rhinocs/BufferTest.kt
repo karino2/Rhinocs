@@ -36,4 +36,73 @@ class BufferTest {
         assertEquals("ibc", buf.getLine(1))
         assertEquals("def", buf.getLine(2))
     }
+
+    @Test
+    fun toPoint_basic() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.toPoint(1)
+        assertEquals(Point(0, 1, 1), actual)
+    }
+
+    @Test
+    fun toPoint_eol() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.toPoint(3)
+        assertEquals(Point(0, 3, 3), actual)
+    }
+
+    @Test
+    fun toPoint_secondLine() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.toPoint(4)
+        assertEquals(Point(1, 0, 4), actual)
+    }
+
+    @Test
+    fun forwardChar_basicL() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.forwardChar(buf.toPoint(1), 1)
+        assertEquals(0, actual.linenum)
+        assertEquals(2, actual.offset)
+    }
+
+    @Test
+    fun forwardChar_canMoveToEOL() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.forwardChar(buf.toPoint(2), 1)
+        assertEquals(0, actual.linenum)
+        assertEquals(3, actual.offset)
+    }
+
+    @Test
+    fun forwardChar_eolToNextLine() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.forwardChar(buf.toPoint(3), 1)
+        assertEquals(1, actual.linenum)
+        assertEquals(0, actual.offset)
+    }
+
+    @Test
+    fun backwardChar_basicL() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.backwardChar(buf.toPoint(2), 1)
+        assertEquals(0, actual.linenum)
+        assertEquals(1, actual.offset)
+    }
+
+    @Test
+    fun backwardChar_canMoveToBOL() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.backwardChar(buf.toPoint(5), 1)
+        assertEquals(1, actual.linenum)
+        assertEquals(0, actual.offset)
+    }
+
+    @Test
+    fun backwardChar_bollToPrevLine() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.backwardChar(buf.toPoint(4), 1)
+        assertEquals(0, actual.linenum)
+        assertEquals(3, actual.offset)
+    }
 }
