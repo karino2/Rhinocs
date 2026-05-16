@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     private val window: Window
         get() = rview.window
 
-    private val packageDirUri: Uri?
+    val packageDirUri: Uri?
         get() = packageDirUriStr(this)?.toUri()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,6 +137,13 @@ class MainActivity : AppCompatActivity() {
             val scripts = file.readText()
             runScript(scripts, file.name, errorLabel)
         }
+    }
+
+    fun readFileContent(fileName: String) : String {
+        packageDirUri?.let { ini ->
+            val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return ""
+            return file.readText()
+        } ?: return ""
     }
 
     private fun runScript(script: String, fileName: String="script", errorLabel: String = "") {

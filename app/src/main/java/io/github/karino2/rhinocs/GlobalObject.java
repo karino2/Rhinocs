@@ -20,7 +20,10 @@ public class GlobalObject  extends ImporterTopLevel {
             "forward_char",
             "backward_char",
             "insert",
-            "default_self_insert_keys"
+            "default_self_insert_keys",
+            "read_file",
+            "point",
+            "delete_region",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -107,6 +110,28 @@ public class GlobalObject  extends ImporterTopLevel {
         return ctx.newArray(glob, strs.toArray());
     }
 
+    public static Object read_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("non file name argument.");
+        String fname = Context.toString(args[0]);
+        return glob.activity.readFileContent(fname);
+    }
+
+    public static Object point(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Point pt = glob.getWindow().getPoint();
+        return pt.getPoint();
+    }
+
+    public static Object delete_region(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 2)
+            throw new IllegalArgumentException("invalid delete region argument num.");
+        long start = (long)Context.toNumber(args[0]);
+        long end = (long)Context.toNumber(args[1]);
+        return glob.getWindow().deleteRegion(start, end);
+    }
 
     public void openUri(Uri uri) {
         rview.loadFile(activity.getContentResolver(), uri);

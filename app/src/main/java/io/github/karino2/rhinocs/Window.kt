@@ -4,13 +4,13 @@ import android.content.ContentResolver
 import android.net.Uri
 
 class Window {
-    var point = Point(0, 0)
-    var buffer: Buffer? = null
+    var point = Point(0, 0, 0)
+    var buffer: Buffer = Buffer()
         set(newBuf) {
             field = newBuf
 
             lastOffset = RowCol(0, 0)
-            point = Point(0, 0)
+            point = Point(0, 0, 0)
         }
 
     var lastOffset = RowCol(0, 0)
@@ -29,10 +29,7 @@ class Window {
     // 現在のpointを絶対Columnに変換したもの
     val pointColumn : Int
         get(){
-            buffer?.let { buf->
-                return lineBuilder.pointToColumn(buf, point)
-            }
-            return 0
+            return lineBuilder.pointToColumn(buffer, point)
         }
 
     // 絶対座標でのpointをrowcolに変換したもの
@@ -65,15 +62,12 @@ class Window {
     }
 
     fun lineInfo(relativeRow: Int) : ArrayList<Cell> {
-        val line = buffer?.let { buf->
-
-            val linenum = relativeRow+lastOffset.row
-            if(buf.numLines > linenum) {
-                buf.getLine(linenum)
-            } else {
-                ""
-            }
-        } ?: ""
+        val linenum = relativeRow+lastOffset.row
+        val line = if(buffer.numLines > linenum) {
+            buffer.getLine(linenum)
+        } else {
+            ""
+        }
         return lineBuilder.buildInfo(line, lastOffset.col, numCols)
     }
 
@@ -86,17 +80,27 @@ class Window {
     }
 
     fun insert(content: String) {
-        buffer?.let { buf ->
-            point = buf.insert(point, content)
+        point = buffer.insert(point, content)
+    }
+
+    // 削除した文字数を返す
+    fun deleteRegion(from: Long, to: Long) : Long {
+        val count = buffer.deleteRegion(from, to)
+        // pointの補正
+        if (count > 0 && point.point > from) {
+            // 削除の範囲内ならfromにする
+            if(point.point < from+count)
+                point = buffer.toPoint(from)
+            else // 削除した範囲よりも外側ならcount分だけ前にずらす
+                point = buffer.toPoint(point.point - count)
         }
+        return count
     }
 
     fun moveCharDelta(delta: Int) {
-        buffer?.let { buf->
-            if(delta > 0)
-                point = buf.forwardChar(point, delta)
-            else
-                point = buf.backwardChar(point, -delta)
-        }
+        if(delta > 0)
+            point = buffer.forwardChar(point, delta)
+        else
+            point = buffer.backwardChar(point, -delta)
     }
 }
