@@ -62,36 +62,7 @@ class MainActivity : AppCompatActivity() {
         Interpreter().apply{
             global.activity = this@MainActivity
             global.rview = rview
-            run($$"""
-                function self_insert() {
-                   insert($key);
-                }
-                
-                function delete_backward_char(n=1) {
-                   let end = point();
-                   backward_char(n);
-                   delete_region(point(), end);
-                }
-                
-                let defSelfKeys = default_self_insert_keys();
-                let keyMap = {};
-                defSelfKeys.forEach(k => keyMap[k] = self_insert);
-
-                keyMap["Left"] = backward_char;
-                keyMap["Right"] = forward_char;
-                keyMap["Space"] = ()=> { insert(" "); }
-                keyMap["Return"] = ()=> { insert("\n"); }
-                keyMap["Backspace"] = delete_backward_char;
-                
-                function defaultOnKeyDown(str) {
-                    print("deb:", str);
-                    if (keyMap[str]) keyMap[str]();
-                }
-                
-                function onKeyDown(str) {
-                   defaultOnKeyDown(str);
-                }
-            """.trimIndent())
+            run(readAsset("builtins.js"), "builtins.js")
         }
     }
 
@@ -152,6 +123,10 @@ class MainActivity : AppCompatActivity() {
             val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return ""
             return file.readText()
         } ?: return ""
+    }
+
+    private fun readAsset(fileName: String): String {
+        return assets.open(fileName).bufferedReader().use { it.readText() }
     }
 
     private fun runScript(script: String, fileName: String="script", errorLabel: String = "") {
