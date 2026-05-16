@@ -48,6 +48,9 @@ function previous_page() {
   scroll_window(-Math.floor(window_height()-2))
 }
 
+function beginning_of_line() { goto_bol(); }
+function end_of_line() { goto_eol(); }
+
 
 let lastKeySequence = []
 
@@ -96,6 +99,9 @@ defineKey(keyMap, "C-b", backward_char)
 defineKey(keyMap, "C-f", forward_char)
 defineKey(keyMap, "C-n", next_line);
 defineKey(keyMap, "C-p", previous_line);
+defineKey(keyMap, "C-a", beginning_of_line)
+defineKey(keyMap, "C-e", end_of_line)
+defineKey(keyMap, "C-h", delete_backward_char)
 defineKey(keyMap, ["C-x", "C-s"], saveBuffer);
 defineKey(keyMap, ["C-x", "C-f"], find_file);
 defineKey(keyMap, "M->", end_of_buffer);

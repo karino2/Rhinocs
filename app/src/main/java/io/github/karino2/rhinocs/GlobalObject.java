@@ -34,6 +34,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "goto_column",
             "point_max",
             "goto_char",
+            "goto_eol",
+            "goto_bol",
             "window_height",
             "scroll_window",
             "read_gzip_file",
@@ -241,6 +243,18 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("goto_char must be 1 arg.");
         long pos = (long) Context.toNumber(args[0]);
         glob.getWindow().gotoChar(pos);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object goto_bol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        glob.getWindow().gotoBol();
+        return Context.getUndefinedValue();
+    }
+
+    public static Object goto_eol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        glob.getWindow().gotoEol();
         return Context.getUndefinedValue();
     }
 

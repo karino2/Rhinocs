@@ -189,4 +189,15 @@ class Window {
         gotoColumn(computeGoalGolumn())
         return true
     }
+
+    fun gotoBol() {
+        resetGoalGolumn()
+        point = buffer.gotoBol(point)
+    }
+
+    fun gotoEol() {
+        resetGoalGolumn()
+        point = buffer.gotoEol(point)
+    }
+
 }

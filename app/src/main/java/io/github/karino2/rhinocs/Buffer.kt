@@ -166,6 +166,10 @@ class Buffer {
         return pTo.point - pFrom.point
     }
 
+    fun gotoBol(point: Point) = toPoint(point.linenum, 0)
+
+    fun gotoEol(point: Point) = toPoint(point.linenum, getLine(point.linenum).length)
+
     companion object {
         fun fromText(text: String) = Buffer().apply { load(text) }
     }
