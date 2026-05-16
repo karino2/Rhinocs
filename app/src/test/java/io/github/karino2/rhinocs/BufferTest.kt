@@ -89,6 +89,31 @@ class BufferTest {
     }
 
     @Test
+    fun toPoint_linenumarg_secondLine() {
+        val buf = Buffer.fromText("abc\ndef")
+        val pt = buf.toPoint(1, 0)
+        assertEquals(4, pt.point)
+    }
+
+    @Test
+    fun pointMax_empty() {
+        val buf = Buffer()
+        assertEquals(0, buf.pointMax)
+    }
+
+    @Test
+    fun pointMax_oneLine() {
+        val buf = Buffer.fromText("abc")
+        assertEquals(3, buf.pointMax)
+    }
+
+    @Test
+    fun pointMax_twoLine() {
+        val buf = Buffer.fromText("abc\ndef")
+        assertEquals(7, buf.pointMax)
+    }
+
+    @Test
     fun forwardChar_basicL() {
         val buf = Buffer.fromText("abc\ndef")
         val actual = buf.forwardChar(buf.toPoint(1), 1)
@@ -110,6 +135,16 @@ class BufferTest {
         val actual = buf.forwardChar(buf.toPoint(3), 1)
         assertEquals(1, actual.linenum)
         assertEquals(0, actual.offset)
+        assertEquals(4, actual.point)
+    }
+
+    @Test
+    fun forwardChar_eob() {
+        val buf = Buffer.fromText("abc\ndef")
+        val actual = buf.forwardChar(buf.toPoint(7), 1)
+        assertEquals(1, actual.linenum)
+        assertEquals(3, actual.offset)
+        assertEquals(7, actual.point)
     }
 
     @Test
@@ -135,4 +170,5 @@ class BufferTest {
         assertEquals(0, actual.linenum)
         assertEquals(3, actual.offset)
     }
+
 }

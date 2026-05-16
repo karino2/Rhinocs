@@ -101,22 +101,17 @@ class Window {
         return lineBuilder.buildInfo(line, lastOffset.col, numCols)
     }
 
-    fun forwardChar(delta: Int) {
-        moveCharDelta(delta)
-    }
-
-    fun backwardChar(delta: Int) {
-        moveCharDelta(-delta)
-    }
-
     fun insert(content: String) {
+        val debPrev = point
         point = buffer.insert(point, content)
         resetGoalGolumn()
+        println("insert: $debPrev, ${point}, $content")
     }
 
     // 削除した文字数を返す
     fun deleteRegion(from: Long, to: Long) : Long {
         val count = buffer.deleteRegion(from, to)
+        val debPrev = point
         // pointの補正
         if (count > 0 && point.point > from) {
             // 削除の範囲内ならfromにする
@@ -125,25 +120,30 @@ class Window {
             else // 削除した範囲よりも外側ならcount分だけ前にずらす
                 point = buffer.toPoint(point.point - count)
         }
+        println("debDelRegion: ($from, $to): $debPrev, ${point}, $count")
         return count
     }
 
     fun moveCharDelta(delta: Int) {
         resetGoalGolumn()
+        val debPrev = point
 
         if(delta > 0)
             point = buffer.forwardChar(point, delta)
         else
             point = buffer.backwardChar(point, -delta)
+        println("moveChar: $debPrev, ${point}, $delta")
     }
 
     fun moveLineDelta(delta: Int) {
+        val debPrev = point
         resetGoalGolumn()
 
         if(delta > 0)
             point = buffer.forwardLine(point, delta)
         else
             point = buffer.backwardLine(point, -delta)
+        println("moveLineDelta: $debPrev, ${point}, $delta")
     }
 
     fun pontToColumn(pos: Long): Int {
@@ -153,6 +153,7 @@ class Window {
 
     // 実際に移動出来たカラム を返す。行末かcolumnかcolumn下が全角の右側ならcolumn-1を返す。
     fun gotoColumn(column: Int): Int {
+        val debPrev = point
         if (column == 0)
             return column
         val targetLine = buffer.getLine(point.linenum)
@@ -165,6 +166,7 @@ class Window {
         val actual = if (info[column].isEmpty) { column - 1 } else { column }
         val offset = lineBuilder.columnToOffset(targetLine, actual)
         point = buffer.toPoint(point.linenum, offset)
+        println("gotoColumn: $debPrev, ${point}, $column, $actual")
         return actual
     }
 

@@ -70,7 +70,7 @@ class Buffer {
 
             // 最後の行でも終わりまで行けなかった。最後のPointを返す
             if(linenum == lines.size-1) {
-                return Point(linenum, line.length, total+line.length)
+                return Point(linenum, line.length, pointMax)
             }
 
             rest -= line.length+1-offset
@@ -126,12 +126,12 @@ class Buffer {
         if (linenum == 0)
             return Point(0, offset, offset.toLong())
 
-        val prev = lines.take(linenum-1).sumOf { it.length.toLong()+1 }
+        val prev = lines.take(linenum).sumOf { it.length.toLong()+1 }
         return Point(linenum, offset, prev+offset)
     }
 
     val pointMax : Long
-        get() = lines.sumOf { it.length.toLong()+1 }
+        get() = lines.sumOf { it.length.toLong() }+(lines.size-1)
 
     fun findLine(pos: Long): Int {
         var total = 0L

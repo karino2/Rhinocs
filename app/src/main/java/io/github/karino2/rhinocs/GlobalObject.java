@@ -89,7 +89,7 @@ public class GlobalObject  extends ImporterTopLevel {
         int delta = 1;
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
-        glob.rview.getWindow().forwardChar(delta);
+        glob.rview.getWindow().moveCharDelta(delta);
         return Context.getUndefinedValue();
     }
 
@@ -98,7 +98,7 @@ public class GlobalObject  extends ImporterTopLevel {
         int delta = 1;
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
-        glob.rview.getWindow().backwardChar(delta);
+        glob.rview.getWindow().moveCharDelta(-delta);
         return Context.getUndefinedValue();
     }
 
