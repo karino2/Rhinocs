@@ -140,6 +140,10 @@ data class FastFile(val uri: Uri, val name: String, val lastModified: Long, val 
 
 
     fun findFile(targetDisplayName: String) = listFiles().find { it.name == targetDisplayName }
+    
+    fun findFileRec(relativePath: String) : FastFile? {
+        return relativePath.split("/").fold(this as FastFile?) { acc, disp -> acc?.findFile(disp) }
+    }
 
     fun createDirectory(displayName: String): FastFile? {
         val resUri = DocumentsContract.createDocument(resolver, uri, DocumentsContract.Document.MIME_TYPE_DIR, displayName) ?: return null

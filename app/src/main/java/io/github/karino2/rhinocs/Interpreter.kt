@@ -28,8 +28,9 @@ class Interpreter {
         withContext { GlobalObject(it) }
     }
 
-    fun run(script: String, fileName:String ="script") {
+    fun run(script: String, fileName:String ="*script*") {
         withContext {
+            global.currentFileName = fileName
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             global.rview.invalidate()

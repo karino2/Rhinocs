@@ -48,6 +48,8 @@ public class GlobalObject  extends ImporterTopLevel {
     public RView rview;
     public Window getWindow() { return rview.getWindow(); }
 
+    public String currentFileName = "*script*";
+
     public GlobalObject(Context ctx) {
         initStandardObjects(ctx, true);
         defineFunctionProperties(TOP_COMMANDS, GlobalObject.class, ScriptableObject.DONTENUM);
@@ -149,7 +151,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
-        return glob.activity.readFileContent(fname);
+        return glob.activity.readFileContent(fname, glob.currentFileName);
     }
 
     public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -157,7 +159,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
-        return glob.activity.readGZIPFileContent(fname);
+        return glob.activity.readGZIPFileContent(fname, glob.currentFileName);
     }
 
     public static Object load_gzip_skk_dictionary(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -165,7 +167,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("load_gzip_skk_dictionary must be 1 arg.");
         String fname = Context.toString(args[0]);
-        String content = glob.activity.readGZIPFileContent(fname);
+        String content = glob.activity.readGZIPFileContent(fname, glob.currentFileName);
         
         SkkDictionary skk = new SkkDictionary();
         return skk.parseData(ctx, funcObj.getParentScope(), content);

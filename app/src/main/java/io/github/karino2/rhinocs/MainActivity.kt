@@ -64,8 +64,18 @@ class MainActivity : AppCompatActivity() {
         Interpreter().apply{
             global.activity = this@MainActivity
             global.rview = rview
-            run(readAsset("builtins.js"), "builtins.js")
+            loadBuiltin()
         }
+    }
+
+    private fun Interpreter.loadBuiltin() {
+        // buildins_override.jsがあればそちらを優先
+        val overwrite = packageDirUri?.let { FastFile.fromTreeUri(this@MainActivity, it).findFile("builtins_override.js")?.readText() }
+        overwrite?.let {
+            run(it, "builtins_override.js")
+            return
+        }
+        run(readAsset("builtins.js"), "builtins.js")
     }
 
 
@@ -109,42 +119,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitScript() {
-        loadPackageJS("skk_all.js", "Init js load fail: ")
+        loadPackageJS("skk/skk_all.js", "Init js load fail: ")
     }
 
-    private fun loadPackageJS(fileName: String, errorLabel: String) {
+    private fun loadPackageJS(relativePath: String, errorLabel: String) {
         packageDirUri?.let { ini ->
-            val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return
+            val file = FastFile.fromTreeUri(this, ini).findFileRec(relativePath) ?: return
             val scripts = file.readText()
-            runScript(scripts, file.name, errorLabel)
+            runScript(scripts, relativePath, errorLabel)
         }
     }
 
-    fun readFileContent(fileName: String) : String {
+    fun sourceDir(sourceName: String) : FastFile? {
         packageDirUri?.let { ini ->
-            val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return ""
-            return file.readText()
+            val root = FastFile.fromTreeUri(this, ini)
+            if (sourceName.startsWith("*"))
+                return root
+            return sourceName.split("/").dropLast(1)
+                .fold(root as FastFile?) { acc, dirName ->
+                    acc?.findFile(dirName)
+                }
         }
-        return ""
+        return null
     }
 
-    fun readGZIPFileContent(fileName: String) : String {
+    private fun findSourceFile(
+        fromSource: String,
+        fileName: String
+    ): FastFile? = sourceDir(fromSource)?.findFileRec(fileName)
+
+    fun readFileContent(fileName: String, fromSource: String) : String {
+        return findSourceFile(fromSource, fileName)?.readText() ?: ""
+    }
+
+    fun readGZIPFileContent(fileName: String, fromSource: String) : String {
         val startTime = System.currentTimeMillis()
-        packageDirUri?.let { ini ->
-            val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return ""
-            val content = file.readGZIPText()
-            val endTime = System.currentTimeMillis()
-            println("readGZIPFileContent: finished in ${endTime - startTime} ms")
-            return content
-        }
-        return ""
+        val content = findSourceFile(fromSource, fileName)?.readGZIPText() ?: ""
+        val endTime = System.currentTimeMillis()
+        println("readGZIPFileContent: finished in ${endTime - startTime} ms")
+        return content
     }
 
     private fun readAsset(fileName: String): String {
         return assets.open(fileName).bufferedReader().use { it.readText() }
     }
 
-    private fun runScript(script: String, fileName: String="script", errorLabel: String = "") {
+    private fun runScript(script: String, fileName: String="*script*", errorLabel: String = "") {
         try {
             interpreter.run(script, fileName)
         } catch (e: ContinuationPending) {
@@ -160,3 +180,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
