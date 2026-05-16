@@ -205,8 +205,8 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_PAGE_DOWN to "PageDown",
         KeyEvent.KEYCODE_ENTER to "Return",
         KeyEvent.KEYCODE_SPACE to "Space",
-        KeyEvent.KEYCODE_DEL to "Delete",
-        KeyEvent.KEYCODE_FORWARD_DEL to "Backspace",
+        KeyEvent.KEYCODE_DEL to "Backspace",
+        KeyEvent.KEYCODE_FORWARD_DEL to "Delete",
         KeyEvent.KEYCODE_TAB to "Tab",
         KeyEvent.KEYCODE_ESCAPE to "Escape"
     )
