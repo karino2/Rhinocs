@@ -123,9 +123,10 @@ class Buffer {
         if (pFrom.linenum == pTo.linenum) {
             lines[pFrom.linenum].delete(pFrom.offset, pTo.offset)
         } else {
+            val suffix = lines[pTo.linenum].substring(pTo.offset)
             lines[pFrom.linenum].delete(pFrom.offset, lines[pFrom.linenum].length)
-            lines[pTo.linenum].delete(0, pTo.offset)
-            for (i in pTo.linenum - 1 downTo pFrom.linenum + 1) {
+            lines[pFrom.linenum].append(suffix)
+            for (i in pTo.linenum downTo pFrom.linenum + 1) {
                 lines.removeAt(i)
             }
         }

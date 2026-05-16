@@ -38,6 +38,36 @@ class BufferTest {
     }
 
     @Test
+    fun deleteRegion_basic() {
+        val buf = Buffer.fromText("abc\ndef")
+        val count = buf.deleteRegion(1, 2)
+        assertEquals(1, count)
+        assertEquals("ac", buf.getLine(0))
+        assertEquals("def", buf.getLine(1))
+    }
+
+    @Test
+    fun deleteRegion_deleteEOL_concat() {
+        val buf = Buffer.fromText("abc\ndef")
+        val count = buf.deleteRegion(3, 4)
+        assertEquals(1, count)
+        assertEquals("abcdef", buf.getLine(0))
+        assertEquals(1, buf.numLines)
+    }
+
+    @Test
+    fun deleteRegion_multiLines() {
+        // 012 3 456 7 890
+        // abc \n def \n ghi
+        val buf = Buffer.fromText("abc\ndef\nghi")
+        // "c\ndef\ng" を削除 (2から9まで)
+        val count = buf.deleteRegion(2, 9)
+        assertEquals(7, count)
+        assertEquals("abhi", buf.getLine(0))
+        assertEquals(1, buf.numLines)
+    }
+
+    @Test
     fun toPoint_basic() {
         val buf = Buffer.fromText("abc\ndef")
         val actual = buf.toPoint(1)
