@@ -52,7 +52,7 @@ class RView @JvmOverloads constructor(
         window.numRows = ((h - margin) / cellHeight).toInt()
     }
 
-    val window = Window().apply { buffer = Buffer.fromText("Hello, Rhinocs!日本語\n二行目") }
+    val window = Window().apply { buffer = Buffer() }
 
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {

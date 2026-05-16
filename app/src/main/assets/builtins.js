@@ -18,20 +18,27 @@ function saveBuffer() {
    show_toast("Saved!");
 }
 
-function nextLine(delta=1) {
+function next_line(delta=1) {
     let goal = goal_column();
     forward_line(delta);
     goto_column(goal);
     set_goal_column(goal);
 }
 
-function previousLine(delta=1) {
+function previous_line(delta=1) {
     let goal = goal_column();
     backward_line(delta);
     goto_column(goal);
     set_goal_column(goal);
 }
 
+function beginning_of_buffer() {
+  goto_char(0)
+}
+
+function end_of_buffer() {
+  goto_char(point_max());
+ }
 
 let lastKeySequence = []
 
@@ -68,24 +75,22 @@ let defSelfKeys = default_self_insert_keys();
 let keyMap = {};
 defSelfKeys.forEach(k => keyMap[k] = self_insert);
 
-keyMap["Left"] = backward_char;
-keyMap["Right"] = forward_char;
-keyMap["Up"] = previousLine;
-keyMap["Down"] = nextLine;
 keyMap["Space"] = ()=> { insert(" "); }
 keyMap["Return"] = ()=> { insert("\n"); }
 keyMap["Backspace"] = delete_backward_char;
 
 defineKey(keyMap, "Left", backward_char)
 defineKey(keyMap, "Right", forward_char)
-defineKey(keyMap, "Down", nextLine)
-defineKey(keyMap, "Up", previousLine)
+defineKey(keyMap, "Down", next_line)
+defineKey(keyMap, "Up", previous_line)
 defineKey(keyMap, "C-b", backward_char)
 defineKey(keyMap, "C-f", forward_char)
-defineKey(keyMap, "C-n", nextLine);
-defineKey(keyMap, "C-p", previousLine);
+defineKey(keyMap, "C-n", next_line);
+defineKey(keyMap, "C-p", previous_line);
 defineKey(keyMap, ["C-x", "C-s"], saveBuffer);
 defineKey(keyMap, ["C-x", "C-f"], find_file);
+defineKey(keyMap, "M->", end_of_buffer);
+defineKey(keyMap, "M-<", beginning_of_buffer);
 
 function defaultOnKeyDown(str) {
     print(`deb: ${JSON.stringify(lastKeySequence)}, ${str}`);

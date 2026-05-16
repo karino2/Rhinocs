@@ -5,10 +5,11 @@ import kotlin.math.max
 import kotlin.math.min
 
 class Buffer {
+
     // 対応するfileがあれば入る。なければnull
     var url: Uri? = null
 
-    val lines = ArrayList<StringBuilder>()
+    val lines = ArrayList<StringBuilder>().apply { add(StringBuilder()) }
     val numLines: Int
         get() = lines.size
     fun load(text: String) {
@@ -129,7 +130,7 @@ class Buffer {
         return Point(linenum, offset, prev+offset)
     }
 
-    val lastPoint : Long
+    val pointMax : Long
         get() = lines.sumOf { it.length.toLong()+1 }
 
     fun findLine(pos: Long): Int {

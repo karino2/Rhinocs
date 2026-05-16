@@ -32,12 +32,14 @@ class Interpreter {
         withContext {
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
+            global.rview.invalidate()
         }
     }
 
     fun resume(cc: ContinuationPending, result: Any) {
         withContext {
             it.resumeContinuation(cc.continuation, global, result)
+            global.rview.invalidate()
         }
     }
 

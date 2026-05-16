@@ -57,6 +57,8 @@ class LineAnalyzer {
                 return index
             sum += charWidth(ch)
         }
+        if (sum >= column)
+            return line.length
         throw IndexOutOfBoundsException("column is out of bounds")
     }
 

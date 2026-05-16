@@ -32,6 +32,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "set_goal_column",
             "goal_column",
             "goto_column",
+            "point_max",
+            "goto_char",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -88,7 +90,6 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
         glob.rview.getWindow().forwardChar(delta);
-        glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
 
@@ -98,7 +99,6 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
         glob.rview.getWindow().backwardChar(delta);
-        glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
 
@@ -108,7 +108,6 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
         glob.rview.getWindow().moveLineDelta(delta);
-        glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
 
@@ -118,7 +117,6 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
         glob.rview.getWindow().moveLineDelta(-delta);
-        glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
 
@@ -128,7 +126,6 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("non insert argument.");
         String content = Context.toString(args[0]);
         glob.getWindow().insert(content);
-        glob.rview.invalidate();
         return Context.getUndefinedValue();
     }
 
@@ -206,6 +203,19 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("goto_column must be 1 arg.");
         int column = (int) Context.toNumber(args[0]);
         return glob.getWindow().gotoColumn(column);
+    }
+    public static Object point_max(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getWindow().getPointMax();
+    }
+
+    public static Object goto_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("goto_char must be 1 arg.");
+        long pos = (long) Context.toNumber(args[0]);
+        glob.getWindow().gotoChar(pos);
+        return Context.getUndefinedValue();
     }
     public void openUri(Uri uri) {
         rview.loadFile(activity.getContentResolver(), uri);

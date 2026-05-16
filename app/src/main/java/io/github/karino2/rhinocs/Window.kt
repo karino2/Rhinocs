@@ -34,6 +34,9 @@ class Window {
         goalColumn = null
     }
 
+    val pointMax: Long
+        get() = buffer.pointMax
+
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         FastFile.fromDocUri(resolver, uri)?.let {
             buffer = Buffer.fromText(it.readText())
@@ -163,5 +166,10 @@ class Window {
         val offset = lineBuilder.columnToOffset(targetLine, actual)
         point = buffer.toPoint(point.linenum, offset)
         return actual
+    }
+
+    fun gotoChar(pos: Long) {
+        resetGoalGolumn()
+        point = buffer.toPoint(pos)
     }
 }
