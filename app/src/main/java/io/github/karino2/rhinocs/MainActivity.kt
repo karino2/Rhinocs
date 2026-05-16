@@ -74,6 +74,7 @@ class MainActivity : AppCompatActivity() {
                 keyMap["Left"] = backward_char;
                 keyMap["Right"] = forward_char;
                 keyMap["Space"] = ()=> { insert(" "); }
+                keyMap["Return"] = ()=> { insert("\n"); }
                 
                 function defaultOnKeyDown(str) {
                     print("deb:", str);

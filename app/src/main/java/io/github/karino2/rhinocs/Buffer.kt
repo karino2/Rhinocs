@@ -17,7 +17,19 @@ class Buffer {
     fun getLine(linenum: Int) = lines[linenum].toString()
 
     fun insert(at: Point, content: String) : Point {
-        lines[at.linenum].insert(at.offset, content)
+        val clines = content.split('\n')
+
+        lines[at.linenum].insert(at.offset, clines[0])
+        val restLines = clines.drop(1)
+        if (restLines.isNotEmpty()) {
+            val firstLineEndPos = at.offset+clines[0].length
+            val restOfFirstLine = lines[at.linenum].substring(firstLineEndPos)
+            lines[at.linenum].delete(firstLineEndPos, lines[at.linenum].length)
+            restLines.forEachIndexed { index, line ->
+                lines.add(at.linenum+1+index, StringBuilder().apply{ append(line) } )
+            }
+            lines[at.linenum+restLines.size].append(restOfFirstLine)
+        }
         return forwardChar(at, content.length)
     }
 
