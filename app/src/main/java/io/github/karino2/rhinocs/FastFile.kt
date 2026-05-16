@@ -8,8 +8,11 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import java.io.BufferedWriter
 import java.io.FileInputStream
+import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.util.Date
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 // similar to DocumentFile, but store metadata at first query.
 // Copied from TextTL.
@@ -105,6 +108,19 @@ data class FastFile(val uri: Uri, val name: String, val lastModified: Long, val 
         val writer = BufferedWriter(OutputStreamWriter(it))
         writer.use {
             writer.write(content)
+        }
+    }
+
+    fun readGZIPText() = resolver.openInputStream(uri)!!.use {
+        val gzis = GZIPInputStream(it)
+        gzis.bufferedReader().use { reader -> reader.readText() }
+    }
+
+    fun writeGZIPText(content: String) = resolver.openOutputStream(uri, "wt").use {
+        val gzos = GZIPOutputStream(it)
+        val writer = BufferedWriter(OutputStreamWriter(gzos))
+        writer.use { w ->
+            w.write(content)
         }
     }
 

@@ -124,7 +124,20 @@ class MainActivity : AppCompatActivity() {
         packageDirUri?.let { ini ->
             val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return ""
             return file.readText()
-        } ?: return ""
+        }
+        return ""
+    }
+
+    fun readGZIPFileContent(fileName: String) : String {
+        val startTime = System.currentTimeMillis()
+        packageDirUri?.let { ini ->
+            val file = FastFile.fromTreeUri(this, ini).findFile(fileName) ?: return ""
+            val content = file.readGZIPText()
+            val endTime = System.currentTimeMillis()
+            println("readGZIPFileContent: finished in ${endTime - startTime} ms")
+            return content
+        }
+        return ""
     }
 
     private fun readAsset(fileName: String): String {

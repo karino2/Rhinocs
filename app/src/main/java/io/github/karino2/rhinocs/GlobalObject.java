@@ -36,6 +36,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "goto_char",
             "window_height",
             "scroll_window",
+            "read_gzip_file",
+            "load_gzip_skk_dictionary",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -51,6 +53,9 @@ public class GlobalObject  extends ImporterTopLevel {
 
     static GlobalObject getInstance(Function funcObj) {
         Scriptable scope = funcObj.getParentScope();
+        while (scope != null && !(scope instanceof GlobalObject)) {
+            scope = scope.getParentScope();
+        }
         if (!(scope instanceof GlobalObject))
             throw new IllegalArgumentException("non GlobalObject func obj.");
         return (GlobalObject) scope;
@@ -143,6 +148,25 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
         return glob.activity.readFileContent(fname);
+    }
+
+    public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("non file name argument.");
+        String fname = Context.toString(args[0]);
+        return glob.activity.readGZIPFileContent(fname);
+    }
+
+    public static Object load_gzip_skk_dictionary(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("load_gzip_skk_dictionary must be 1 arg.");
+        String fname = Context.toString(args[0]);
+        String content = glob.activity.readGZIPFileContent(fname);
+        
+        SkkDictionary skk = new SkkDictionary();
+        return skk.parseData(ctx, funcObj.getParentScope(), content);
     }
 
     public static Object point(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
