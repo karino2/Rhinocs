@@ -119,24 +119,37 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitScript() {
-        loadPackageJS("skk/skk_all.js", "Init js load fail: ")
+        loadPackageJS("skk/skk_all.js", "*script*", "Init js load fail: ")
     }
 
-    private fun loadPackageJS(relativePath: String, errorLabel: String) {
-        packageDirUri?.let { ini ->
-            val file = FastFile.fromTreeUri(this, ini).findFileRec(relativePath) ?: return
-            val scripts = file.readText()
-            runScript(scripts, relativePath, errorLabel)
-        }
+    fun sourceDirPath(sourceName: String) : List<String> {
+        if (sourceName.startsWith("*"))
+            return emptyList()
+        return sourceName.split("/").dropLast(1)
+    }
+
+    private fun mergePath(relativePath: String, fromSource: String) : String {
+        val sourceDirs = sourceDirPath(fromSource)
+        if(sourceDirs.isEmpty())
+            return relativePath
+        if (relativePath.startsWith("*"))
+            return relativePath
+        return listOf(sourceDirs.joinToString("/"), relativePath).joinToString("/")
+    }
+
+    fun loadPackageJS(relativePath: String, fromSource: String, errorLabel: String) {
+        findSourceFile(fromSource, relativePath)
+        val content = readFileContent(relativePath, fromSource)
+        if(content.isEmpty()) return
+
+        val path = mergePath(relativePath, fromSource)
+        runScript(content, path, errorLabel)
     }
 
     fun sourceDir(sourceName: String) : FastFile? {
         packageDirUri?.let { ini ->
             val root = FastFile.fromTreeUri(this, ini)
-            if (sourceName.startsWith("*"))
-                return root
-            return sourceName.split("/").dropLast(1)
-                .fold(root as FastFile?) { acc, dirName ->
+            return sourceDirPath(sourceName).fold(root as FastFile?) { acc, dirName ->
                     acc?.findFile(dirName)
                 }
         }
@@ -154,7 +167,7 @@ class MainActivity : AppCompatActivity() {
 
     fun readGZIPFileContent(fileName: String, fromSource: String) : String {
         val startTime = System.currentTimeMillis()
-        val content = findSourceFile(fromSource, fileName)?.readGZIPText() ?: ""
+        val content = findSourceFile(fromSource, fileName)?.readGZIPText() ?: return ""
         val endTime = System.currentTimeMillis()
         println("readGZIPFileContent: finished in ${endTime - startTime} ms")
         return content
