@@ -34,6 +34,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "goto_column",
             "point_max",
             "goto_char",
+            "window_height",
+            "scroll_window",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -215,6 +217,20 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("goto_char must be 1 arg.");
         long pos = (long) Context.toNumber(args[0]);
         glob.getWindow().gotoChar(pos);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object window_height(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getWindow().getNumRows();
+    }
+
+    public static Object scroll_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("scroll_window must be 1 arg.");
+        int delta = (int) Context.toNumber(args[0]);
+        glob.getWindow().scrollWindow(delta);
         return Context.getUndefinedValue();
     }
     public void openUri(Uri uri) {

@@ -40,6 +40,15 @@ function end_of_buffer() {
   goto_char(point_max());
  }
 
+function next_page() {
+  scroll_window(Math.floor(window_height()-2))
+}
+
+function previous_page() {
+  scroll_window(-Math.floor(window_height()-2))
+}
+
+
 let lastKeySequence = []
 
 function defineKey(kmap, keySeq, func) {
@@ -91,6 +100,8 @@ defineKey(keyMap, ["C-x", "C-s"], saveBuffer);
 defineKey(keyMap, ["C-x", "C-f"], find_file);
 defineKey(keyMap, "M->", end_of_buffer);
 defineKey(keyMap, "M-<", beginning_of_buffer);
+defineKey(keyMap, "C-v", next_page)
+defineKey(keyMap, "M-v", previous_page)
 
 function defaultOnKeyDown(str) {
     print(`deb: ${JSON.stringify(lastKeySequence)}, ${str}`);

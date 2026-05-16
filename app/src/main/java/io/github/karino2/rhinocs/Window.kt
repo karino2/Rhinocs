@@ -2,6 +2,7 @@ package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
 import android.net.Uri
+import kotlin.math.max
 import kotlin.math.min
 
 class Window {
@@ -173,5 +174,19 @@ class Window {
     fun gotoChar(pos: Long) {
         resetGoalGolumn()
         point = buffer.toPoint(pos)
+    }
+
+    fun scrollWindow(delta: Int) : Boolean{
+        val goalLine = (point.linenum+delta).coerceAtLeast(0)
+        if (goalLine == point.linenum)
+            return false
+
+        if (goalLine > buffer.numLines)
+            return false;
+
+        lastOffset = lastOffset.copy(row=goalLine)
+        moveLineDelta(delta)
+        gotoColumn(computeGoalGolumn())
+        return true
     }
 }
