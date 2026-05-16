@@ -1,6 +1,11 @@
 package io.github.karino2.rhinocs
 
+import android.net.Uri
+
 class Buffer {
+    // 対応するfileがあれば入る。なければnull
+    var url: Uri? = null
+
     val lines = ArrayList<StringBuilder>()
     val numLines: Int
         get() = lines.size
@@ -12,6 +17,10 @@ class Buffer {
                 lines.add(it)
             }
         }
+    }
+
+    fun toText() :String {
+        return lines.joinToString("\n")
     }
 
     fun getLine(linenum: Int) = lines[linenum].toString()

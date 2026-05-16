@@ -21,7 +21,17 @@ class Window {
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         FastFile.fromDocUri(resolver, uri)?.let {
             buffer = Buffer.fromText(it.readText())
+            buffer.url = uri
         }
+    }
+
+    fun saveBuffer(resolver: ContentResolver) : Boolean {
+        return buffer.url?.let {
+            FastFile.fromDocUri(resolver, it)?.let {ff->
+                ff.writeText(buffer.toText())
+                true
+            }
+        } ?: false
     }
 
     val lineBuilder = LineAnalyzer()

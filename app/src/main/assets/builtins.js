@@ -44,15 +44,21 @@ keyMap["Space"] = ()=> { insert(" "); }
 keyMap["Return"] = ()=> { insert("\n"); }
 keyMap["Backspace"] = delete_backward_char;
 
-
-function save_buffer() {
-  print("SaveBuffer!");
+function find_file() {
+   let uri = select_file("*/*");
+   open_uri(uri);
 }
 
-defineKey(keyMap, ["C-x", "C-s"], save_buffer)
+function saveBuffer() {
+   save_buffer();
+   show_toast("Saved!");
+}
+
+defineKey(keyMap, ["C-x", "C-s"], saveBuffer);
+defineKey(keyMap, ["C-x", "C-f"], find_file);
 
 function defaultOnKeyDown(str) {
-    print("deb:", str);
+    print(`deb: ${str}, ${JSON.stringify(lastKeySequence)}`);
 
     let lmap = lookupLastMap(keyMap, lastKeySequence);
     if (lmap) {

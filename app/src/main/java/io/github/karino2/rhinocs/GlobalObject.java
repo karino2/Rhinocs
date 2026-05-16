@@ -24,6 +24,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "read_file",
             "point",
             "delete_region",
+            "save_buffer",
+            "show_toast",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -135,6 +137,19 @@ public class GlobalObject  extends ImporterTopLevel {
         long end = Math.max(p1, p2);
 
         return glob.getWindow().deleteRegion(start, end);
+    }
+
+    public static Object save_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getWindow().saveBuffer(glob.activity.getContentResolver());
+    }
+
+    public static Object show_toast(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("show_toast must be 1 arg.");
+        glob.activity.showMessage(Context.toString(args[0]));
+        return Context.getUndefinedValue();
     }
 
     public void openUri(Uri uri) {

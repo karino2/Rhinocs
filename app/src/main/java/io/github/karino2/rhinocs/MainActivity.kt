@@ -35,6 +35,8 @@ class MainActivity : AppCompatActivity() {
         fun showMessage(ctx: Context, msg : String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
     }
 
+    fun showMessage(msg : String) = showMessage(this, msg)
+
     private val getFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         uri?.let {
             contentResolver.takePersistableUriPermission(
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity() {
             runScript($$"onKeyDown($key);")
         }
         findViewById<Button>(R.id.buttonDeb1).setOnClickListener {
-            runScript("""let uri = select_file("*/*"); print(uri); open_uri(uri);""")
+            runScript("""find_file();""")
         }
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
             getPackageDirUri.launch(null)
