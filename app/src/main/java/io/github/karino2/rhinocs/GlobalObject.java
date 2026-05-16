@@ -19,6 +19,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "open_uri",
             "forward_char",
             "backward_char",
+            "forward_line",
+            "backward_line",
             "insert",
             "default_self_insert_keys",
             "read_file",
@@ -26,6 +28,10 @@ public class GlobalObject  extends ImporterTopLevel {
             "delete_region",
             "save_buffer",
             "show_toast",
+            "point_column",
+            "set_goal_column",
+            "goal_column",
+            "goto_column",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -96,6 +102,26 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
+    public static Object forward_line(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        int delta = 1;
+        if (args.length != 0)
+            delta = (int) Context.toNumber(args[0]);
+        glob.rview.getWindow().moveLineDelta(delta);
+        glob.rview.invalidate();
+        return Context.getUndefinedValue();
+    }
+
+    public static Object backward_line(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        int delta = 1;
+        if (args.length != 0)
+            delta = (int) Context.toNumber(args[0]);
+        glob.rview.getWindow().moveLineDelta(-delta);
+        glob.rview.invalidate();
+        return Context.getUndefinedValue();
+    }
+
     public static Object insert(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         if (args.length != 1)
@@ -152,6 +178,35 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
+    public static Object point_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("point_column must be 1 arg.");
+        long pos = (long)Context.toNumber(args[0]);
+        return glob.getWindow().pontToColumn(pos);
+    }
+
+    public static Object set_goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("set_goal_column must be 1 arg.");
+        int column = (int) Context.toNumber(args[0]);
+        glob.getWindow().setGoalColumn(column);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getWindow().computeGoalGolumn();
+    }
+
+    public static Object goto_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("goto_column must be 1 arg.");
+        int column = (int) Context.toNumber(args[0]);
+        return glob.getWindow().gotoColumn(column);
+    }
     public void openUri(Uri uri) {
         rview.loadFile(activity.getContentResolver(), uri);
     }

@@ -18,10 +18,29 @@ function saveBuffer() {
    show_toast("Saved!");
 }
 
+function nextLine(delta=1) {
+    let goal = goal_column();
+    forward_line(delta);
+    goto_column(goal);
+    set_goal_column(goal);
+}
+
+function previousLine(delta=1) {
+    let goal = goal_column();
+    backward_line(delta);
+    goto_column(goal);
+    set_goal_column(goal);
+}
+
 
 let lastKeySequence = []
 
 function defineKey(kmap, keySeq, func) {
+  if (typeof keySeq === 'string') {
+    kmap[keySeq] = func;
+    return;
+  }
+
   let current = kmap;
   for(let i = 0; i < keySeq.length-1; i++) {
     let k = keySeq[i];
@@ -51,11 +70,20 @@ defSelfKeys.forEach(k => keyMap[k] = self_insert);
 
 keyMap["Left"] = backward_char;
 keyMap["Right"] = forward_char;
+keyMap["Up"] = previousLine;
+keyMap["Down"] = nextLine;
 keyMap["Space"] = ()=> { insert(" "); }
 keyMap["Return"] = ()=> { insert("\n"); }
 keyMap["Backspace"] = delete_backward_char;
 
-
+defineKey(keyMap, "Left", backward_char)
+defineKey(keyMap, "Right", forward_char)
+defineKey(keyMap, "Down", nextLine)
+defineKey(keyMap, "Up", previousLine)
+defineKey(keyMap, "C-b", backward_char)
+defineKey(keyMap, "C-f", forward_char)
+defineKey(keyMap, "C-n", nextLine);
+defineKey(keyMap, "C-p", previousLine);
 defineKey(keyMap, ["C-x", "C-s"], saveBuffer);
 defineKey(keyMap, ["C-x", "C-f"], find_file);
 

@@ -1,6 +1,8 @@
 package io.github.karino2.rhinocs
 
 import android.net.Uri
+import kotlin.math.max
+import kotlin.math.min
 
 class Buffer {
     // 対応するfileがあれば入る。なければnull
@@ -40,6 +42,16 @@ class Buffer {
             lines[at.linenum+restLines.size].append(restOfFirstLine)
         }
         return forwardChar(at, content.length)
+    }
+
+    fun forwardLine(from: Point, delta: Int) : Point {
+        val destLine = min(lines.size-1, from.linenum+delta)
+        return toPoint(destLine, 0)
+    }
+
+    fun backwardLine(from: Point, delta: Int) : Point {
+        val destLine = max(0, from.linenum-delta)
+        return toPoint(destLine, 0)
     }
 
     fun forwardChar(from: Point, delta: Int) : Point {
@@ -104,6 +116,17 @@ class Buffer {
         }
         val lastIdx = (lines.size - 1).coerceAtLeast(0)
         return Point(lastIdx, lines[lastIdx].length, total)
+    }
+
+    // 何行目の何文字めか、からPointを作る。先頭から何文字めか数える必要があるのでBufferのメソッドで。
+    fun toPoint(linenum: Int, offset: Int) : Point {
+        assert(linenum < lines.size)
+
+        if (linenum == 0)
+            return Point(0, offset, offset.toLong())
+
+        val prev = lines.take(linenum-1).sumOf { it.length.toLong()+1 }
+        return Point(linenum, offset, prev+offset)
     }
 
     val lastPoint : Long

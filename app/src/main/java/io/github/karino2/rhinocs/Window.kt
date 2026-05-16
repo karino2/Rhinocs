@@ -2,6 +2,7 @@ package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
 import android.net.Uri
+import kotlin.math.min
 
 class Window {
     var point = Point(0, 0, 0)
@@ -18,10 +19,26 @@ class Window {
     var numRows = 0
     var numCols = 0
 
+    var goalColumn : Int? = null
+
+    fun computeGoalGolumn() : Int {
+        goalColumn?.let {
+            return it
+        }
+        val col = pointColumn
+        goalColumn = col
+        return col
+    }
+
+    fun resetGoalGolumn() {
+        goalColumn = null
+    }
+
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         FastFile.fromDocUri(resolver, uri)?.let {
             buffer = Buffer.fromText(it.readText())
             buffer.url = uri
+            resetGoalGolumn()
         }
     }
 
@@ -91,6 +108,7 @@ class Window {
 
     fun insert(content: String) {
         point = buffer.insert(point, content)
+        resetGoalGolumn()
     }
 
     // 削除した文字数を返す
@@ -108,9 +126,42 @@ class Window {
     }
 
     fun moveCharDelta(delta: Int) {
+        resetGoalGolumn()
+
         if(delta > 0)
             point = buffer.forwardChar(point, delta)
         else
             point = buffer.backwardChar(point, -delta)
+    }
+
+    fun moveLineDelta(delta: Int) {
+        resetGoalGolumn()
+
+        if(delta > 0)
+            point = buffer.forwardLine(point, delta)
+        else
+            point = buffer.backwardLine(point, -delta)
+    }
+
+    fun pontToColumn(pos: Long): Int {
+        val pt = buffer.toPoint(pos)
+        return lineBuilder.pointToColumn(buffer, pt)
+    }
+
+    // 実際に移動出来たカラム を返す。行末かcolumnかcolumn下が全角の右側ならcolumn-1を返す。
+    fun gotoColumn(column: Int): Int {
+        if (column == 0)
+            return column
+        val targetLine = buffer.getLine(point.linenum)
+        val maxCol = lineBuilder.maxColumn(targetLine)
+        if (maxCol < column) {
+            point = buffer.toPoint(point.linenum, targetLine.length)
+            return maxCol
+        }
+        val info = lineBuilder.buildInfo(targetLine, 0, column+1)
+        val actual = if (info[column].isEmpty) { column - 1 } else { column }
+        val offset = lineBuilder.columnToOffset(targetLine, actual)
+        point = buffer.toPoint(point.linenum, offset)
+        return actual
     }
 }

@@ -35,10 +35,43 @@ data class Cell(val ch: Char, val ctype: CellType) {
 }
 
 class LineAnalyzer {
-    fun pointToColumn(buf: Buffer, point: Point) : Int {
-        val line = buf.getLine(point.linenum)
-        return line.take(point.offset).map { if(isFullWidth(it)) { 2 } else { 1 } }.sum()
+    fun offsetToColumn(buf: Buffer, linenum: Int, offset: Int) : Int {
+        val line = buf.getLine(linenum)
+        return offsetToColumn(line, offset)
+
     }
+
+    fun offsetToColumn(line: String, offset: Int): Int {
+        return line.take(offset).map {
+            charWidth(it)
+        }.sum()
+    }
+
+    private fun charWidth(ch: Char): Int = if (isFullWidth(ch)) { 2 } else { 1 }
+
+    // columnを最初に越えたoffsetを返す。
+    fun columnToOffset(line: String, column: Int): Int {
+        var sum = 0
+        line.forEachIndexed { index, ch ->
+            if (sum >= column)
+                return index
+            sum += charWidth(ch)
+        }
+        throw IndexOutOfBoundsException("column is out of bounds")
+    }
+
+    // その行の右端のカラムを返す。
+    // maxColumnと同じカラムは有効。
+    fun maxColumn(buf: Buffer, linenum: Int) : Int {
+        val line = buf.getLine(linenum)
+        return maxColumn(line)
+    }
+
+    fun maxColumn(line: String): Int {
+        return offsetToColumn(line, line.length)
+    }
+
+    fun pointToColumn(buf: Buffer, point: Point) = offsetToColumn(buf, point.linenum, point.offset)
 
     fun buildInfo(line: String, colOffset: Int, numCols: Int) : ArrayList<Cell> {
         val cells = ArrayList<Cell>()
