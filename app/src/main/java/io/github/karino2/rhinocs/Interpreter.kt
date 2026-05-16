@@ -30,10 +30,11 @@ class Interpreter {
 
     fun run(script: String, fileName:String ="*script*") {
         withContext {
-            global.currentFileName = fileName
+            global.pushCurrentSourcePath(fileName)
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             global.rview.invalidate()
+            global.popCurrentSourcePath()
         }
     }
 
@@ -41,6 +42,7 @@ class Interpreter {
         withContext {
             it.resumeContinuation(cc.continuation, global, result)
             global.rview.invalidate()
+            global.popCurrentSourcePath()
         }
     }
 

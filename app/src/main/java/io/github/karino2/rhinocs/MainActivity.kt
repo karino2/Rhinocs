@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitScript() {
-        loadPackageJS("skk/skk_all.js", "*script*", "Init js load fail: ")
+        loadPackageJS("skk/skk_all.js", "*script*")
     }
 
     fun sourceDirPath(sourceName: String) : List<String> {
@@ -137,13 +137,16 @@ class MainActivity : AppCompatActivity() {
         return listOf(sourceDirs.joinToString("/"), relativePath).joinToString("/")
     }
 
-    fun loadPackageJS(relativePath: String, fromSource: String, errorLabel: String) {
+    fun loadPackageJS(relativePath: String, fromSource: String) {
         findSourceFile(fromSource, relativePath)
         val content = readFileContent(relativePath, fromSource)
-        if(content.isEmpty()) return
+        if(content.isEmpty()) {
+            showMessage("Fail to load: $relativePath")
+            return
+        }
 
         val path = mergePath(relativePath, fromSource)
-        runScript(content, path, errorLabel)
+        runScript(content, path)
     }
 
     fun sourceDir(sourceName: String) : FastFile? {
@@ -177,7 +180,7 @@ class MainActivity : AppCompatActivity() {
         return assets.open(fileName).bufferedReader().use { it.readText() }
     }
 
-    private fun runScript(script: String, fileName: String="*script*", errorLabel: String = "") {
+    private fun runScript(script: String, fileName: String="*script*") {
         try {
             interpreter.run(script, fileName)
         } catch (e: ContinuationPending) {
@@ -187,8 +190,8 @@ class MainActivity : AppCompatActivity() {
                 GlobalObject.REQUEST_SELECT_FILE -> getFileUriFromScript.launch(rarg.arg as Array<String>)
             }
         } catch(e : EcmaError) {
-            val msg = "$errorLabel: $e"
-            showMessage(this, msg)
+            val msg = "$e"
+            showMessage(this, "$e")
             println(msg)
         }
     }

@@ -40,6 +40,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "scroll_window",
             "read_gzip_file",
             "load_gzip_skk_dictionary",
+            "load_js",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -48,9 +49,15 @@ public class GlobalObject  extends ImporterTopLevel {
     public RView rview;
     public Window getWindow() { return rview.getWindow(); }
 
-    public String currentFileName = "*script*";
+    public ArrayList<String> fileNameStack;
+
+    public void popCurrentSourcePath() { fileNameStack.remove(fileNameStack.size()-1); }
+    public void pushCurrentSourcePath(String newPath) { fileNameStack.add(newPath); }
+    public String getCurrentSourcePath() { return fileNameStack.get(fileNameStack.size()-1); }
 
     public GlobalObject(Context ctx) {
+        fileNameStack = new ArrayList<String>();
+        fileNameStack.add("*script*");
         initStandardObjects(ctx, true);
         defineFunctionProperties(TOP_COMMANDS, GlobalObject.class, ScriptableObject.DONTENUM);
     }
@@ -151,7 +158,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
-        return glob.activity.readFileContent(fname, glob.currentFileName);
+        return glob.activity.readFileContent(fname, glob.getCurrentSourcePath());
     }
 
     public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -159,7 +166,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
-        return glob.activity.readGZIPFileContent(fname, glob.currentFileName);
+        return glob.activity.readGZIPFileContent(fname, glob.getCurrentSourcePath());
     }
 
     public static Object load_gzip_skk_dictionary(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -167,11 +174,21 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("load_gzip_skk_dictionary must be 1 arg.");
         String fname = Context.toString(args[0]);
-        String content = glob.activity.readGZIPFileContent(fname, glob.currentFileName);
+        String content = glob.activity.readGZIPFileContent(fname, glob.getCurrentSourcePath());
         
         SkkDictionary skk = new SkkDictionary();
         return skk.parseData(ctx, funcObj.getParentScope(), content);
     }
+
+    public static Object load_js(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("load_js must be 1 arg.");
+        String fname = Context.toString(args[0]);
+        glob.activity.loadPackageJS(fname, glob.getCurrentSourcePath());
+        return Context.getUndefinedValue();
+    }
+
 
     public static Object point(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
