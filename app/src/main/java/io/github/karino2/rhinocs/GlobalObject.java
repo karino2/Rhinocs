@@ -12,6 +12,8 @@ import org.mozilla.javascript.ScriptableObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.Pair;
+
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
             "print",
@@ -40,7 +42,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "scroll_window",
             "read_gzip_file",
             "load_gzip_skk_dictionary",
-            "load_js",
+            "request_load_js",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -49,15 +51,27 @@ public class GlobalObject  extends ImporterTopLevel {
     public RView rview;
     public Window getWindow() { return rview.getWindow(); }
 
-    public ArrayList<String> fileNameStack;
+    public ArrayList<Pair<String, String>> loadRequestsQueue;
 
-    public void popCurrentSourcePath() { fileNameStack.remove(fileNameStack.size()-1); }
-    public void pushCurrentSourcePath(String newPath) { fileNameStack.add(newPath); }
-    public String getCurrentSourcePath() { return fileNameStack.get(fileNameStack.size()-1); }
+    public void pushLoadRequest(String relativePath) {
+        loadRequestsQueue.add(new Pair<>(relativePath, getCurrentSourcePath()));
+    }
+
+    public boolean hasPendingRequest() { return !loadRequestsQueue.isEmpty(); }
+    public Pair<String, String> popLoadRequest() {
+        Pair<String, String> first = loadRequestsQueue.get(0);
+        loadRequestsQueue.remove(0);
+        return first;
+    }
+
+    private String currentSourceName;
+
+    public void setCurrentSourcePath(String newPath) { currentSourceName = newPath; }
+    public String getCurrentSourcePath() { return currentSourceName; }
 
     public GlobalObject(Context ctx) {
-        fileNameStack = new ArrayList<String>();
-        fileNameStack.add("*script*");
+        loadRequestsQueue = new ArrayList<>();
+        currentSourceName = "*script*";
         initStandardObjects(ctx, true);
         defineFunctionProperties(TOP_COMMANDS, GlobalObject.class, ScriptableObject.DONTENUM);
     }
@@ -180,12 +194,15 @@ public class GlobalObject  extends ImporterTopLevel {
         return skk.parseData(ctx, funcObj.getParentScope(), content);
     }
 
-    public static Object load_js(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+    // load_jsは再入してしまうと以下のexceptionがでてしまったので、リクエストをpushするだけにして遅延ロードするようにする。
+    // たぶんコンテキストとかをちゃんと使い回せば平気なんだろうけれど、その中からopen_fileなどのpending continuation系が呼ばれるとややこしいので。
+    // org.mozilla.javascript.WrappedException: Wrapped java.lang.IllegalStateException: Cannot have any pending top calls when executing a script with continuations
+    public static Object request_load_js(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         if (args.length != 1)
-            throw new IllegalArgumentException("load_js must be 1 arg.");
+            throw new IllegalArgumentException("request_load_js must be 1 arg.");
         String fname = Context.toString(args[0]);
-        glob.activity.loadPackageJS(fname, glob.getCurrentSourcePath());
+        glob.pushLoadRequest(fname);
         return Context.getUndefinedValue();
     }
 

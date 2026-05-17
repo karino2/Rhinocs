@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitScript() {
-        loadPackageJS("skk/skk_all.js", "*script*")
+        loadPackageJS("init.js", "*script*")
     }
 
     fun sourceDirPath(sourceName: String) : List<String> {

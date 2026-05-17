@@ -30,19 +30,26 @@ class Interpreter {
 
     fun run(script: String, fileName:String ="*script*") {
         withContext {
-            global.pushCurrentSourcePath(fileName)
+            global.setCurrentSourcePath(fileName)
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             global.rview.invalidate()
-            global.popCurrentSourcePath()
         }
+        runPendingRequest()
     }
 
     fun resume(cc: ContinuationPending, result: Any) {
         withContext {
             it.resumeContinuation(cc.continuation, global, result)
             global.rview.invalidate()
-            global.popCurrentSourcePath()
+        }
+        runPendingRequest()
+    }
+
+    private fun runPendingRequest() {
+        if (global.hasPendingRequest()) {
+            val req = global.popLoadRequest()
+            global.activity.loadPackageJS(req.first, req.second)
         }
     }
 
