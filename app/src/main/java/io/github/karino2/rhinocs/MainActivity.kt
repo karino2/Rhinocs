@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadInitScript() {
         loadPackageJS("init.js", "*script*")
+        showMessage("init.js loaded.")
     }
 
     fun sourceDirPath(sourceName: String) : List<String> {
