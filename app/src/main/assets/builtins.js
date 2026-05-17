@@ -51,6 +51,10 @@ function previous_page() {
 function beginning_of_line() { goto_bol(); }
 function end_of_line() { goto_eol(); }
 
+/*
+  KeyMap関連。ひとまずここに置く。
+*/
+
 function KeyMap() {
   this.keyMap = {};
 }
@@ -89,6 +93,27 @@ KeyMap.prototype.defineDefaultSelfInsert = function() {
     defSelfKeys.forEach(k => this.keyMap[k] = self_insert);
 }
 
+KeyMap.prototype.cloneDict = function(kmapDict) {
+  let newDict = {};
+  for(let k in kmapDict) {
+    let v = kmapDict[k];
+    if (typeof v === 'function') {
+      newDict[k] = v;
+    }
+    else if (v !== null && typeof v === 'object') {
+      newDict[k] = this.cloneDict(v);
+    }
+  }
+  return newDict;
+}
+
+KeyMap.prototype.clone = function() {
+  let newMap = new KeyMap();
+  newMap.keyMap = this.cloneDict(this.keyMap);
+  return newMap;
+}
+
+
 function CreateDefaultKeyMap() {
   let keymap = new KeyMap();
   keymap.defineDefaultSelfInsert();
@@ -123,18 +148,31 @@ function KeyMapHandler() {
   this.keyMapStack = [defaultKeyMap];
 }
 
-
-KeyMapHandler.prototype.handleKeyDown = function(str) {
-    let lmap = this.keyMapStack[this.keyMapStack.length-1].lookupLastMap(this.lastKeySequence);
+KeyMapHandler.prototype.handleOneKeyMap = function(keymap, str) {
+    let lmap = keymap.lookupLastMap(this.lastKeySequence);
     if (lmap) {
        let v = lmap[str];
        if (typeof v === 'function') {
           this.lastKeySequence.length = 0;
-          return v();
+          v();
+          return true;
        }
        if (v !== null && typeof v === 'object') {
           print("waiting next key");
           this.lastKeySequence.push(str);
+          return true;
+       }
+    }
+
+    return false;
+}
+
+KeyMapHandler.prototype.isWaitingNextKey = function() { return this.lastKeySequence.length > 0; }
+
+
+KeyMapHandler.prototype.handleKeyDown = function(str) {
+    for(let i = this.keyMapStack.length-1; i >= 0; i--) {
+       if (this.handleOneKeyMap(this.keyMapStack[i], str)) {
           return;
        }
     }
@@ -143,7 +181,26 @@ KeyMapHandler.prototype.handleKeyDown = function(str) {
     this.lastKeySequence.length = 0;
 }
 
+KeyMapHandler.prototype.currentKeyMap = function() {
+   return this.keyMapStack[this.keyMapStack.length-1];
+}
+
+KeyMapHandler.prototype.pushKeyMap = function(keymap) {
+   this.keyMapStack.push(keymap);
+}
+
+KeyMapHandler.prototype.popKeyMap = function() {
+   if (this.keyMapStack.length > 1) {
+      this.keyMapStack.pop();
+   }
+}
+
 let keyMapHandler = new KeyMapHandler();
+
+function global_set_key(keyPat, func) {
+    keyMapHandler.currentKeyMap().defineKey(keyPat, func);
+}
+
 
 function defaultOnKeyDown(str) {
    keyMapHandler.handleKeyDown(str);
