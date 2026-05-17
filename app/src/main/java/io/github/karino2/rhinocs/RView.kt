@@ -194,7 +194,8 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_SLASH to '?',
         KeyEvent.KEYCODE_GRAVE to '~',
         KeyEvent.KEYCODE_MINUS to '_',
-        KeyEvent.KEYCODE_EQUALS to '+'
+        KeyEvent.KEYCODE_EQUALS to '+',
+        KeyEvent.KEYCODE_ZENKAKU_HANKAKU to "_", // わたしのキーボードにはアンダースコアが無いのでどうせ使わない全角半角をそれにあてる。
     )
     val specialMap = mapOf(
         KeyEvent.KEYCODE_DPAD_LEFT to "Left",
@@ -208,7 +209,7 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_DEL to "Backspace",
         KeyEvent.KEYCODE_FORWARD_DEL to "Delete",
         KeyEvent.KEYCODE_TAB to "Tab",
-        KeyEvent.KEYCODE_ESCAPE to "Escape"
+        KeyEvent.KEYCODE_ESCAPE to "Escape",
     )
 
     fun selfInsertKeys() : List<String> {
