@@ -51,16 +51,17 @@ function previous_page() {
 function beginning_of_line() { goto_bol(); }
 function end_of_line() { goto_eol(); }
 
+function KeyMap() {
+  this.keyMap = {};
+}
 
-let lastKeySequence = []
-
-function defineKey(kmap, keySeq, func) {
+KeyMap.prototype.defineKey = function(keySeq, func) {
   if (typeof keySeq === 'string') {
-    kmap[keySeq] = func;
+    this.keyMap[keySeq] = func;
     return;
   }
 
-  let current = kmap;
+  let current = this.keyMap;
   for(let i = 0; i < keySeq.length-1; i++) {
     let k = keySeq[i];
     let v = current[k];
@@ -71,11 +72,11 @@ function defineKey(kmap, keySeq, func) {
   current[keySeq[keySeq.length-1]] = func
 }
 
-function lookupLastMap(kmap, keySeq) {
+KeyMap.prototype.lookupLastMap = function(keySeq) {
   if(keySeq.length == 0)
-    return kmap;
+    return this.keyMap;
 
-  let current = kmap;
+  let current = this.keyMap;
   for (let i = 0; i < keySeq.length; i++) {
     if (!current || typeof current !== 'object') return undefined;
     current = current[keySeq[i]];
@@ -83,53 +84,71 @@ function lookupLastMap(kmap, keySeq) {
   return current;
 }
 
-let defSelfKeys = default_self_insert_keys();
-let keyMap = {};
-defSelfKeys.forEach(k => keyMap[k] = self_insert);
+KeyMap.prototype.defineDefaultSelfInsert = function() {
+    let defSelfKeys = default_self_insert_keys();
+    defSelfKeys.forEach(k => this.keyMap[k] = self_insert);
+}
 
-keyMap["Space"] = ()=> { insert(" "); }
-keyMap["Return"] = ()=> { insert("\n"); }
-keyMap["Backspace"] = delete_backward_char;
+function CreateDefaultKeyMap() {
+  let keymap = new KeyMap();
+  keymap.defineDefaultSelfInsert();
+  keymap.defineKey("Space", ()=> { insert(" "); })
+  keymap.defineKey("Return", ()=> { insert("\n"); })
+  keymap.defineKey("Backspace", delete_backward_char)
+  keymap.defineKey("Left", backward_char)
+  keymap.defineKey("Right", forward_char)
+  keymap.defineKey("Down", next_line)
+  keymap.defineKey("Up", previous_line)
+  keymap.defineKey("C-b", backward_char)
+  keymap.defineKey("C-f", forward_char)
+  keymap.defineKey("C-n", next_line);
+  keymap.defineKey("C-p", previous_line);
+  keymap.defineKey("C-a", beginning_of_line)
+  keymap.defineKey("C-e", end_of_line)
+  keymap.defineKey("C-h", delete_backward_char)
+  keymap.defineKey(["C-x", "C-s"], saveBuffer);
+  keymap.defineKey(["C-x", "C-f"], find_file);
+  keymap.defineKey("M->", end_of_buffer);
+  keymap.defineKey("M-<", beginning_of_buffer);
+  keymap.defineKey("C-v", next_page)
+  keymap.defineKey("M-v", previous_page)
+  return keymap;
+}
 
-defineKey(keyMap, "Left", backward_char)
-defineKey(keyMap, "Right", forward_char)
-defineKey(keyMap, "Down", next_line)
-defineKey(keyMap, "Up", previous_line)
-defineKey(keyMap, "C-b", backward_char)
-defineKey(keyMap, "C-f", forward_char)
-defineKey(keyMap, "C-n", next_line);
-defineKey(keyMap, "C-p", previous_line);
-defineKey(keyMap, "C-a", beginning_of_line)
-defineKey(keyMap, "C-e", end_of_line)
-defineKey(keyMap, "C-h", delete_backward_char)
-defineKey(keyMap, ["C-x", "C-s"], saveBuffer);
-defineKey(keyMap, ["C-x", "C-f"], find_file);
-defineKey(keyMap, "M->", end_of_buffer);
-defineKey(keyMap, "M-<", beginning_of_buffer);
-defineKey(keyMap, "C-v", next_page)
-defineKey(keyMap, "M-v", previous_page)
 
-function defaultOnKeyDown(str) {
-    print(`deb: ${JSON.stringify(lastKeySequence)}, ${str}`);
+let defaultKeyMap = CreateDefaultKeyMap();
 
-    let lmap = lookupLastMap(keyMap, lastKeySequence);
+function KeyMapHandler() {
+  this.lastKeySequence = [];
+  this.keyMapStack = [defaultKeyMap];
+}
+
+
+KeyMapHandler.prototype.handleKeyDown = function(str) {
+    let lmap = this.keyMapStack[this.keyMapStack.length-1].lookupLastMap(this.lastKeySequence);
     if (lmap) {
        let v = lmap[str];
        if (typeof v === 'function') {
-          lastKeySequence.length = 0;
+          this.lastKeySequence.length = 0;
           return v();
        }
        if (v !== null && typeof v === 'object') {
           print("waiting next key");
-          lastKeySequence.push(str);
+          this.lastKeySequence.push(str);
           return;
        }
     }
 
-    print(`unknown key: ${str}, ${JSON.stringify(lastKeySequence)}`);
-    lastKeySequence.length = 0;
+    print(`unknown key: ${str}, ${JSON.stringify(this.lastKeySequence)}`);
+    this.lastKeySequence.length = 0;
+}
+
+let keyMapHandler = new KeyMapHandler();
+
+function defaultOnKeyDown(str) {
+   keyMapHandler.handleKeyDown(str);
 }
 
 function onKeyDown(str) {
-   defaultOnKeyDown(str);
+   keyMapHandler.handleKeyDown(str);
 }
