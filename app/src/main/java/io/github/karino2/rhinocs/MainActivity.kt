@@ -109,8 +109,18 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         rview.keyDownHandler = {keyStr->
-            interpreter.setGlobalKey(keyStr)
-            runScript($$"onKeyDown($key);")
+            if (pendingReadKey)
+            {
+                pendingReadKey = false
+                pendingCC?.let { pcc->
+                    withContinuationHandling {
+                        interpreter.resume(pcc, keyStr)
+                    }
+                }
+            } else {
+                interpreter.setGlobalKey(keyStr)
+                runScript($$"onKeyDown($key);")
+            }
         }
         findViewById<Button>(R.id.buttonDeb1).setOnClickListener {
             runScript("""find_file();""")
@@ -202,14 +212,21 @@ class MainActivity : AppCompatActivity() {
         withContinuationHandling { interpreter.run(script, fileName) }
     }
 
+    private var pendingReadKey = false
+
     private fun withContinuationHandling(run: () -> Unit) {
         try {
             run()
         } catch (e: ContinuationPending) {
             pendingCC = e
+            rview.invalidate()
             val rarg = e.applicationState as RequestArg
             when (rarg.requestId) {
                 GlobalObject.REQUEST_SELECT_FILE -> getFileUriFromScript.launch(rarg.arg as Array<String>)
+                GlobalObject.REQUEST_READ_KEY-> {
+                    pendingReadKey = true
+                    showMessage(rarg.arg as String)
+                }
             }
         } catch (e: EcmaError) {
             val msg = "$e"

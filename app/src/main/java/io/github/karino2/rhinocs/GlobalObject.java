@@ -17,6 +17,7 @@ import kotlin.Pair;
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
             "print",
+            "read_key",
             "select_file",
             "open_uri",
             "forward_char",
@@ -49,6 +50,7 @@ public class GlobalObject  extends ImporterTopLevel {
     };
 
     public static final int REQUEST_SELECT_FILE=1;
+    public static final int REQUEST_READ_KEY=2;
 
     public MainActivity activity;
     public RView rview;
@@ -83,6 +85,18 @@ public class GlobalObject  extends ImporterTopLevel {
         if (!(scope instanceof GlobalObject))
             throw new IllegalArgumentException("non GlobalObject func obj.");
         return (GlobalObject) scope;
+    }
+
+    public static Object read_key(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        if (args.length != 1)
+            throw new IllegalArgumentException("non msg argument.");
+        String msg = Context.toString(args[0]);
+        try (Context cx = Context.enter()) {
+            ContinuationPending pending = cx.captureContinuation();
+            RequestArg ra = new RequestArg(REQUEST_READ_KEY, msg);
+            pending.setApplicationState(ra);
+            throw pending;
+        }
     }
 
     public static Object select_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
