@@ -9,7 +9,8 @@ function delete_backward_char(n=1) {
 }
 
 function find_file() {
-   let uri = select_file("*/*");
+   let [uri, fname] = select_file("*/*");
+   print(`deb: ${uri}, ${fname}`);
    open_uri(uri);
 }
 

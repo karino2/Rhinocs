@@ -44,7 +44,10 @@ class MainActivity : AppCompatActivity() {
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             pendingCC?.let { pcc->
-                interpreter.resume(pcc, it)
+                val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
+                withContinuationHandling {
+                    interpreter.resume(pcc, interpreter.newJSArray(arrayOf(it.toString(), dispName)))
+                }
             }
         }
     }
@@ -190,15 +193,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun runScript(script: String, fileName: String="*script*") {
+        withContinuationHandling { interpreter.run(script, fileName) }
+    }
+
+    private fun withContinuationHandling(run: () -> Unit) {
         try {
-            interpreter.run(script, fileName)
+            run()
         } catch (e: ContinuationPending) {
             pendingCC = e
             val rarg = e.applicationState as RequestArg
             when (rarg.requestId) {
                 GlobalObject.REQUEST_SELECT_FILE -> getFileUriFromScript.launch(rarg.arg as Array<String>)
             }
-        } catch(e : EcmaError) {
+        } catch (e: EcmaError) {
             val msg = "$e"
             showMessage(this, "$e")
             println(msg)
