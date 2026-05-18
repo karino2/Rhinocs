@@ -145,26 +145,31 @@ let g_defaultKeyMap = CreateDefaultKeyMap();
 
 function KeyMapHandler() {
   this.lastKeySequence = [];
-  this.keyMapStack = [defaultKeyMap];
+  this.delegateRequest = false;
+  this.keyMapStack = [g_defaultKeyMap];
 }
 
 KeyMapHandler.prototype.handleOneKeyMap = function(keymap, str) {
-    let lmap = keymap.lookupLastMap(this.lastKeySequence);
-    if (lmap) {
-       let v = lmap[str];
-       if (typeof v === 'function') {
-          this.lastKeySequence.length = 0;
-          v();
-          return true;
-       }
-       if (v !== null && typeof v === 'object') {
-          print("waiting next key");
-          this.lastKeySequence.push(str);
-          return true;
-       }
-    }
+  let lmap = keymap.lookupLastMap(this.lastKeySequence);
+  if (lmap) {
+      let v = lmap[str];
+      if (typeof v === 'function') {
+        this.lastKeySequence.length = 0;
+        v();
+        if (this.delegateRequest){
+            this.delegateRequest = false;
+            return false;
+        }
+        return true;
+      }
+      if (v !== null && typeof v === 'object') {
+        print("waiting next key");
+        this.lastKeySequence.push(str);
+        return true;
+      }
+  }
 
-    return false;
+  return false;
 }
 
 KeyMapHandler.prototype.isWaitingNextKey = function() { return this.lastKeySequence.length > 0; }
@@ -193,6 +198,10 @@ KeyMapHandler.prototype.popKeyMap = function() {
    if (this.keyMapStack.length > 1) {
       this.keyMapStack.pop();
    }
+}
+
+KeyMapHandler.prototype.requestDelegateKeyHandle = function() {
+  this.delegateRequest = true;
 }
 
 let g_keyMapHandler = new KeyMapHandler();
