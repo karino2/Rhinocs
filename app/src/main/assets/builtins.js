@@ -143,22 +143,21 @@ function CreateDefaultKeyMap() {
 
 let g_defaultKeyMap = CreateDefaultKeyMap();
 
-function KeyMapHandler() {
-  this.lastKeySequence = [];
-  this.delegateRequest = false;
-  this.keyMapStack = [g_defaultKeyMap];
-}
+let g_keyMapHandler = {
+  lastKeySequence: [],
+  delegateRequest: false,
+  keyMapStack: [g_defaultKeyMap],
 
-KeyMapHandler.prototype.handleOneKeyMap = function(keymap, str) {
-  let lmap = keymap.lookupLastMap(this.lastKeySequence);
-  if (lmap) {
+  handleOneKeyMap(keymap, str) {
+    let lmap = keymap.lookupLastMap(this.lastKeySequence);
+    if (lmap) {
       let v = lmap[str];
       if (typeof v === 'function') {
         this.lastKeySequence.length = 0;
         v();
-        if (this.delegateRequest){
-            this.delegateRequest = false;
-            return false;
+        if (this.delegateRequest) {
+          this.delegateRequest = false;
+          return false;
         }
         return true;
       }
@@ -167,44 +166,44 @@ KeyMapHandler.prototype.handleOneKeyMap = function(keymap, str) {
         this.lastKeySequence.push(str);
         return true;
       }
-  }
+    }
 
-  return false;
-}
+    return false;
+  },
 
-KeyMapHandler.prototype.isWaitingNextKey = function() { return this.lastKeySequence.length > 0; }
+  isWaitingNextKey() {
+    return this.lastKeySequence.length > 0;
+  },
 
-
-KeyMapHandler.prototype.handleKeyDown = function(str) {
-    for(let i = this.keyMapStack.length-1; i >= 0; i--) {
-       if (this.handleOneKeyMap(this.keyMapStack[i], str)) {
-          return;
-       }
+  handleKeyDown(str) {
+    for (let i = this.keyMapStack.length - 1; i >= 0; i--) {
+      if (this.handleOneKeyMap(this.keyMapStack[i], str)) {
+        return;
+      }
     }
 
     print(`unknown key: ${str}, ${JSON.stringify(this.lastKeySequence)}`);
     this.lastKeySequence.length = 0;
-}
+  },
 
-KeyMapHandler.prototype.currentKeyMap = function() {
-   return this.keyMapStack[this.keyMapStack.length-1];
-}
+  currentKeyMap() {
+    return this.keyMapStack[this.keyMapStack.length - 1];
+  },
 
-KeyMapHandler.prototype.pushKeyMap = function(keymap) {
-   this.keyMapStack.push(keymap);
-}
+  pushKeyMap(keymap) {
+    this.keyMapStack.push(keymap);
+  },
 
-KeyMapHandler.prototype.popKeyMap = function() {
-   if (this.keyMapStack.length > 1) {
+  popKeyMap() {
+    if (this.keyMapStack.length > 1) {
       this.keyMapStack.pop();
-   }
-}
+    }
+  },
 
-KeyMapHandler.prototype.requestDelegateKeyHandle = function() {
-  this.delegateRequest = true;
-}
-
-let g_keyMapHandler = new KeyMapHandler();
+  requestDelegateKeyHandle() {
+    this.delegateRequest = true;
+  }
+};
 
 function global_set_key(keyPat, func) {
     g_keyMapHandler.currentKeyMap().defineKey(keyPat, func);
