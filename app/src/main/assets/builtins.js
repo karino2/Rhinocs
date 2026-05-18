@@ -141,7 +141,7 @@ function CreateDefaultKeyMap() {
 }
 
 
-let defaultKeyMap = CreateDefaultKeyMap();
+let g_defaultKeyMap = CreateDefaultKeyMap();
 
 function KeyMapHandler() {
   this.lastKeySequence = [];
@@ -195,17 +195,17 @@ KeyMapHandler.prototype.popKeyMap = function() {
    }
 }
 
-let keyMapHandler = new KeyMapHandler();
+let g_keyMapHandler = new KeyMapHandler();
 
 function global_set_key(keyPat, func) {
-    keyMapHandler.currentKeyMap().defineKey(keyPat, func);
+    g_keyMapHandler.currentKeyMap().defineKey(keyPat, func);
 }
 
 
 function defaultOnKeyDown(str) {
-   keyMapHandler.handleKeyDown(str);
+   g_keyMapHandler.handleKeyDown(str);
 }
 
 function onKeyDown(str) {
-   keyMapHandler.handleKeyDown(str);
+   g_keyMapHandler.handleKeyDown(str);
 }
