@@ -54,27 +54,23 @@ public class GlobalObject  extends ImporterTopLevel {
     public RView rview;
     public Window getWindow() { return rview.getWindow(); }
 
-    public ArrayList<Pair<String, String>> loadRequestsQueue;
+    public ArrayList<String> loadRequestsQueue;
 
-    public void pushLoadRequest(String relativePath) {
-        loadRequestsQueue.add(new Pair<>(relativePath, getCurrentSourcePath()));
+    public void pushLoadRequest(String jsPath) {
+        loadRequestsQueue.add(jsPath);
     }
 
     public boolean hasPendingRequest() { return !loadRequestsQueue.isEmpty(); }
-    public Pair<String, String> popLoadRequest() {
-        Pair<String, String> first = loadRequestsQueue.get(0);
+    public String popLoadRequest() {
+        String first = loadRequestsQueue.get(0);
         loadRequestsQueue.remove(0);
         return first;
     }
 
-    private String currentSourceName;
 
-    public void setCurrentSourcePath(String newPath) { currentSourceName = newPath; }
-    public String getCurrentSourcePath() { return currentSourceName; }
 
     public GlobalObject(Context ctx) {
         loadRequestsQueue = new ArrayList<>();
-        currentSourceName = "*script*";
         initStandardObjects(ctx, true);
         defineFunctionProperties(TOP_COMMANDS, GlobalObject.class, ScriptableObject.DONTENUM);
     }
@@ -175,7 +171,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
-        return glob.activity.readFileContent(fname, glob.getCurrentSourcePath());
+        return glob.activity.readFileContent(fname);
     }
 
     // elispの (write-region start end filename) に合わせて wirte_file(content, path)にする。
@@ -185,7 +181,7 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("write_file need content and path.");
         String content = Context.toString(args[0]);
         String path = Context.toString(args[1]);
-        return glob.activity.writeFileContent(path, glob.getCurrentSourcePath(), content);
+        return glob.activity.writeFileContent(path, content);
     }
 
     public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -193,7 +189,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
-        return glob.activity.readGZIPFileContent(fname, glob.getCurrentSourcePath());
+        return glob.activity.readGZIPFileContent(fname);
     }
 
     public static Object load_gzip_skk_dictionary(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -201,7 +197,7 @@ public class GlobalObject  extends ImporterTopLevel {
         if (args.length != 1)
             throw new IllegalArgumentException("load_gzip_skk_dictionary must be 1 arg.");
         String fname = Context.toString(args[0]);
-        String content = glob.activity.readGZIPFileContent(fname, glob.getCurrentSourcePath());
+        String content = glob.activity.readGZIPFileContent(fname);
         
         SkkDictionary skk = new SkkDictionary();
         return skk.parseData(ctx, funcObj.getParentScope(), content);

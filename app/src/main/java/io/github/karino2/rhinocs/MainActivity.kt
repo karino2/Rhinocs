@@ -15,7 +15,6 @@ import org.mozilla.javascript.ContinuationPending
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
-import java.io.IOException
 
 data class RequestArg(val requestId: Int, val arg: Any)
 
@@ -82,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         // buildins_override.jsがあればそちらを優先
         val overwrite = packageDirUri?.let { FastFile.fromTreeUri(this@MainActivity, it).findFile("builtins_override.js")?.readText() }
         overwrite?.let {
-            run(it, "builtins_override.js")
+            run(it, "/builtins_override.js")
             return
         }
         run(readAsset("builtins.js"), "builtins.js")
@@ -131,79 +130,65 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadInitScript() {
-        loadPackageJS("init.js", "*script*")
+        loadPackageJS("/init.js")
         showMessage("init.js loaded.")
     }
 
-    fun sourceDirPath(sourceName: String) : List<String> {
-        if (sourceName.startsWith("*"))
-            return emptyList()
-        return sourceName.split("/").dropLast(1)
-    }
-
-    private fun mergePath(relativePath: String, fromSource: String) : String {
-        val sourceDirs = sourceDirPath(fromSource)
-        if(sourceDirs.isEmpty())
-            return relativePath
-        if (relativePath.startsWith("*"))
-            return relativePath
-        return listOf(sourceDirs.joinToString("/"), relativePath).joinToString("/")
-    }
-
-    fun loadPackageJS(relativePath: String, fromSource: String) {
-        findSourceFile(fromSource, relativePath)
-        val content = readFileContent(relativePath, fromSource)
+    fun loadPackageJS(absPath: String) {
+        val content = readFileContent(absPath)
         if(content.isEmpty()) {
-            showMessage("Fail to load: $relativePath")
+            showMessage("Fail to load: $absPath")
             return
         }
 
-        val path = mergePath(relativePath, fromSource)
-        runScript(content, path)
+        runScript(content, absPath)
     }
 
-    fun sourceDir(sourceName: String) : FastFile? {
-        packageDirUri?.let { ini ->
-            val root = FastFile.fromTreeUri(this, ini)
-            return sourceDirPath(sourceName).fold(root as FastFile?) { acc, dirName ->
-                    acc?.findFile(dirName)
-                }
+    val packageRootDir: FastFile?
+        get() {
+            return packageDirUri?.let { ini ->
+                FastFile.fromTreeUri(this, ini)
+            }
         }
-        return null
+
+    fun trimHeadSlash(absPath: String) : String {
+        if(!absPath.startsWith("/"))
+            throw IllegalArgumentException("Path not start with /.")
+        return absPath.drop(1)
     }
 
     private fun findSourceFile(
-        fromSource: String,
-        fileName: String
-    ): FastFile? = sourceDir(fromSource)?.findFileRec(fileName)
+        absPath: String
+    ): FastFile? = packageRootDir?.findFileRec(trimHeadSlash(absPath))
 
-    fun readFileContent(fileName: String, fromSource: String) : String {
-        return findSourceFile(fromSource, fileName)?.readText() ?: ""
+    fun readFileContent(fileName: String) : String {
+        return findSourceFile(fileName)?.readText() ?: ""
     }
 
     private fun findSourceFileOrCreate(
-        fromSource: String,
-        fileName: String
+        relativePath: String
     ): FastFile? {
-        sourceDir(fromSource)?.let { dir->
-            dir.findFileRec(fileName)?.let { return it }
-            return dir.createFileRec(fileName)
+        packageRootDir?.let { dir->
+            dir.findFileRec(relativePath)?.let { return it }
+            return dir.createFileRec(relativePath)
         }
         return null
     }
 
 
-    fun writeFileContent(fileName: String, fromSource: String, content: String) : Boolean  {
-        findSourceFileOrCreate(fromSource, fileName)?.let {
+
+    fun writeFileContent(absPath: String, content: String) : Boolean  {
+        val fileName = trimHeadSlash(absPath)
+        findSourceFileOrCreate(fileName)?.let {
             it.writeText(content)
             return true
         }
         return false
     }
 
-    fun readGZIPFileContent(fileName: String, fromSource: String) : String {
+    fun readGZIPFileContent(fileName: String) : String {
         val startTime = System.currentTimeMillis()
-        val content = findSourceFile(fromSource, fileName)?.readGZIPText() ?: return ""
+        val content = findSourceFile(fileName)?.readGZIPText() ?: return ""
         val endTime = System.currentTimeMillis()
         println("readGZIPFileContent: finished in ${endTime - startTime} ms")
         return content

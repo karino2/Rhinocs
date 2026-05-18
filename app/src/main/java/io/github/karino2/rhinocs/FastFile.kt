@@ -154,7 +154,7 @@ data class FastFile(val uri: Uri, val name: String, val lastModified: Long, val 
     fun createFileRec(relativePath: String) : FastFile? {
         val paths =  relativePath.split("/")
         val last = paths.last()
-        val parent = paths.dropLast(1).fold(this as FastFile?) { acc, disp -> acc?.findFile(disp) } ?: return null
+        val parent = paths.dropLast(1).fold(this as FastFile) { acc, disp -> acc.findFile(disp) ?: acc.createDirectory(disp)!! }
         val mimeType = nameToMimeType(last)
 
         return parent.createFile(mimeType, last)

@@ -31,7 +31,6 @@ class Interpreter {
 
     fun run(script: String, fileName:String ="*script*") {
         withContext {
-            global.setCurrentSourcePath(fileName)
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             global.rview.invalidate()
@@ -52,7 +51,7 @@ class Interpreter {
     private fun runPendingRequest() {
         if (global.hasPendingRequest()) {
             val req = global.popLoadRequest()
-            global.activity.loadPackageJS(req.first, req.second)
+            global.activity.loadPackageJS(req)
         }
     }
 
