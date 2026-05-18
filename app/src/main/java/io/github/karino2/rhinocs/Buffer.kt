@@ -9,6 +9,9 @@ class Buffer {
     // 対応するfileがあれば入る。なければnull
     var url: Uri? = null
 
+    // 今の所使ってない。
+    var name = ""
+
     val lines = ArrayList<StringBuilder>().apply { add(StringBuilder()) }
     val numLines: Int
         get() = lines.size
