@@ -26,6 +26,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "insert",
             "default_self_insert_keys",
             "read_file",
+            "write_file",
             "point",
             "delete_region",
             "save_buffer",
@@ -173,6 +174,16 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
         return glob.activity.readFileContent(fname, glob.getCurrentSourcePath());
+    }
+
+    // elispの (write-region start end filename) に合わせて wirte_file(content, path)にする。
+    public static Object write_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 2)
+            throw new IllegalArgumentException("write_file need content and path.");
+        String content = Context.toString(args[0]);
+        String path = Context.toString(args[1]);
+        return glob.activity.writeFileContent(path, glob.getCurrentSourcePath(), content);
     }
 
     public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {

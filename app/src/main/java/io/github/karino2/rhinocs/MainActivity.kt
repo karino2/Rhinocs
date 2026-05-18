@@ -15,6 +15,7 @@ import org.mozilla.javascript.ContinuationPending
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
+import java.io.IOException
 
 data class RequestArg(val requestId: Int, val arg: Any)
 
@@ -178,6 +179,26 @@ class MainActivity : AppCompatActivity() {
 
     fun readFileContent(fileName: String, fromSource: String) : String {
         return findSourceFile(fromSource, fileName)?.readText() ?: ""
+    }
+
+    private fun findSourceFileOrCreate(
+        fromSource: String,
+        fileName: String
+    ): FastFile? {
+        sourceDir(fromSource)?.let { dir->
+            dir.findFileRec(fileName)?.let { return it }
+            return dir.createFileRec(fileName)
+        }
+        return null
+    }
+
+
+    fun writeFileContent(fileName: String, fromSource: String, content: String) : Boolean  {
+        findSourceFileOrCreate(fromSource, fileName)?.let {
+            it.writeText(content)
+            return true
+        }
+        return false
     }
 
     fun readGZIPFileContent(fileName: String, fromSource: String) : String {
