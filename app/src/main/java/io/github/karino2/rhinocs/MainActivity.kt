@@ -60,13 +60,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val interpreter by lazy {
-        Interpreter().apply{
-            global.activity = this@MainActivity
-            global.rview = rview
-            loadBuiltin()
+    // reset可能なlazy getterみたいな事をしたい。
+    private var _interpreter: Interpreter? = null
+    private val interpreter : Interpreter
+        get() {
+            if (_interpreter == null) {
+                _interpreter = Interpreter().apply {
+                    global.activity = this@MainActivity
+                    global.rview = rview
+                    loadBuiltin()
+                }
+            }
+            return _interpreter!!
         }
-    }
 
     private fun Interpreter.loadBuiltin() {
         // buildins_override.jsがあればそちらを優先
@@ -113,6 +119,8 @@ class MainActivity : AppCompatActivity() {
             loadInitScript()
         }
         findViewById<Button>(R.id.buttonDeb4).setOnClickListener {
+            _interpreter = null
+            showMessage("Interpreter reset.")
         }
 
         // loadInitScript()
