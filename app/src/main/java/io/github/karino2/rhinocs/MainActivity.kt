@@ -123,15 +123,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         findViewById<Button>(R.id.buttonDeb1).setOnClickListener {
-            runScript("""find_file();""")
-        }
-        findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
             getPackageDirUri.launch(null)
         }
-        findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
+        findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
             loadInitScript()
         }
-        findViewById<Button>(R.id.buttonDeb4).setOnClickListener {
+        findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
             _interpreter = null
             interpreter
             showMessage("Interpreter reset.")
