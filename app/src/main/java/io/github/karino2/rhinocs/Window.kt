@@ -22,6 +22,8 @@ class Window {
 
     var goalColumn : Int? = null
 
+    var statusText = ""
+
     fun computeGoalGolumn() : Int {
         goalColumn?.let {
             return it

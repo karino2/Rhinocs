@@ -31,6 +31,7 @@ class Interpreter {
 
     fun run(script: String, fileName:String ="*script*") {
         withContext {
+            global.window.statusText = ""
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             global.rview.invalidate()

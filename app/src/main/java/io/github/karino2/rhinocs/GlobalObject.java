@@ -47,6 +47,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "request_load_js",
             "get_buffer_create",
             "switch_to_buffer",
+            "message",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -351,6 +352,15 @@ public class GlobalObject  extends ImporterTopLevel {
         //  || !(args[0] instanceof Buffer)
         Buffer buf = (Buffer)Context.jsToJava(args[0], Buffer.class);
         glob.getWindow().setBuffer(buf);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object message(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("message takes 1 arg.");
+        String msg = Context.toString(args[0]);
+        glob.getWindow().setStatusText(msg);
         return Context.getUndefinedValue();
     }
 }

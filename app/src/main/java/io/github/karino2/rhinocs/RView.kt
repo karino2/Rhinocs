@@ -10,6 +10,7 @@ import android.net.Uri
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
+import androidx.core.graphics.toColorInt
 
 class RView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -49,7 +50,7 @@ class RView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         window.numCols = ((w - margin) / cellWidth).toInt()
-        window.numRows = ((h - margin) / cellHeight).toInt()
+        window.numRows = ((h - margin) / cellHeight).toInt() - 1 // 最後の1行をステータス行用に空ける
     }
 
     val window = Window().apply { buffer = Buffer() }
@@ -94,6 +95,36 @@ class RView @JvmOverloads constructor(
             canvas.drawRect(caretX, caretY, caretX + 3f, caretY + cellHeight, caretPaint)
         }
 
+        drawStatusLine(canvas)
+    }
+
+    private fun drawStatusLine(canvas: Canvas) {
+        val statusRow = numRows
+        val yBase = margin + statusRow * cellHeight
+
+        // 境界線とわずかな影を描画
+        val separatorPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
+        val shadowPaint = Paint().apply { color = "#E0E0E0".toColorInt(); strokeWidth = 1f }
+
+        // 上側の細い境界線
+        canvas.drawLine(0f, yBase, width.toFloat(), yBase, separatorPaint)
+        // そのすぐ下にさらに薄い色で影をつける
+        canvas.drawLine(0f, yBase + 1f, width.toFloat(), yBase + 1f, shadowPaint)
+
+        val statusText = window.statusText
+
+        if(statusText.isNotEmpty())
+        {
+            val fm = textPaint.fontMetrics
+            // 上下中央
+            val textY = yBase + (cellHeight / 2f) - (fm.ascent + fm.descent) / 2f
+
+
+            val oldAlign = textPaint.textAlign
+            textPaint.textAlign = Paint.Align.LEFT
+            canvas.drawText(statusText, margin, textY, textPaint)
+            textPaint.textAlign = oldAlign
+        }
     }
 
     val keyMap = mapOf(

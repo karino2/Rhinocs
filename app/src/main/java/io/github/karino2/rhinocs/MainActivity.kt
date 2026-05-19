@@ -133,10 +133,12 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.buttonDeb4).setOnClickListener {
             _interpreter = null
+            interpreter
             showMessage("Interpreter reset.")
         }
 
-        // loadInitScript()
+        // loadBuiltinしておく
+        interpreter
     }
 
     private fun loadInitScript() {
