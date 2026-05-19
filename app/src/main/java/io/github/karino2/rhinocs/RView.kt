@@ -24,19 +24,19 @@ class RView @JvmOverloads constructor(
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.BLACK
         textSize = 40f
-        typeface = Typeface.MONOSPACE
+        typeface = Typeface.createFromAsset(context.assets, "fonts/JetBrainsMono-Regular.ttf")
         textAlign = Paint.Align.CENTER
     }
 
     private val caretPaint = Paint().apply {
-        color = Color.parseColor("#4285F4") // Android標準に近い青色
+        color = "#4285F4".toColorInt() // Android標準に近い青色
         style = Paint.Style.FILL
     }
 
     private val margin = 10f
 
     val cellWidth: Float
-        get() = textPaint.measureText("A")
+        get() = textPaint.measureText("W")
 
     val cellHeight: Float
         get() = textPaint.fontMetrics.let { it.descent - it.ascent }
