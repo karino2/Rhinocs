@@ -287,18 +287,44 @@ class RView @JvmOverloads constructor(
         val isCtrl = event.isCtrlPressed
         val isShift = event.isShiftPressed
         val isAlt = event.isAltPressed
-        println("onKeyDown: keyCode=$keyCode, isShift=$isShift, isCtrl=$isCtrl, isAlt=$isAlt, metaState=${event.metaState}, unichar=$charStr, ")
+        val rep = event.repeatCount
+        val action = event.action
+        println("keydeb: keyCode=$keyCode, isShift=$isShift, isCtrl=$isCtrl, isAlt=$isAlt, metaState=${event.metaState}, rep=${rep}, ac=${action}, unichar=$charStr, ")
          */
     }
 
+    override fun onKeyPreIme(keyCode: Int, event: KeyEvent?): Boolean {
+        event?.let { ev->
+            // some device take over C-Space. For those device, treat C-Space keyup as keydown.
+            if(event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_SPACE && ev.action == KeyEvent.ACTION_UP)
+            {
+                val strRep = keyEventToString(keyCode, event)
+                if(lastKeyRep != strRep)
+                {
+                    keyDownHandler?.let {
+                        lastKeyRep = strRep
+                        it(strRep)
+                    }
+
+                }
+
+            }
+        }
+        debPrint(keyCode, event!!)
+        return super.onKeyPreIme(keyCode, event)
+    }
+
+    var lastKeyRep = ""
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        debPrint(keyCode, event)
+        // debPrint(keyCode, event)
 
         val strRep = keyEventToString(keyCode, event)
         if (strRep.isEmpty())
             return super.onKeyDown(keyCode, event)
 
         keyDownHandler?.let {
+            lastKeyRep = strRep
             it(strRep)
         }
         return true
