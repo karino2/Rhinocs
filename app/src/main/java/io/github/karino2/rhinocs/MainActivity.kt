@@ -15,6 +15,7 @@ import org.mozilla.javascript.ContinuationPending
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
+import org.mozilla.javascript.WrappedException
 
 data class RequestArg(val requestId: Int, val arg: Any)
 
@@ -228,6 +229,10 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } catch (e: EcmaError) {
+            val msg = "$e"
+            showMessage(this, "$e")
+            println(msg)
+        } catch (e: WrappedException) {
             val msg = "$e"
             showMessage(this, "$e")
             println(msg)

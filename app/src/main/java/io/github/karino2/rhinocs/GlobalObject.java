@@ -404,6 +404,9 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("substring takes two arguments: beg, end");
         long beg = (long)Context.toNumber(args[0]);
         long end = (long)Context.toNumber(args[1]);
+        // 選択されてないケース。一応ここでもガードしておく。
+        if (beg < 0 || end < 0)
+            return "";
         return glob.getBuffer().substring(Math.min(beg, end), Math.max(beg, end));
     }
     

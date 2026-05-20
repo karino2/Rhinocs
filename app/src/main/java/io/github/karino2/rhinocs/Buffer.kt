@@ -129,8 +129,10 @@ class Buffer {
     }
 
     // Bufferからpoint番目の文字の位置からPointを返す。
-    // 範囲内ならpointの指す位置を、範囲外なら一番最後のPointを返す。
+    // 範囲内ならpointの指す位置を、範囲外なら負なら0を、大きすぎるなら一番最後のPointを返す。
     fun toPoint(point: Long) : Point {
+        if (point < 0)
+            return Point(0, 0, 0)
         var total = 0L
 
         lines.forEachIndexed { index, line ->
