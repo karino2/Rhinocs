@@ -1,5 +1,7 @@
 package io.github.karino2.rhinocs;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.net.Uri;
 
 import org.mozilla.javascript.Context;
@@ -51,6 +53,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "set_marker",
             "marker_position",
             "buffer_substring",
+            "copy_to_clipboard",
+            "current_clipboard",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -401,5 +405,29 @@ public class GlobalObject  extends ImporterTopLevel {
         long beg = (long)Context.toNumber(args[0]);
         long end = (long)Context.toNumber(args[1]);
         return glob.getBuffer().substring(Math.min(beg, end), Math.max(beg, end));
+    }
+    
+    public static Object copy_to_clipboard(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("string arg missing.");
+        String text = Context.toString(args[0]);
+        ClipboardManager clipboard = (ClipboardManager) glob.activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText("rhinocs", text);
+        clipboard.setPrimaryClip(clip);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object current_clipboard(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        ClipboardManager clipboard = (ClipboardManager) glob.activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+        if (clipboard.hasPrimaryClip()) {
+            ClipData clip = clipboard.getPrimaryClip();
+            if (clip != null && clip.getItemCount() > 0) {
+                CharSequence text = clip.getItemAt(0).getText();
+                return text != null ? text.toString() : "";
+            }
+        }
+        return "";
     }
 }

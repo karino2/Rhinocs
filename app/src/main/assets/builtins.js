@@ -71,6 +71,39 @@ function exchange_point_and_mark() {
   goto_char(mark);
 }
 
+function withRegion(f) {
+  let beg = point();
+  let end = marker_position(mark_marker());
+  return f(Math.min(beg, end), Math.max(beg, end));
+}
+
+function eval_region() {
+  withRegion((beg, end) => {
+    let text = buffer_substring(beg, end);
+    eval(text);
+  });
+}
+
+function copy_region() {
+  withRegion((beg, end) => {
+    let text = buffer_substring(beg, end);
+    copy_to_clipboard(text);
+  });
+}
+
+function kill_region() {
+  withRegion((beg, end) => {
+    let text = buffer_substring(beg, end);
+    copy_to_clipboard(text);
+    delete_region(beg, end);
+  });
+}
+
+function yank() {
+  let text = current_clipboard();
+  insert(text);
+}
+
 
 /*
   KeyMap関連。ひとまずここに置く。
@@ -162,6 +195,10 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("M-v", previous_page)
   keymap.defineKey("C-Space", set_mark_command);
   keymap.defineKey(["C-x", "C-x"], exchange_point_and_mark);
+  keymap.defineKey("C-j", eval_region);
+  keymap.defineKey("M-w", copy_region);
+  keymap.defineKey("C-w", kill_region);
+  keymap.defineKey("C-y", yank);
   return keymap;
 }
 
