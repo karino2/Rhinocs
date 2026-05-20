@@ -171,4 +171,58 @@ class BufferTest {
         assertEquals(3, actual.offset)
     }
 
+    @Test
+    fun marker_baisc() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 5
+        assertEquals(5, buf.mark.position)
+
+    }
+
+    @Test
+    fun marker_setOutsizeBound() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 8
+        assertEquals(7, buf.mark.position)
+    }
+
+    @Test
+    fun marker_insertAfter_noChange() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 2
+        buf.insert(buf.toPoint(5), "zzz")
+        assertEquals(2, buf.mark.position)
+    }
+
+    @Test
+    fun marker_insertBefore_shift() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 2
+        buf.insert(buf.toPoint(1), "zzz")
+        assertEquals(5, buf.mark.position)
+    }
+
+    @Test
+    fun marker_deleteAfter_noChange() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 4
+        buf.deleteRegion(5, 6)
+        assertEquals(4, buf.mark.position)
+    }
+
+    @Test
+    fun marker_deleteBefore_shift() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 4
+        buf.deleteRegion(1, 2)
+        assertEquals(3, buf.mark.position)
+    }
+
+    @Test
+    fun marker_deleteBetween_shiftToFrom() {
+        val buf = Buffer.fromText("abc\ndef")
+        buf.mark.position = 4
+        buf.deleteRegion(2, 5)
+        assertEquals(2, buf.mark.position)
+    }
 }

@@ -8,6 +8,12 @@ function delete_backward_char(n=1) {
    delete_region(point(), end);
 }
 
+function delete_char(n=1) {
+   let beg = point();
+   forward_char(n);
+   delete_region(beg, point());
+}
+
 function find_file() {
    let [uri, fname] = select_file("*/*");
    print(`deb: ${uri}, ${fname}`);
@@ -16,7 +22,7 @@ function find_file() {
 
 function saveBuffer() {
    save_buffer();
-   show_toast("Saved!");
+   message("Saved!");
 }
 
 function next_line(delta=1) {
@@ -51,6 +57,20 @@ function previous_page() {
 
 function beginning_of_line() { goto_bol(); }
 function end_of_line() { goto_eol(); }
+
+function set_mark_command() {
+  let marker = mark_marker();
+  set_marker(marker, point());
+  message("mark set");
+}
+
+function exchange_point_and_mark() {
+  let marker = mark_marker();
+  let mark = marker_position(marker);
+  set_marker(marker, point());
+  goto_char(mark);
+}
+
 
 /*
   KeyMap関連。ひとまずここに置く。
@@ -121,6 +141,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("Space", ()=> { insert(" "); })
   keymap.defineKey("Return", ()=> { insert("\n"); })
   keymap.defineKey("Backspace", delete_backward_char)
+  keymap.defineKey("Delete", delete_char);
   keymap.defineKey("Left", backward_char)
   keymap.defineKey("Right", forward_char)
   keymap.defineKey("Down", next_line)
@@ -132,12 +153,15 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-a", beginning_of_line)
   keymap.defineKey("C-e", end_of_line)
   keymap.defineKey("C-h", delete_backward_char)
+  keymap.defineKey("C-d", delete_char);
   keymap.defineKey(["C-x", "C-s"], saveBuffer);
   keymap.defineKey(["C-x", "C-f"], find_file);
   keymap.defineKey("M->", end_of_buffer);
   keymap.defineKey("M-<", beginning_of_buffer);
   keymap.defineKey("C-v", next_page)
   keymap.defineKey("M-v", previous_page)
+  keymap.defineKey("C-Space", set_mark_command);
+  keymap.defineKey(["C-x", "C-x"], exchange_point_and_mark);
   return keymap;
 }
 
@@ -163,8 +187,8 @@ let g_keyMapHandler = {
         return true;
       }
       if (v !== null && typeof v === 'object') {
-        print("waiting next key");
         this.lastKeySequence.push(str);
+        message(`${this.lastKeySequence.join(" ")}:`);
         return true;
       }
     }
@@ -183,7 +207,7 @@ let g_keyMapHandler = {
       }
     }
 
-    print(`unknown key: ${str}, ${JSON.stringify(this.lastKeySequence)}`);
+    message(`unknown key: ${str}, ${JSON.stringify(this.lastKeySequence)}`);
     this.lastKeySequence.length = 0;
   },
 

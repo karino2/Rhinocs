@@ -4,6 +4,17 @@ import android.net.Uri
 import kotlin.math.max
 import kotlin.math.min
 
+class Marker(val buffer: Buffer, pos: Long) {
+    var position: Long = pos
+        set(newPos) {
+            when {
+                newPos > buffer.pointMax -> field = buffer.pointMax
+                // 負の値も設定出来るようにしておく。-1で設定されてないとする。
+                else -> field = newPos
+            }
+        }
+}
+
 class Buffer {
 
     // 対応するfileがあれば入る。なければnull
@@ -15,6 +26,9 @@ class Buffer {
     val lines = ArrayList<StringBuilder>().apply { add(StringBuilder()) }
     val numLines: Int
         get() = lines.size
+
+    val mark = Marker(this, -1)
+
     fun load(text: String) {
         lines.clear()
         text.split("\n").forEach {line->
@@ -31,6 +45,12 @@ class Buffer {
 
     fun getLine(linenum: Int) = lines[linenum].toString()
 
+    fun adjustAfterInsert(at: Point, contentSize: Int) {
+        if(mark.position > at.point) {
+            mark.position += contentSize
+        }
+    }
+
     fun insert(at: Point, content: String) : Point {
         val clines = content.split('\n')
 
@@ -45,6 +65,7 @@ class Buffer {
             }
             lines[at.linenum+restLines.size].append(restOfFirstLine)
         }
+        adjustAfterInsert(at, content.length)
         return forwardChar(at, content.length)
     }
 
@@ -147,6 +168,12 @@ class Buffer {
         return (lines.size - 1).coerceAtLeast(0)
     }
 
+    fun adjustAfterDelete(from: Long, delNum: Long) {
+        if(mark.position > from) {
+            mark.position = (mark.position-delNum).coerceAtLeast(from)
+        }
+    }
+
     // 実際に削除された文字数を返す
     fun deleteRegion(from: Long, to: Long) : Long{
         if (from >= to) return 0
@@ -166,7 +193,9 @@ class Buffer {
                 lines.removeAt(i)
             }
         }
-        return pTo.point - pFrom.point
+        val delNum =  pTo.point - pFrom.point
+        adjustAfterDelete(from, delNum)
+        return delNum
     }
 
     fun gotoBol(point: Point) = toPoint(point.linenum, 0)

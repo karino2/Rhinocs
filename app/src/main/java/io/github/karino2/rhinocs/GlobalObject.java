@@ -12,7 +12,6 @@ import org.mozilla.javascript.ScriptableObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import kotlin.Pair;
 
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
@@ -48,6 +47,9 @@ public class GlobalObject  extends ImporterTopLevel {
             "get_buffer_create",
             "switch_to_buffer",
             "message",
+            "mark_marker",
+            "set_marker",
+            "marker_position",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -362,5 +364,29 @@ public class GlobalObject  extends ImporterTopLevel {
         String msg = Context.toString(args[0]);
         glob.getWindow().setStatusText(msg);
         return Context.getUndefinedValue();
+    }
+
+    public static Object mark_marker(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Marker mark = glob.getWindow().getBuffer().getMark();
+        return Context.javaToJS(mark, glob);
+    }
+
+    public static Object set_marker(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 2)
+            throw new IllegalArgumentException("set_marker takes two arguments: marker, position");
+        Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
+        long pos = (long)args[1];
+        marker.setPosition(pos);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object marker_position(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 1)
+            throw new IllegalArgumentException("not marker argument");
+        Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
+        return marker.getPosition();
     }
 }
