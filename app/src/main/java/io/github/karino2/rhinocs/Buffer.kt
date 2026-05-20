@@ -202,6 +202,23 @@ class Buffer {
 
     fun gotoEol(point: Point) = toPoint(point.linenum, getLine(point.linenum).length)
 
+    fun substring(beg: Long, end: Long) : String {
+        val bp = toPoint(beg)
+        val ep = toPoint(end)
+        if (bp.linenum == ep.linenum) {
+            return lines[bp.linenum].substring(bp.offset, ep.offset)
+        }
+        val ret = StringBuilder()
+        ret.append(lines[bp.linenum].substring(bp.offset))
+        for(i in (bp.linenum+1)..(ep.linenum-1)) {
+            ret.append("\n")
+            ret.append(lines[i])
+        }
+        ret.append("\n")
+        ret.append(lines[ep.linenum].substring(0, ep.offset))
+        return ret.toString()
+    }
+
     companion object {
         fun fromText(text: String) = Buffer().apply { load(text) }
     }

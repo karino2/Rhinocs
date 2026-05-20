@@ -225,4 +225,31 @@ class BufferTest {
         buf.deleteRegion(2, 5)
         assertEquals(2, buf.mark.position)
     }
+
+    @Test
+    fun substring_basic() {
+        val buf = Buffer.fromText("abcdefg")
+        val actual = buf.substring(1, 3)
+        assertEquals("bc", actual)
+    }
+
+    @Test
+    fun substring_bol() {
+        val buf = Buffer.fromText("abcdefg")
+        val actual = buf.substring(0, 3)
+        assertEquals("abc", actual)
+    }
+
+    @Test
+    fun substring_diffLine() {
+        val buf = Buffer.fromText("ab\ncd")
+        val actual = buf.substring(1, 4)
+        assertEquals("b\nc", actual)
+    }
+    @Test
+    fun substring_diffLineBetween() {
+        val buf = Buffer.fromText("ab\ncd\nef")
+        val actual = buf.substring(1, 7)
+        assertEquals("b\ncd\ne", actual)
+    }
 }

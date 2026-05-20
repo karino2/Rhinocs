@@ -50,6 +50,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "mark_marker",
             "set_marker",
             "marker_position",
+            "buffer_substring",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -388,5 +389,17 @@ public class GlobalObject  extends ImporterTopLevel {
             throw new IllegalArgumentException("not marker argument");
         Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
         return marker.getPosition();
+    }
+
+    Buffer getBuffer() { return getWindow().getBuffer(); }
+
+    // 今の所第三引数（bufferオブジェクト）はサポートしないが、名前はbuffer_substringにしておく。
+    public static Object buffer_substring(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        if (args.length != 2)
+            throw new IllegalArgumentException("substring takes two arguments: beg, end");
+        long beg = (long)Context.toNumber(args[0]);
+        long end = (long)Context.toNumber(args[1]);
+        return glob.getBuffer().substring(Math.min(beg, end), Math.max(beg, end));
     }
 }
