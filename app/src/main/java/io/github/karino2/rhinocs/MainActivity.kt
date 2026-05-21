@@ -87,11 +87,13 @@ class MainActivity : AppCompatActivity() {
     private fun Interpreter.loadBuiltin() {
         // buildins_override.jsがあればそちらを優先
         val overwrite = packageDirUri?.let { FastFile.fromTreeUri(this@MainActivity, it).findFile("builtins_override.js")?.readText() }
-        overwrite?.let {
-            run(it, "/builtins_override.js")
-            return
+        withContinuationHandling {
+            overwrite?.let {
+                run(it, "/builtins_override.js")
+                true
+            } ?: run(readAsset("builtins.js"), "builtins.js")
         }
-        run(readAsset("builtins.js"), "builtins.js")
+
     }
 
 
