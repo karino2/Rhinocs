@@ -57,10 +57,12 @@ public class GlobalObject  extends ImporterTopLevel {
             "current_clipboard",
             "put_pref_string",
             "get_pref_string",
+            "query_text_dialog",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
     public static final int REQUEST_READ_KEY=2;
+    public static final int REQUEST_TEXT_DIALOG=3;
 
     public MainActivity activity;
     public RView rview;
@@ -483,4 +485,14 @@ public class GlobalObject  extends ImporterTopLevel {
         String defaultValue = Context.toString(args[1]);
         return glob.activity.getPrefString(key, defaultValue);
     }
-}
+
+    public static Object query_text_dialog(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{String.class});
+
+        try (Context cx = Context.enter()) {
+            ContinuationPending pending = cx.captureContinuation();
+            RequestArg ra = new RequestArg(REQUEST_TEXT_DIALOG, Context.toString(args[0]));
+            pending.setApplicationState(ra);
+            throw pending;
+        }
+    }}

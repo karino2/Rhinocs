@@ -1,13 +1,17 @@
 package io.github.karino2.rhinocs
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -34,6 +38,8 @@ class MainActivity : AppCompatActivity() {
         private fun sharedPreferences(ctx: Context) = ctx.getSharedPreferences("Rhinocs", Context.MODE_PRIVATE)
 
         fun showMessage(ctx: Context, msg : String) = Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show()
+
+        const val DIALOG_ID_TEXT = 1
     }
 
     fun showMessage(msg : String) = showMessage(this, msg)
@@ -220,6 +226,58 @@ class MainActivity : AppCompatActivity() {
         withContinuationHandling { interpreter.run(script, fileName) }
     }
 
+    @Deprecated("Deprecated in Java")
+    override fun onCreateDialog(id: Int, args: Bundle?): Dialog? {
+        when(id) {
+            DIALOG_ID_TEXT->return showTextDialog(args!!.getString("DIALOG_TEXT_LABEL")!!, pendingCC!!)
+        }
+        return super.onCreateDialog(id, args)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onPrepareDialog(id: Int, dialog: Dialog?, args: Bundle?) {
+        when(id) {
+            DIALOG_ID_TEXT->{
+                dialog!!.setTitle(args!!.getString("DIALOG_TEXT_LABEL")!!)
+                dialog.findViewById<EditText>(R.id.text_edit_id)?.setText("")
+            }
+        }
+        super.onPrepareDialog(id, dialog, args)
+    }
+
+    private fun showTextDialog(label: String, pending: ContinuationPending) : Dialog {
+        val editText = EditText(this).apply { id = R.id.text_edit_id }
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+        val params = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        val margin = (20 * resources.displayMetrics.density).toInt()
+        params.setMargins(margin, 0, margin, 0)
+        layout.addView(editText, params)
+
+        return AlertDialog.Builder(this)
+            .setTitle(label)
+            .setView(layout)
+            .setPositiveButton("OK") { _, _ ->
+                withContinuationHandling {
+                    interpreter.resume(pending, editText.text.toString())
+                }
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                withContinuationHandling {
+                    interpreter.resume(pending, "")
+                }
+            }
+            .setOnCancelListener {
+                withContinuationHandling {
+                    interpreter.resume(pending, "")
+                }
+            }
+            .create()
+    }
+
     private var pendingReadKey = false
 
     private fun withContinuationHandling(run: () -> Unit) {
@@ -234,6 +292,11 @@ class MainActivity : AppCompatActivity() {
                 GlobalObject.REQUEST_READ_KEY-> {
                     pendingReadKey = true
                     showMessage(rarg.arg as String)
+                }
+                GlobalObject.REQUEST_TEXT_DIALOG -> {
+                    val label = rarg.arg as String
+                    val bundle = Bundle().apply { putString("DIALOG_TEXT_LABEL", label) }
+                    showDialog(DIALOG_ID_TEXT, bundle)
                 }
             }
         } catch (e: EcmaError) {
