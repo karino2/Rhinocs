@@ -74,6 +74,10 @@ function exchange_point_and_mark() {
 function withRegion(f) {
   let beg = point();
   let end = marker_position(mark_marker());
+  if (end < 0) {
+    message("No mark set");
+    return;
+  }
   return f(Math.min(beg, end), Math.max(beg, end));
 }
 
@@ -88,6 +92,7 @@ function copy_region() {
   withRegion((beg, end) => {
     let text = buffer_substring(beg, end);
     copy_to_clipboard(text);
+    message("Copied");
   });
 }
 
@@ -104,6 +109,28 @@ function yank() {
   insert(text);
 }
 
+function set_device_id(devid) {
+  put_pref_string("device_id", devid);
+}
+
+function get_device_id() {
+  return get_pref_string("device_id", "Default");
+}
+
+function get_per_device_storage() {
+  return `/storage/per_device/${get_device_id()}/`;
+}
+
+function join_path(...parts) {
+  if (parts.length === 0) return "";
+  return parts.reduce((acc, part, idx) => {
+    part = String(part);
+    if (idx === 0) return part;
+    if (!acc.endsWith("/")) acc += "/";
+    if (part.startsWith("/")) part = part.slice(1);
+    return acc + part;
+  }, "");
+}
 
 /*
   KeyMap関連。ひとまずここに置く。
@@ -194,6 +221,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-v", next_page)
   keymap.defineKey("M-v", previous_page)
   keymap.defineKey("C-Space", set_mark_command);
+  keymap.defineKey("C-@", set_mark_command);
   keymap.defineKey(["C-x", "C-x"], exchange_point_and_mark);
   keymap.defineKey("C-j", eval_region);
   keymap.defineKey("M-w", copy_region);

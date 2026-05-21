@@ -38,6 +38,12 @@ class MainActivity : AppCompatActivity() {
 
     fun showMessage(msg : String) = showMessage(this, msg)
 
+    fun putPrefString(key: String, value: String) = sharedPreferences(this).edit(commit = true) {
+        putString(key, value)
+    }
+
+    fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
+
     private val getFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         uri?.let {
             contentResolver.takePersistableUriPermission(

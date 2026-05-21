@@ -55,6 +55,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "buffer_substring",
             "copy_to_clipboard",
             "current_clipboard",
+            "put_pref_string",
+            "get_pref_string",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -461,5 +463,24 @@ public class GlobalObject  extends ImporterTopLevel {
             }
         }
         return "";
+    }
+
+    public static Object put_pref_string(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{String.class, String.class});
+
+        GlobalObject glob = getInstance(funcObj);
+        String key = Context.toString(args[0]);
+        String value = Context.toString(args[1]);
+        glob.activity.putPrefString(key, value);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object get_pref_string(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{String.class, String.class});
+
+        GlobalObject glob = getInstance(funcObj);
+        String key = Context.toString(args[0]);
+        String defaultValue = Context.toString(args[1]);
+        return glob.activity.getPrefString(key, defaultValue);
     }
 }
