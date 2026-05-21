@@ -90,14 +90,43 @@ public class GlobalObject  extends ImporterTopLevel {
         while (scope != null && !(scope instanceof GlobalObject)) {
             scope = scope.getParentScope();
         }
-        if (!(scope instanceof GlobalObject))
+        if (scope == null)
             throw new IllegalArgumentException("non GlobalObject func obj.");
         return (GlobalObject) scope;
     }
 
+    private static String getFuncName(Function funcObj) {
+        Object name = funcObj.get("name", funcObj);
+        return name != Scriptable.NOT_FOUND ? Context.toString(name) : "function";
+    }
+
+    private static void verifyArgs(Function funcObj, Object[] args, Class<?>[] expectedTypes) {
+        if (args.length != expectedTypes.length) {
+            throw new IllegalArgumentException(getFuncName(funcObj) + " expects " + expectedTypes.length + " argument(s).");
+        }
+        for (int i = 0; i < args.length; i++) {
+            Object arg = args[i];
+            Class<?> type = expectedTypes[i];
+            if (type == String.class) {
+                if (arg == Context.getUndefinedValue() || arg == null) {
+                    throw new IllegalArgumentException(getFuncName(funcObj) + " arg " + (i + 1) + " must be a string.");
+                }
+            } else if (type == Number.class) {
+                if (!(arg instanceof Number)) {
+                    throw new IllegalArgumentException(getFuncName(funcObj) + " arg " + (i + 1) + " must be a number.");
+                }
+            } else if (type != Object.class) {
+                Object javaObj = Context.jsToJava(arg, type);
+                if (javaObj == null || !type.isInstance(javaObj)) {
+                    throw new IllegalArgumentException(getFuncName(funcObj) + " arg " + (i + 1) + " must be " + type.getSimpleName() + ".");
+                }
+            }
+        }
+    }
+
     public static Object read_key(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        if (args.length != 1)
-            throw new IllegalArgumentException("non msg argument.");
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         String msg = Context.toString(args[0]);
         try (Context cx = Context.enter()) {
             ContinuationPending pending = cx.captureContinuation();
@@ -130,9 +159,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object open_uri(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("non uri argument.");
         String uriStr = Context.toString(args[0]);
         glob.openUri(Uri.parse(uriStr));
         return Context.getUndefinedValue();
@@ -174,9 +203,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object insert(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("non insert argument.");
         String content = Context.toString(args[0]);
         glob.getWindow().insert(content);
         return Context.getUndefinedValue();
@@ -189,35 +218,35 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object read_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
         return glob.activity.readFileContent(fname);
     }
 
     // elispの (write-region start end filename) に合わせて wirte_file(content, path)にする。
     public static Object write_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class, String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 2)
-            throw new IllegalArgumentException("write_file need content and path.");
         String content = Context.toString(args[0]);
         String path = Context.toString(args[1]);
         return glob.activity.writeFileContent(path, content);
     }
 
     public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("non file name argument.");
         String fname = Context.toString(args[0]);
         return glob.activity.readGZIPFileContent(fname);
     }
 
     public static Object load_gzip_skk_dictionary(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("load_gzip_skk_dictionary must be 1 arg.");
         String fname = Context.toString(args[0]);
         String content = glob.activity.readGZIPFileContent(fname);
         
@@ -229,9 +258,9 @@ public class GlobalObject  extends ImporterTopLevel {
     // たぶんコンテキストとかをちゃんと使い回せば平気なんだろうけれど、その中からopen_fileなどのpending continuation系が呼ばれるとややこしいので。
     // org.mozilla.javascript.WrappedException: Wrapped java.lang.IllegalStateException: Cannot have any pending top calls when executing a script with continuations
     public static Object request_load_js(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("request_load_js must be 1 arg.");
         String fname = Context.toString(args[0]);
         glob.pushLoadRequest(fname);
         return Context.getUndefinedValue();
@@ -245,9 +274,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object delete_region(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class, Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 2)
-            throw new IllegalArgumentException("invalid delete region argument num.");
 
         long p1 = (long)Context.toNumber(args[0]);
         long p2 = (long)Context.toNumber(args[1]);
@@ -263,25 +292,25 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object show_toast(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("show_toast must be 1 arg.");
         glob.activity.showMessage(Context.toString(args[0]));
         return Context.getUndefinedValue();
     }
 
     public static Object point_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("point_column must be 1 arg.");
         long pos = (long)Context.toNumber(args[0]);
         return glob.getWindow().pontToColumn(pos);
     }
 
     public static Object set_goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("set_goal_column must be 1 arg.");
         int column = (int) Context.toNumber(args[0]);
         glob.getWindow().setGoalColumn(column);
         return Context.getUndefinedValue();
@@ -293,9 +322,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object goto_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("goto_column must be 1 arg.");
         int column = (int) Context.toNumber(args[0]);
         return glob.getWindow().gotoColumn(column);
     }
@@ -305,9 +334,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object goto_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("goto_char must be 1 arg.");
         long pos = (long) Context.toNumber(args[0]);
         glob.getWindow().gotoChar(pos);
         return Context.getUndefinedValue();
@@ -331,9 +360,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object scroll_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("scroll_window must be 1 arg.");
         int delta = (int) Context.toNumber(args[0]);
         glob.getWindow().scrollWindow(delta);
         return Context.getUndefinedValue();
@@ -343,9 +372,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object get_buffer_create(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("non buffer name argument.");
         String bname = Context.toString(args[0]);
         Buffer buf = new Buffer();
         buf.setName(bname);
@@ -353,9 +382,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object switch_to_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Buffer.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("need buffer argument.");
         //  || !(args[0] instanceof Buffer)
         Buffer buf = (Buffer)Context.jsToJava(args[0], Buffer.class);
         glob.getWindow().setBuffer(buf);
@@ -363,9 +392,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object message(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("message takes 1 arg.");
         String msg = Context.toString(args[0]);
         glob.getWindow().setStatusText(msg);
         return Context.getUndefinedValue();
@@ -378,19 +407,19 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object set_marker(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Marker.class, Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 2)
-            throw new IllegalArgumentException("set_marker takes two arguments: marker, position");
         Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
-        long pos = (long)args[1];
+        long pos = (long)Context.toNumber(args[1]);
         marker.setPosition(pos);
         return Context.getUndefinedValue();
     }
 
     public static Object marker_position(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Marker.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("not marker argument");
         Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
         return marker.getPosition();
     }
@@ -399,9 +428,9 @@ public class GlobalObject  extends ImporterTopLevel {
 
     // 今の所第三引数（bufferオブジェクト）はサポートしないが、名前はbuffer_substringにしておく。
     public static Object buffer_substring(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class, Number.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 2)
-            throw new IllegalArgumentException("substring takes two arguments: beg, end");
         long beg = (long)Context.toNumber(args[0]);
         long end = (long)Context.toNumber(args[1]);
         // 選択されてないケース。一応ここでもガードしておく。
@@ -411,9 +440,9 @@ public class GlobalObject  extends ImporterTopLevel {
     }
     
     public static Object copy_to_clipboard(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
         GlobalObject glob = getInstance(funcObj);
-        if (args.length != 1)
-            throw new IllegalArgumentException("string arg missing.");
         String text = Context.toString(args[0]);
         ClipboardManager clipboard = (ClipboardManager) glob.activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("rhinocs", text);
