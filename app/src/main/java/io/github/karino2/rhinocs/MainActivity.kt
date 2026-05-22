@@ -142,31 +142,34 @@ class MainActivity : AppCompatActivity() {
             getPackageDirUri.launch(null)
         }
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
-            loadInitScript()
-        }
-        findViewById<Button>(R.id.buttonDeb3).setOnClickListener {
             _interpreter = null
-            interpreter
+            initInterpreter()
             showMessage("Interpreter reset.")
         }
 
         // loadBuiltinしておく
+        initInterpreter()
+    }
+
+    private fun initInterpreter() {
         interpreter
+        loadInitScript()
     }
 
     private fun loadInitScript() {
-        loadPackageJS("/init.js")
-        showMessage("init.js loaded.")
+        loadPackageJS("/init.js", mayNotExist = true)
     }
 
-    fun loadPackageJS(absPath: String) {
+    fun loadPackageJS(absPath: String, mayNotExist: Boolean = false) : Boolean {
         val content = readFileContent(absPath)
         if(content.isEmpty()) {
-            showMessage("Fail to load: $absPath")
-            return
+            if (!mayNotExist)
+                showMessage("Fail to load: $absPath")
+            return false
         }
 
         runScript(content, absPath)
+        return true
     }
 
     val packageRootDir: FastFile?
