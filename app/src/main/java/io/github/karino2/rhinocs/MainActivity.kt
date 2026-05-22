@@ -19,6 +19,7 @@ import org.mozilla.javascript.ContinuationPending
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
+import org.mozilla.javascript.Function
 import org.mozilla.javascript.WrappedException
 
 data class RequestArg(val requestId: Int, val arg: Any)
@@ -224,6 +225,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun runScript(script: String, fileName: String="*script*") {
         withContinuationHandling { interpreter.run(script, fileName) }
+    }
+
+    fun callJsFunction(function: Function) {
+        withContinuationHandling {
+            interpreter.callFunction(function)
+        }
     }
 
     @Deprecated("Deprecated in Java")

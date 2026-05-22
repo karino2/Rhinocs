@@ -14,6 +14,8 @@ import org.mozilla.javascript.ScriptableObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.Pair;
+
 
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
@@ -68,15 +70,15 @@ public class GlobalObject  extends ImporterTopLevel {
     public RView rview;
     public Window getWindow() { return rview.getWindow(); }
 
-    public ArrayList<String> loadRequestsQueue;
+    public ArrayList<Pair<String, Function>> loadRequestsQueue;
 
-    public void pushLoadRequest(String jsPath) {
-        loadRequestsQueue.add(jsPath);
+    public void pushLoadRequest(String jsPath, Function callAfter) {
+        loadRequestsQueue.add(new Pair<>(jsPath, callAfter));
     }
 
     public boolean hasPendingRequest() { return !loadRequestsQueue.isEmpty(); }
-    public String popLoadRequest() {
-        String first = loadRequestsQueue.get(0);
+    public Pair<String, Function> popLoadRequest() {
+        Pair<String, Function> first = loadRequestsQueue.get(0);
         loadRequestsQueue.remove(0);
         return first;
     }
@@ -262,11 +264,16 @@ public class GlobalObject  extends ImporterTopLevel {
     // たぶんコンテキストとかをちゃんと使い回せば平気なんだろうけれど、その中からopen_fileなどのpending continuation系が呼ばれるとややこしいので。
     // org.mozilla.javascript.WrappedException: Wrapped java.lang.IllegalStateException: Cannot have any pending top calls when executing a script with continuations
     public static Object request_load_js(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
+        if (args.length < 1 || args.length > 2) {
+            throw new IllegalArgumentException("request_load_js arguments must be 1 or 2.");
+        }
         GlobalObject glob = getInstance(funcObj);
         String fname = Context.toString(args[0]);
-        glob.pushLoadRequest(fname);
+        Function after = null;
+        if(args.length == 2) {
+            after = (Function) args[1];
+        }
+        glob.pushLoadRequest(fname, after);
         return Context.getUndefinedValue();
     }
 
