@@ -239,7 +239,7 @@ class MainActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onCreateDialog(id: Int, args: Bundle?): Dialog? {
         when(id) {
-            DIALOG_ID_TEXT->return showTextDialog(args!!.getString("DIALOG_TEXT_LABEL")!!, pendingCC!!)
+            DIALOG_ID_TEXT->return createQueryTextDialog(args!!.getString("DIALOG_TEXT_LABEL")!!, pendingCC!!)
         }
         return super.onCreateDialog(id, args)
     }
@@ -255,7 +255,7 @@ class MainActivity : AppCompatActivity() {
         super.onPrepareDialog(id, dialog, args)
     }
 
-    private fun showTextDialog(label: String, pending: ContinuationPending) : Dialog {
+    private fun createQueryTextDialog(label: String, pending: ContinuationPending) : Dialog {
         val editText = EditText(this).apply { id = R.id.text_edit_id }
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
