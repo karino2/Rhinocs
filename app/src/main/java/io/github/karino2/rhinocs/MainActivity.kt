@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -267,7 +268,8 @@ class MainActivity : AppCompatActivity() {
         params.setMargins(margin, 0, margin, 0)
         layout.addView(editText, params)
 
-        return AlertDialog.Builder(this)
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(label)
             .setTitle(label)
             .setView(layout)
             .setPositiveButton("OK") { _, _ ->
@@ -286,6 +288,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .create()
+
+        editText.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_G && event.isCtrlPressed) {
+                dialog.cancel()
+                true
+            } else {
+                false
+            }
+        }
+        return dialog
     }
 
     private var pendingReadKey = false
