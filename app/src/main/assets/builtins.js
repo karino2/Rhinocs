@@ -111,6 +111,7 @@ function yank() {
 
 function set_device_id(devid) {
   put_pref_string("device_id", devid);
+  message("set: " + devid);
 }
 
 function get_device_id() {
