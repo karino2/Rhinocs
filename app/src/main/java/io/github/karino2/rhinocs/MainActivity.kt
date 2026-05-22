@@ -145,6 +145,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
             _interpreter = null
             initInterpreter()
+            rview.window.resetModeLineFormat()
             showMessage("Interpreter reset.")
         }
 

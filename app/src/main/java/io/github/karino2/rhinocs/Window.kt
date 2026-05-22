@@ -23,7 +23,9 @@ class Window {
     var goalColumn : Int? = null
 
     var statusText = ""
-    var modeLineFormat = "\${bufferName} [\${lineNum}:\${column}]"
+
+    val defaultModeFmt = "\${bufferName} [\${lineNum}:\${column}]"
+    var modeLineFormat = defaultModeFmt
 
     val modeLineText: String
         get() {
@@ -229,6 +231,10 @@ class Window {
     fun gotoEol() {
         resetGoalGolumn()
         point = buffer.gotoEol(point)
+    }
+
+    fun resetModeLineFormat() {
+        modeLineFormat = defaultModeFmt
     }
 
 }
