@@ -58,7 +58,7 @@ class RView @JvmOverloads constructor(
         window.numRows = ((h - margin) / cellHeight).toInt() - 2 // モード行とステータス行用に空ける
     }
 
-    val window = Window().apply { buffer = Buffer() }
+    val window = Window().apply { buffer = Buffer().apply { name = "*scratch*" } }
 
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
@@ -139,11 +139,11 @@ class RView @JvmOverloads constructor(
         val bgPaint = Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }
         canvas.drawRect(0f, yBase, width.toFloat(), yBase + cellHeight, bgPaint)
 
-        canvas.withColorAlign(Color.WHITE, Paint.Align.LEFT) {
+        canvas.withColorAlign(Color.WHITE, Paint.Align.RIGHT) {
             val textY = textCenterBase(yBase)
 
             val modeText = window.modeLineText
-            drawText(modeText, margin, textY, textPaint)
+            drawText(modeText, width.toFloat() - margin, textY, textPaint)
         }
     }
 

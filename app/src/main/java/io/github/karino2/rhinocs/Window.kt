@@ -7,7 +7,7 @@ import kotlin.math.min
 
 class Window {
     var point = Point(0, 0, 0)
-    var buffer: Buffer = Buffer()
+    var buffer: Buffer = Buffer().apply { name = "*scratch*" }
         set(newBuf) {
             field = newBuf
 
@@ -23,10 +23,34 @@ class Window {
     var goalColumn : Int? = null
 
     var statusText = ""
-    var modeLineFormat = "-- Hello Mode --"
+    var modeLineFormat = "\${bufferName} [\${lineNum}:\${column}]"
 
     val modeLineText: String
-        get() = modeLineFormat
+        get() {
+            val res = StringBuilder()
+            var i = 0
+            while (i < modeLineFormat.length) {
+                val c = modeLineFormat[i]
+                if (c == '$' && i + 1 < modeLineFormat.length && modeLineFormat[i + 1] == '{') {
+                    val end = modeLineFormat.indexOf('}', i + 2)
+                    if (end != -1) {
+                        val symbol = modeLineFormat.substring(i + 2, end)
+                        val value = when (symbol) {
+                            "bufferName" -> buffer.name
+                            "column" -> point.offset+1
+                            "lineNum" -> point.linenum +1
+                            else -> "\${$symbol}"
+                        }
+                        res.append(value)
+                        i = end + 1
+                        continue
+                    }
+                }
+                res.append(c)
+                i++
+            }
+            return res.toString()
+        }
 
     fun computeGoalGolumn() : Int {
         goalColumn?.let {
@@ -48,6 +72,7 @@ class Window {
         FastFile.fromDocUri(resolver, uri)?.let {
             buffer = Buffer.fromText(it.readText())
             buffer.url = uri
+            buffer.name = it.name
             resetGoalGolumn()
         }
     }
