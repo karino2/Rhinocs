@@ -495,4 +495,5 @@ public class GlobalObject  extends ImporterTopLevel {
             pending.setApplicationState(ra);
             throw pending;
         }
-    }}
+    }
+}
