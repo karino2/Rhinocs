@@ -517,8 +517,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
     public static Object get_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        glob.getWindow().getModeLineFormat();
-        return Context.getUndefinedValue();
+        return glob.getWindow().getModeLineFormat();
     }
 
 }
