@@ -60,6 +60,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "put_pref_string",
             "get_pref_string",
             "query_text_dialog",
+            "set_mode_line_format",
+            "get_mode_line_format",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -503,4 +505,20 @@ public class GlobalObject  extends ImporterTopLevel {
             throw pending;
         }
     }
+
+    public static Object set_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        String fmt = Context.toString(args[0]);
+        glob.getWindow().setModeLineFormat(fmt);
+        return Context.getUndefinedValue();
+    }
+
+    public static Object get_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        glob.getWindow().getModeLineFormat();
+        return Context.getUndefinedValue();
+    }
+
 }

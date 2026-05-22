@@ -23,6 +23,10 @@ class Window {
     var goalColumn : Int? = null
 
     var statusText = ""
+    var modeLineFormat = "-- Hello Mode --"
+
+    val modeLineText: String
+        get() = modeLineFormat
 
     fun computeGoalGolumn() : Int {
         goalColumn?.let {

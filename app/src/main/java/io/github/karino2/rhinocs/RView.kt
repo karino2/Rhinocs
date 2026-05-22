@@ -41,6 +41,11 @@ class RView @JvmOverloads constructor(
     val cellHeight: Float
         get() = textPaint.fontMetrics.let { it.descent - it.ascent }
 
+    private fun textCenterBase(yBase: Float): Float {
+        val fm = textPaint.fontMetrics
+        return yBase + (cellHeight / 2f) - (fm.ascent + fm.descent) / 2f
+    }
+
     val numRows: Int
         get() = window.numRows
     val numCols: Int
@@ -50,7 +55,7 @@ class RView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         window.numCols = ((w - margin) / cellWidth).toInt()
-        window.numRows = ((h - margin) / cellHeight).toInt() - 1 // 最後の1行をステータス行用に空ける
+        window.numRows = ((h - margin) / cellHeight).toInt() - 2 // モード行とステータス行用に空ける
     }
 
     val window = Window().apply { buffer = Buffer() }
@@ -95,13 +100,73 @@ class RView @JvmOverloads constructor(
             canvas.drawRect(caretX, caretY, caretX + 3f, caretY + cellHeight, caretPaint)
         }
 
+        drawModeLine(canvas)
         drawStatusLine(canvas)
     }
 
+    private fun Canvas.withColor(fg: Int, block: Canvas.() -> Unit) {
+        val oldFg = textPaint.color
+        textPaint.color = fg
+        try {
+            this.block()
+        } finally {
+            textPaint.color = oldFg
+        }
+    }
+
+    private fun Canvas.withAlign(align: Paint.Align, block: Canvas.() -> Unit) {
+        val oldAlign = textPaint.textAlign
+        textPaint.textAlign = align
+        try {
+            this.block()
+        } finally {
+            textPaint.textAlign = oldAlign
+        }
+    }
+
+    private fun Canvas.withColorAlign(fg: Int, align: Paint.Align, block: Canvas.() -> Unit) {
+        withColor(fg) {
+            withAlign(align) {
+                this.block()
+            }
+        }
+    }
+
+    private fun drawModeLine(canvas: Canvas) {
+        val modeRow = numRows
+        val yBase = margin + modeRow * cellHeight
+
+        val bgPaint = Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }
+        canvas.drawRect(0f, yBase, width.toFloat(), yBase + cellHeight, bgPaint)
+
+        canvas.withColorAlign(Color.WHITE, Paint.Align.LEFT) {
+            val textY = textCenterBase(yBase)
+
+            val modeText = window.modeLineText
+            drawText(modeText, margin, textY, textPaint)
+        }
+    }
+
     private fun drawStatusLine(canvas: Canvas) {
-        val statusRow = numRows
+        val statusRow = numRows + 1
         val yBase = margin + statusRow * cellHeight
 
+        drawMiniBufferBorder(canvas, yBase)
+
+        val statusText = window.statusText
+
+        if(statusText.isNotEmpty())
+        {
+            // 上下中央
+            val textY = textCenterBase(yBase)
+
+            canvas.withAlign(Paint.Align.LEFT) {
+                drawText(statusText, margin, textY, textPaint)
+            }
+        }
+    }
+
+    private fun drawMiniBufferBorder(canvas: Canvas, yBase: Float) {
         // 境界線とわずかな影を描画
         val separatorPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
         val shadowPaint = Paint().apply { color = "#E0E0E0".toColorInt(); strokeWidth = 1f }
@@ -110,21 +175,6 @@ class RView @JvmOverloads constructor(
         canvas.drawLine(0f, yBase, width.toFloat(), yBase, separatorPaint)
         // そのすぐ下にさらに薄い色で影をつける
         canvas.drawLine(0f, yBase + 1f, width.toFloat(), yBase + 1f, shadowPaint)
-
-        val statusText = window.statusText
-
-        if(statusText.isNotEmpty())
-        {
-            val fm = textPaint.fontMetrics
-            // 上下中央
-            val textY = yBase + (cellHeight / 2f) - (fm.ascent + fm.descent) / 2f
-
-
-            val oldAlign = textPaint.textAlign
-            textPaint.textAlign = Paint.Align.LEFT
-            canvas.drawText(statusText, margin, textY, textPaint)
-            textPaint.textAlign = oldAlign
-        }
     }
 
     val keyMap = mapOf(
