@@ -1,6 +1,13 @@
 # Rhinocs
 
-An Android text editor powered by Rhino (JavaScript engine).
+An Android text editor powered by [Rhino](https://rhino.github.io/).
+
+## JS Package
+
+Rhinocs is hevily relied on js sources.
+Place following js packages and set PackageRoot to this dir.
+
+[karino2/RhinocsJSPackage](https://github.com/karino2/RhinocsJSPackage)
 
 ## Font Credits
 
