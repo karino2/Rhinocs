@@ -66,6 +66,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "is_bol",
             "enter_minibuffer",
             "leave_minibuffer",
+            "request_function_execute",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -78,23 +79,28 @@ public class GlobalObject  extends ImporterTopLevel {
     public Window selectedWindow() { return getRhinocs().getSelectedWindow(); }
     Buffer selectedBuffer() { return getRhinocs().getSelectedBuffer(); }
 
-    public ArrayList<Pair<String, Function>> loadRequestsQueue;
+    ArrayList<DelayedRequest> pendingRequestQueue;
 
     public void pushLoadRequest(String jsPath, Function callAfter) {
-        loadRequestsQueue.add(new Pair<>(jsPath, callAfter));
+        pendingRequestQueue.add( DelayedRequest.Companion.jsLoadRequest(jsPath, callAfter) );
     }
 
-    public boolean hasPendingRequest() { return !loadRequestsQueue.isEmpty(); }
-    public Pair<String, Function> popLoadRequest() {
-        Pair<String, Function> first = loadRequestsQueue.get(0);
-        loadRequestsQueue.remove(0);
+    public void pushDelayedCallRequest(Function jsfunc) {
+        pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.CALL_FUNCTION, jsfunc) );
+    }
+
+
+    public boolean hasPendingRequest() { return !pendingRequestQueue.isEmpty(); }
+
+    public DelayedRequest popDelayedRequest() {
+        DelayedRequest first = pendingRequestQueue.get(0);
+        pendingRequestQueue.remove(0);
         return first;
     }
 
 
-
     public GlobalObject(Context ctx) {
-        loadRequestsQueue = new ArrayList<>();
+        pendingRequestQueue = new ArrayList<>();
         initStandardObjects(ctx, true);
         defineFunctionProperties(TOP_COMMANDS, GlobalObject.class, ScriptableObject.DONTENUM);
     }
@@ -573,6 +579,7 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         return glob.selectedWindow().isBOL();
     }
+
     /*(non-Javadoc)
      *
      * enter_minibuffer(prompt)
@@ -603,4 +610,20 @@ public class GlobalObject  extends ImporterTopLevel {
         return glob.getRhinocs().leaveMiniBuffer();
     }
 
+    /*(non-Javadoc)
+     *
+     * request_function_execute(jsfunc)
+     *
+     * jsfuncをcapture continuationが出来る状態で（つまり非同期で後から）実行する。
+     *
+     * @param {function()} jsfunc
+     */
+    public static Object request_function_execute(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Function.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        Function jsfunc = (Function)args[0];
+        glob.pushDelayedCallRequest(jsfunc);
+        return Context.getUndefinedValue();
+    }
 }

@@ -42,7 +42,7 @@ class Interpreter {
 
     fun callFunction(jsFunction: Function)  {
         withContext {
-            jsFunction.call(it, global, global, emptyArray<Any>())
+            it.callFunctionWithContinuations(jsFunction, global, emptyArray<Any>())
         }
     }
 
@@ -59,10 +59,19 @@ class Interpreter {
 
     private fun runPendingRequest() {
         if (global.hasPendingRequest()) {
-            val req = global.popLoadRequest()
-            global.activity.loadPackageJS(req.first)
-            req.second?.let {
-                global.activity.callJsFunction(it)
+            val req = global.popDelayedRequest()
+            when(req.type) {
+                DelayedRequestType.LOAD_JS -> {
+                    val larg = req.arg as DelayedRequest.JSLoadArg
+                    global.activity.loadPackageJS(larg.fname)
+                    larg.callAfter?.let {
+                        global.activity.callJsFunction(it)
+                    }
+                }
+                DelayedRequestType.CALL_FUNCTION -> {
+                    val farg = req.arg as Function
+                    callFunction(farg)
+                }
             }
         }
     }
