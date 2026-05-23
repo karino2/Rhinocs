@@ -73,12 +73,25 @@ class RView @JvmOverloads constructor(
         val startX = margin
         val startY = -fm.ascent + margin
 
+        drawOneWin(win, margin, startX, startY, canvas)
+
+        drawModeLine(canvas)
+        drawStatusLine(canvas)
+    }
+
+    private fun drawOneWin(
+        win: Window,
+        topY: Float,
+        startX: Float,
+        startY: Float,
+        canvas: Canvas
+    ) {
         val currentPos = win.pointRowCol
         win.updateOffset(currentPos.col)
 
-        for (row in 0..<numRows) {
+        for (row in 0..<win.numRows) {
             val linfo = win.lineInfo(row)
-            for (col in 0..<numCols) {
+            for (col in 0..<win.numCols) {
                 val cell = linfo[col]
                 if (!cell.isEmpty) {
                     val numCells = cell.widthCount
@@ -90,18 +103,24 @@ class RView @JvmOverloads constructor(
             }
         }
 
-        val rpos = currentPos.toRelative(win.lastOffset)
+        if(win.isSelected)
+            drawCaret(win, startX, topY, canvas)
+    }
 
-        // Draw caret
-        if (rpos.row in 0..<numRows && rpos.col in 0..<numCols) {
-            val caretX = startX + rpos.col * cellWidth
-            val caretY = margin + rpos.row * cellHeight
+    private fun drawCaret(
+        win: Window,
+        topX: Float,
+        topY: Float,
+        canvas: Canvas
+    ) {
+        val rpos = win.pointRowCol.toRelative(win.lastOffset)
+
+        if (rpos.row in 0..<win.numRows && rpos.col in 0..<win.numCols) {
+            val caretX = topX + rpos.col * cellWidth
+            val caretY = topY + rpos.row * cellHeight
             // 2dp相当の幅の縦棒を描画
             canvas.drawRect(caretX, caretY, caretX + 3f, caretY + cellHeight, caretPaint)
         }
-
-        drawModeLine(canvas)
-        drawStatusLine(canvas)
     }
 
     private fun Canvas.withColor(fg: Int, block: Canvas.() -> Unit) {

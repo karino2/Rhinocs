@@ -19,6 +19,8 @@ class Window {
             point = Point(0, 0, 0)
         }
 
+    var isSelected = true
+
     var lastOffset = RowCol(0, 0)
 
     var numRows = 0

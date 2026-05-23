@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
 
     private val rview: RView
         get() = findViewById<RView>(R.id.rView)!!
-    
+
     val packageDirUri: Uri?
         get() = packageDirUriStr(this)?.toUri()
 
