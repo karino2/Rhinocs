@@ -96,12 +96,44 @@ function copy_region() {
   });
 }
 
-function kill_region() {
-  withRegion((beg, end) => {
+function kill_region_inner(beg, end) {
     let text = buffer_substring(beg, end);
     copy_to_clipboard(text);
     delete_region(beg, end);
+}
+
+function kill_region() {
+  withRegion((beg, end) => {
+    kill_region_inner(beg, end);
   });
+}
+
+/*
+  (kill-region (point)
+	       (progn
+		 (cond ((null lines)
+			(if (eolp)
+			    (forward-line 1)
+			  (goto-eol)))
+		       ((zerop lines)
+			(if (bolp)
+			    (forward-line -1)
+			  (goto-bol)))
+		       (t
+			(forward-line lines)))
+		 (point))))
+*/
+function kill_line() {
+  let beg = point();
+  if (is_eol()) {
+    forward_line(1);
+  } else {
+    goto_eol();
+  }
+  let end = point();
+  if (end > beg) {
+    kill_region_inner(beg, end);
+  }
 }
 
 function yank() {
@@ -227,6 +259,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-j", eval_region);
   keymap.defineKey("M-w", copy_region);
   keymap.defineKey("C-w", kill_region);
+  keymap.defineKey("C-k", kill_line);
   keymap.defineKey("C-y", yank);
   return keymap;
 }

@@ -62,6 +62,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "query_text_dialog",
             "set_mode_line_format",
             "get_mode_line_format",
+            "is_eol",
+            "is_bol",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -544,4 +546,29 @@ public class GlobalObject  extends ImporterTopLevel {
         return glob.getWindow().getModeLineFormat();
     }
 
+    /*(non-Javadoc)
+     *
+     * is_eol()
+     *
+     * 現在の位置が行末ならtrue、それ以外ならfalseを返す
+     *
+     * @return {boolean}
+     */
+    public static Object is_eol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getWindow().isEOL();
+    }
+
+    /*(non-Javadoc)
+     *
+     * is_bol()
+     *
+     * 現在の位置が行頭ならtrue、それ以外ならfalseを返す
+     *
+     * @return {boolean}
+     */
+    public static Object is_bol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getWindow().isBOL();
+    }
 }

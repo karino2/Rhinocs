@@ -221,6 +221,12 @@ class Buffer {
         return ret.toString()
     }
 
+    fun isEOL(point: Point) : Boolean {
+        if (lines.isEmpty())
+            return true
+        return lines[point.linenum].length == point.offset
+    }
+
     companion object {
         fun fromText(text: String) = Buffer().apply { load(text) }
     }

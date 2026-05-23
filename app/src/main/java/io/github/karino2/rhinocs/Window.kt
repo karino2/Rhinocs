@@ -6,6 +6,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 class Window {
+    fun isEOL() = buffer.isEOL(point)
+
+    fun isBOL() = point.offset == 0
+
     var point = Point(0, 0, 0)
     var buffer: Buffer = Buffer().apply { name = "*scratch*" }
         set(newBuf) {
