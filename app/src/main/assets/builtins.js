@@ -227,7 +227,6 @@ KeyMap.prototype.clone = function() {
   return newMap;
 }
 
-
 function CreateDefaultKeyMap() {
   let keymap = new KeyMap();
   keymap.defineDefaultSelfInsert();
@@ -329,10 +328,33 @@ let g_keyMapHandler = {
   }
 };
 
+/*
+  g_keyMapHandlerが必要なAPI
+*/
+
 function global_set_key(keyPat, func) {
     g_keyMapHandler.currentKeyMap().defineKey(keyPat, func);
 }
 
+function read_string(prompt) {
+  let miniKeyMap = new KeyMap();
+  let promise = new Promise((resolve, reject)=> {
+    miniKeyMap.defineKey("Return", ()=> {
+      g_keyMapHandler.popKeyMap();
+      let ret = leave_minibuffer()
+      print("success! " + ret);
+      resolve(ret);
+    });
+    miniKeyMap.defineKey("C-g", ()=> {
+      g_keyMapHandler.popKeyMap();
+      leave_minibuffer();
+      reject();
+    });
+  });
+  g_keyMapHandler.pushKeyMap(miniKeyMap);
+  enter_minibuffer(prompt);
+  return promise;
+}
 
 function defaultOnKeyDown(str) {
    g_keyMapHandler.handleKeyDown(str);
@@ -341,3 +363,4 @@ function defaultOnKeyDown(str) {
 function onKeyDown(str) {
    g_keyMapHandler.handleKeyDown(str);
 }
+

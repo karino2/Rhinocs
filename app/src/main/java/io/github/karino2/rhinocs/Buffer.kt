@@ -20,8 +20,8 @@ class Buffer {
     // 対応するfileがあれば入る。なければnull
     var url: Uri? = null
 
-    // 今の所使ってない。
     var name = ""
+    var isMiniBuffer = false
 
     val lines = ArrayList<StringBuilder>().apply { add(StringBuilder()) }
     val numLines: Int

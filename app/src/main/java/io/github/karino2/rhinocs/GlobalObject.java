@@ -64,6 +64,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "get_mode_line_format",
             "is_eol",
             "is_bol",
+            "enter_minibuffer",
+            "leave_minibuffer",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -73,7 +75,7 @@ public class GlobalObject  extends ImporterTopLevel {
     public MainActivity activity;
     public RView rview;
     public Rhinocs getRhinocs() { return rview.getRhinocs(); }
-    public Window selectedWindow() { return getRhinocs().getWindow(); }
+    public Window selectedWindow() { return getRhinocs().getSelectedWindow(); }
     Buffer selectedBuffer() { return getRhinocs().getSelectedBuffer(); }
 
     public ArrayList<Pair<String, Function>> loadRequestsQueue;
@@ -571,4 +573,34 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         return glob.selectedWindow().isBOL();
     }
+    /*(non-Javadoc)
+     *
+     * enter_minibuffer(prompt)
+     *
+     * promptを先頭に表示してミニバッファを作成してミニバッファウィンドウをアクティブにする
+     *
+     * @param {string} prompt
+     */
+    public static Object enter_minibuffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        String prompt = Context.toString(args[0]);
+        glob.getRhinocs().enterMiniBuffer(prompt);
+        return Context.getUndefinedValue();
+    }
+
+    /*(non-Javadoc)
+     *
+     * leave_minibuffer()
+     *
+     * minibufferに入力されているテキストを返し、ミニバッファは破棄して最後にアクティブだったWindowをアクティブにする。
+     *
+     * @return {string}
+     */
+    public static Object leave_minibuffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.getRhinocs().leaveMiniBuffer();
+    }
+
 }

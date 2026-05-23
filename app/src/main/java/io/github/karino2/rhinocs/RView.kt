@@ -76,7 +76,7 @@ class RView @JvmOverloads constructor(
         drawOneWin(win, margin, startX, startY, canvas)
 
         drawModeLine(canvas)
-        drawStatusLine(canvas)
+        drawMiniBufferLine(canvas)
     }
 
     private fun drawOneWin(
@@ -166,20 +166,39 @@ class RView @JvmOverloads constructor(
         }
     }
 
-    private fun drawStatusLine(canvas: Canvas) {
-        val statusRow = numRows + 1
-        val yBase = margin + statusRow * cellHeight
+    private fun drawMiniBufferLine(canvas: Canvas) {
+        val minibufRow = numRows + 1
+        val yBase = margin + minibufRow * cellHeight
 
         drawMiniBufferBorder(canvas, yBase)
 
+        val textY = textCenterBase(yBase)
+
         val statusText = rhinocs.statusText
 
+        // エコー領域優先
         if(statusText.isNotEmpty())
         {
-            val textY = textCenterBase(yBase)
-
             canvas.withAlign(Paint.Align.LEFT) {
                 drawText(statusText, margin, textY, textPaint)
+            }
+        } else {
+            rhinocs.miniBufferWindow?.let {mwin->
+                val prompt = mwin.miniBuffer.prompt
+                canvas.withAlign(Paint.Align.LEFT) {
+                    drawText(prompt, margin, textY, textPaint)
+                }
+
+                val promptWidth = textPaint.measureText(prompt)
+                val startX = margin + promptWidth
+                val fm = textPaint.fontMetrics
+                val startY = -fm.ascent + yBase
+
+                // ミニバッファのWindowのカラム数を残りの幅に合わせる
+                val remainingWidth = width.toFloat() - margin - promptWidth
+                mwin.window.numCols = (remainingWidth / cellWidth).toInt().coerceAtLeast(0)
+
+                drawOneWin(mwin.window, yBase, startX, startY, canvas)
             }
         }
     }

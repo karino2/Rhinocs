@@ -9,8 +9,16 @@ import android.net.Uri
  */
 class Rhinocs {
     val window = Window().apply { buffer = Buffer().apply { name = "*scratch*" } }
+
+    var miniBufferWindow: MiniBufferWindow? = null
+
+    val selectedWindow: Window
+        get() {
+            return miniBufferWindow?.window ?: window
+        }
+
     val selectedBuffer : Buffer
-        get() = window.buffer
+        get() = selectedWindow.buffer
 
     var numRows: Int
         get() = window.numRows
@@ -18,7 +26,30 @@ class Rhinocs {
 
     var numCols: Int
         get() = window.numCols
-        set(value) { window.numCols = value }
+        set(value) {
+            window.numCols = value
+            miniBufferWindow?.numCols = value
+        }
+
+    fun enterMiniBuffer(prompt: String) {
+        if(miniBufferWindow != null)
+            throw Error("Recursive minibuffer enter, NYI.")
+
+
+        val mwin = MiniBufferWindow()
+        mwin.numCols = numCols
+        mwin.window.isSelected = true
+        mwin.miniBuffer.prompt = prompt
+        miniBufferWindow = mwin
+        window.isSelected = false
+    }
+
+    fun leaveMiniBuffer() : String {
+        window.isSelected = true
+        val ret = miniBufferWindow?.miniBuffer?.buffer?.getLine(0) ?: ""
+        miniBufferWindow = null
+        return ret
+    }
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         window.loadFile(resolver, uri)
@@ -40,9 +71,9 @@ class Rhinocs {
                     if (end != -1) {
                         val symbol = modeLineFormat.substring(i + 2, end)
                         val value = when (symbol) {
-                            "bufferName" -> window.buffer.name
-                            "column" -> window.point.offset + 1
-                            "lineNum" -> window.point.linenum + 1
+                            "bufferName" -> selectedWindow.buffer.name
+                            "column" -> selectedWindow.point.offset + 1
+                            "lineNum" -> selectedWindow.point.linenum + 1
                             else -> "\${$symbol}"
                         }
                         res.append(value)
