@@ -34,6 +34,7 @@ class Interpreter {
             global.rhinocs.statusText = ""
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
+            it.processMicrotasks()
             global.rview.invalidate()
         }
         runPendingRequest()
@@ -48,6 +49,7 @@ class Interpreter {
     fun resume(cc: ContinuationPending, result: Any) {
         withContext {
             it.resumeContinuation(cc.continuation, global, result)
+            it.processMicrotasks()
             global.rview.invalidate()
         }
         runPendingRequest()
