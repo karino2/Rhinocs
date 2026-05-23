@@ -210,6 +210,14 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
+    /*(non-Javadoc)
+     *
+     * insert(content)
+     *
+     * 文字列を現在の位置に挿入してその分forwardする。
+     *
+     * @param {string} content - 挿入する文字列
+     */
     public static Object insert(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { String.class });
 
@@ -506,6 +514,14 @@ public class GlobalObject  extends ImporterTopLevel {
         }
     }
 
+    /*(non-Javadoc)
+     *
+     * set_mode_line_format(fmt)
+     *
+     * モード行フォーマットを設定する
+     *
+     * @param {string} fmt
+     */
     public static Object set_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { String.class });
 
@@ -515,6 +531,14 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
+    /*(non-Javadoc)
+     *
+     * get_mode_line_format()
+     *
+     * 現在のモード行フォーマットを返す
+     *
+     * @return {string}
+     */
     public static Object get_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         return glob.getWindow().getModeLineFormat();
