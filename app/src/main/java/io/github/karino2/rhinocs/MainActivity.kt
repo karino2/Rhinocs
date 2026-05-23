@@ -46,6 +46,9 @@ class MainActivity : AppCompatActivity() {
 
     fun showMessage(msg : String) = showMessage(this, msg)
 
+    val rhinocs: Rhinocs
+        get() = rview.rhinocs
+
     fun putPrefString(key: String, value: String) = sharedPreferences(this).edit(commit = true) {
         putString(key, value)
     }
@@ -109,10 +112,7 @@ class MainActivity : AppCompatActivity() {
 
     private val rview: RView
         get() = findViewById<RView>(R.id.rView)!!
-
-    private val window: Window
-        get() = rview.window
-
+    
     val packageDirUri: Uri?
         get() = packageDirUriStr(this)?.toUri()
 
@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
             _interpreter = null
             initInterpreter()
-            rview.window.resetModeLineFormat()
+            rhinocs.resetModeLineFormat()
             showMessage("Interpreter reset.")
         }
 
@@ -333,4 +333,3 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
-

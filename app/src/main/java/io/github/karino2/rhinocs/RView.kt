@@ -16,6 +16,8 @@ class RView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
+    val rhinocs = Rhinocs()
+
     init {
         isFocusable = true
         isFocusableInTouchMode = true
@@ -47,37 +49,35 @@ class RView @JvmOverloads constructor(
     }
 
     val numRows: Int
-        get() = window.numRows
+        get() = rhinocs.numRows
     val numCols: Int
-        get() = window.numCols
+        get() = rhinocs.numCols
 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        window.numCols = ((w - margin) / cellWidth).toInt()
-        window.numRows = ((h - margin) / cellHeight).toInt() - 2 // モード行とステータス行用に空ける
+        rhinocs.numCols = ((w - margin) / cellWidth).toInt()
+        rhinocs.numRows = ((h - margin) / cellHeight).toInt() - 2 // モード行とステータス行用に空ける
     }
-
-    val window = Window().apply { buffer = Buffer().apply { name = "*scratch*" } }
-
-
+    
     fun loadFile(resolver: ContentResolver, uri: Uri) {
-        window.loadFile(resolver, uri)
+        rhinocs.loadFile(resolver, uri)
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        val win = rhinocs.window
 
         val fm = textPaint.fontMetrics
 
         val startX = margin
         val startY = -fm.ascent + margin
 
-        val currentPos = window.pointRowCol
-        window.updateOffset(currentPos.col)
+        val currentPos = win.pointRowCol
+        win.updateOffset(currentPos.col)
 
         for (row in 0..<numRows) {
-            val linfo = window.lineInfo(row)
+            val linfo = win.lineInfo(row)
             for (col in 0..<numCols) {
                 val cell = linfo[col]
                 if (!cell.isEmpty) {
@@ -90,7 +90,7 @@ class RView @JvmOverloads constructor(
             }
         }
 
-        val rpos = currentPos.toRelative(window.lastOffset)
+        val rpos = currentPos.toRelative(win.lastOffset)
 
         // Draw caret
         if (rpos.row in 0..<numRows && rpos.col in 0..<numCols) {
@@ -142,7 +142,7 @@ class RView @JvmOverloads constructor(
         canvas.withColorAlign(Color.WHITE, Paint.Align.RIGHT) {
             val textY = textCenterBase(yBase)
 
-            val modeText = window.modeLineText
+            val modeText = rhinocs.modeLineText
             drawText(modeText, width.toFloat() - margin, textY, textPaint)
         }
     }
@@ -153,11 +153,10 @@ class RView @JvmOverloads constructor(
 
         drawMiniBufferBorder(canvas, yBase)
 
-        val statusText = window.statusText
+        val statusText = rhinocs.statusText
 
         if(statusText.isNotEmpty())
         {
-            // 上下中央
             val textY = textCenterBase(yBase)
 
             canvas.withAlign(Paint.Align.LEFT) {

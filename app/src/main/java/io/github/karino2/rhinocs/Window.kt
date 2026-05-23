@@ -26,38 +26,6 @@ class Window {
 
     var goalColumn : Int? = null
 
-    var statusText = ""
-
-    val defaultModeFmt = "\${bufferName} [\${lineNum}:\${column}]"
-    var modeLineFormat = defaultModeFmt
-
-    val modeLineText: String
-        get() {
-            val res = StringBuilder()
-            var i = 0
-            while (i < modeLineFormat.length) {
-                val c = modeLineFormat[i]
-                if (c == '$' && i + 1 < modeLineFormat.length && modeLineFormat[i + 1] == '{') {
-                    val end = modeLineFormat.indexOf('}', i + 2)
-                    if (end != -1) {
-                        val symbol = modeLineFormat.substring(i + 2, end)
-                        val value = when (symbol) {
-                            "bufferName" -> buffer.name
-                            "column" -> point.offset+1
-                            "lineNum" -> point.linenum +1
-                            else -> "\${$symbol}"
-                        }
-                        res.append(value)
-                        i = end + 1
-                        continue
-                    }
-                }
-                res.append(c)
-                i++
-            }
-            return res.toString()
-        }
-
     fun computeGoalGolumn() : Int {
         goalColumn?.let {
             return it
@@ -236,9 +204,4 @@ class Window {
         resetGoalGolumn()
         point = buffer.gotoEol(point)
     }
-
-    fun resetModeLineFormat() {
-        modeLineFormat = defaultModeFmt
-    }
-
 }

@@ -4,7 +4,6 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.ContinuationPending
 import org.mozilla.javascript.Function
-import org.mozilla.javascript.Scriptable
 import org.mozilla.javascript.ScriptableObject
 
 class Interpreter {
@@ -32,7 +31,7 @@ class Interpreter {
 
     fun run(script: String, fileName:String ="*script*") {
         withContext {
-            global.window.statusText = ""
+            global.rhinocs.statusText = ""
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             global.rview.invalidate()

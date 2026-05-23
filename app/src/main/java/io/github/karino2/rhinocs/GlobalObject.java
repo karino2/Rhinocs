@@ -72,7 +72,9 @@ public class GlobalObject  extends ImporterTopLevel {
 
     public MainActivity activity;
     public RView rview;
-    public Window getWindow() { return rview.getWindow(); }
+    public Rhinocs getRhinocs() { return rview.getRhinocs(); }
+    public Window selectedWindow() { return getRhinocs().getWindow(); }
+    Buffer selectedBuffer() { return getRhinocs().getSelectedBuffer(); }
 
     public ArrayList<Pair<String, Function>> loadRequestsQueue;
 
@@ -181,7 +183,7 @@ public class GlobalObject  extends ImporterTopLevel {
         int delta = 1;
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
-        glob.rview.getWindow().moveCharDelta(delta);
+        glob.selectedWindow().moveCharDelta(delta);
         return Context.getUndefinedValue();
     }
 
@@ -190,7 +192,7 @@ public class GlobalObject  extends ImporterTopLevel {
         int delta = 1;
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
-        glob.rview.getWindow().moveCharDelta(-delta);
+        glob.selectedWindow().moveCharDelta(-delta);
         return Context.getUndefinedValue();
     }
 
@@ -199,7 +201,7 @@ public class GlobalObject  extends ImporterTopLevel {
         int delta = 1;
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
-        glob.rview.getWindow().moveLineDelta(delta);
+        glob.selectedWindow().moveLineDelta(delta);
         return Context.getUndefinedValue();
     }
 
@@ -208,7 +210,7 @@ public class GlobalObject  extends ImporterTopLevel {
         int delta = 1;
         if (args.length != 0)
             delta = (int) Context.toNumber(args[0]);
-        glob.rview.getWindow().moveLineDelta(-delta);
+        glob.selectedWindow().moveLineDelta(-delta);
         return Context.getUndefinedValue();
     }
 
@@ -225,7 +227,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String content = Context.toString(args[0]);
-        glob.getWindow().insert(content);
+        glob.selectedWindow().insert(content);
         return Context.getUndefinedValue();
     }
 
@@ -292,7 +294,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
     public static Object point(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        Point pt = glob.getWindow().getPoint();
+        Point pt = glob.selectedWindow().getPoint();
         return pt.getPoint();
     }
 
@@ -306,12 +308,12 @@ public class GlobalObject  extends ImporterTopLevel {
         long start = Math.min(p1, p2);
         long end = Math.max(p1, p2);
 
-        return glob.getWindow().deleteRegion(start, end);
+        return glob.selectedWindow().deleteRegion(start, end);
     }
 
     public static Object save_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().saveBuffer(glob.activity.getContentResolver());
+        return glob.selectedWindow().saveBuffer(glob.activity.getContentResolver());
     }
 
     public static Object show_toast(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -327,7 +329,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         long pos = (long)Context.toNumber(args[0]);
-        return glob.getWindow().pontToColumn(pos);
+        return glob.selectedWindow().pontToColumn(pos);
     }
 
     public static Object set_goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -335,13 +337,13 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         int column = (int) Context.toNumber(args[0]);
-        glob.getWindow().setGoalColumn(column);
+        glob.selectedWindow().setGoalColumn(column);
         return Context.getUndefinedValue();
     }
 
     public static Object goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().computeGoalGolumn();
+        return glob.selectedWindow().computeGoalGolumn();
     }
 
     public static Object goto_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -349,11 +351,11 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         int column = (int) Context.toNumber(args[0]);
-        return glob.getWindow().gotoColumn(column);
+        return glob.selectedWindow().gotoColumn(column);
     }
     public static Object point_max(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().getPointMax();
+        return glob.selectedWindow().getPointMax();
     }
 
     public static Object goto_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -361,25 +363,25 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         long pos = (long) Context.toNumber(args[0]);
-        glob.getWindow().gotoChar(pos);
+        glob.selectedWindow().gotoChar(pos);
         return Context.getUndefinedValue();
     }
 
     public static Object goto_bol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        glob.getWindow().gotoBol();
+        glob.selectedWindow().gotoBol();
         return Context.getUndefinedValue();
     }
 
     public static Object goto_eol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        glob.getWindow().gotoEol();
+        glob.selectedWindow().gotoEol();
         return Context.getUndefinedValue();
     }
 
     public static Object window_height(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().getNumRows();
+        return glob.selectedWindow().getNumRows();
     }
 
     public static Object scroll_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -387,7 +389,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         int delta = (int) Context.toNumber(args[0]);
-        glob.getWindow().scrollWindow(delta);
+        glob.selectedWindow().scrollWindow(delta);
         return Context.getUndefinedValue();
     }
     public void openUri(Uri uri) {
@@ -410,7 +412,7 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         //  || !(args[0] instanceof Buffer)
         Buffer buf = (Buffer)Context.jsToJava(args[0], Buffer.class);
-        glob.getWindow().setBuffer(buf);
+        glob.selectedWindow().setBuffer(buf);
         return Context.getUndefinedValue();
     }
 
@@ -419,13 +421,13 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String msg = Context.toString(args[0]);
-        glob.getWindow().setStatusText(msg);
+        glob.getRhinocs().setStatusText(msg);
         return Context.getUndefinedValue();
     }
 
     public static Object mark_marker(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        Marker mark = glob.getWindow().getBuffer().getMark();
+        Marker mark = glob.selectedBuffer().getMark();
         return Context.javaToJS(mark, glob);
     }
 
@@ -447,8 +449,6 @@ public class GlobalObject  extends ImporterTopLevel {
         return marker.getPosition();
     }
 
-    Buffer getBuffer() { return getWindow().getBuffer(); }
-
     // 今の所第三引数（bufferオブジェクト）はサポートしないが、名前はbuffer_substringにしておく。
     public static Object buffer_substring(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { Number.class, Number.class });
@@ -459,7 +459,7 @@ public class GlobalObject  extends ImporterTopLevel {
         // 選択されてないケース。一応ここでもガードしておく。
         if (beg < 0 || end < 0)
             return "";
-        return glob.getBuffer().substring(Math.min(beg, end), Math.max(beg, end));
+        return glob.selectedBuffer().substring(Math.min(beg, end), Math.max(beg, end));
     }
     
     public static Object copy_to_clipboard(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -529,7 +529,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String fmt = Context.toString(args[0]);
-        glob.getWindow().setModeLineFormat(fmt);
+        glob.getRhinocs().setModeLineFormat(fmt);
         return Context.getUndefinedValue();
     }
 
@@ -543,7 +543,7 @@ public class GlobalObject  extends ImporterTopLevel {
      */
     public static Object get_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().getModeLineFormat();
+        return glob.getRhinocs().getModeLineFormat();
     }
 
     /*(non-Javadoc)
@@ -556,7 +556,7 @@ public class GlobalObject  extends ImporterTopLevel {
      */
     public static Object is_eol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().isEOL();
+        return glob.selectedWindow().isEOL();
     }
 
     /*(non-Javadoc)
@@ -569,6 +569,6 @@ public class GlobalObject  extends ImporterTopLevel {
      */
     public static Object is_bol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
-        return glob.getWindow().isBOL();
+        return glob.selectedWindow().isBOL();
     }
 }
