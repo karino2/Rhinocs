@@ -8,26 +8,42 @@ import android.net.Uri
  * Editor全体を表す。
  */
 class Rhinocs {
-    val window = Window().apply { buffer = Buffer().apply { name = "*scratch*" } }
+    val windowList = ArrayList<Window>().apply{ add(Window()) }
+
+    /*
+      基本的にはactiveはウィンドウを返すがminibufferにenterしている時は
+      minibufferに入る直前のWindowを返す（ミニバッファからでたらアクティブになるWindow
+     */
+    val mainActiveWindow : Window
+        get() = windowList[0]
 
     var miniBufferWindow: MiniBufferWindow? = null
 
     val selectedWindow: Window
         get() {
-            return miniBufferWindow?.window ?: window
+            return miniBufferWindow?.window ?: mainActiveWindow
         }
 
     val selectedBuffer : Buffer
         get() = selectedWindow.buffer
 
     var numRows: Int
-        get() = window.numRows
-        set(value) { window.numRows = value }
+        get() = windowList.sumOf{ it.numRows }
+        set(value) {
+            val winNum = windowList.size
+            val restRows = value/winNum
+            // 端数は最初のwindowに
+            val firstRows = value - restRows*(winNum-1)
+            windowList[0].numRows = firstRows
+            windowList.drop(1).forEach {
+                it.numRows = restRows
+            }
+        }
 
     var numCols: Int
-        get() = window.numCols
+        get() = mainActiveWindow.numCols
         set(value) {
-            window.numCols = value
+            windowList.forEach { win-> win.numCols = value}
             miniBufferWindow?.numCols = value
         }
 
@@ -41,18 +57,18 @@ class Rhinocs {
         mwin.window.isSelected = true
         mwin.miniBuffer.prompt = prompt
         miniBufferWindow = mwin
-        window.isSelected = false
+        mainActiveWindow.isSelected = false
     }
 
     fun leaveMiniBuffer() : String {
-        window.isSelected = true
+        mainActiveWindow.isSelected = true
         val ret = miniBufferWindow?.miniBuffer?.buffer?.getLine(0) ?: ""
         miniBufferWindow = null
         return ret
     }
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
-        window.loadFile(resolver, uri)
+        mainActiveWindow.loadFile(resolver, uri)
     }
 
     var statusText = ""

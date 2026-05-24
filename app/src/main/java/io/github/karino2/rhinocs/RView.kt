@@ -47,14 +47,13 @@ class RView @JvmOverloads constructor(
     val ascent: Float
         get() = textPaint.fontMetrics.ascent
 
-    val numRows: Int
-        get() = rhinocs.numRows
-
+    val borderThick = 2f
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         rhinocs.numCols = ((w - margin) / cellWidth).toInt()
-        rhinocs.numRows = ((h - margin) / cellHeight).toInt() - 2 // モード行とステータス行用に空ける
+        // モード行とステータス行の分と、ウィンドウsplit時の境界線の分
+        rhinocs.numRows = ((h - margin-borderThick) / cellHeight).toInt() - 2
     }
     
     fun loadFile(resolver: ContentResolver, uri: Uri) {
@@ -63,23 +62,33 @@ class RView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val win = rhinocs.window
 
         val topX = margin
-        val topY = margin
+        var topY = margin
 
-        drawOneWin(win, topX, topY, canvas)
+        for (win in rhinocs.windowList) {
+            topY = drawOneWin(win, topX, topY, canvas)
+            drawBorder(canvas, topY)
+            topY += borderThick
+        }
 
-        drawModeLine(canvas)
-        drawMiniBufferLine(canvas)
+
+        val modeY = (height-margin)-2*cellHeight
+        topY = drawModeLine(modeY, canvas)
+        drawMiniBufferLine(topY, canvas)
     }
 
+
+    /*
+        topX, topYの位置を起点にWindowを描画する。
+        一番下のY座標を返す。
+     */
     private fun drawOneWin(
         win: Window,
         topX: Float,
         topY: Float,
         canvas: Canvas
-    ) {
+    ) : Float {
         val topBaseY = topToBase(topY)
         val currentPos = win.pointRowCol
         win.updateOffset(currentPos.col)
@@ -100,6 +109,8 @@ class RView @JvmOverloads constructor(
 
         if(win.isSelected)
             drawCaret(win, topX, topY, canvas)
+
+        return topY+win.numRows*cellHeight
     }
 
     private fun drawCaret(
@@ -146,10 +157,7 @@ class RView @JvmOverloads constructor(
         }
     }
 
-    private fun drawModeLine(canvas: Canvas) {
-        val modeRow = numRows
-        val topY = margin + modeRow * cellHeight
-
+    private fun drawModeLine(topY: Float, canvas: Canvas) :Float {
         val bgPaint = Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }
         canvas.drawRect(0f, topY, width.toFloat(), topY + cellHeight, bgPaint)
 
@@ -159,17 +167,13 @@ class RView @JvmOverloads constructor(
             val modeText = rhinocs.modeLineText
             drawText(modeText, width.toFloat() - margin, baseY, textPaint)
         }
+        return topY+cellHeight
     }
 
-    private fun drawMiniBufferLine(canvas: Canvas) {
-        val minibufRow = numRows + 1
+    private fun drawMiniBufferLine(topY: Float, canvas: Canvas) {
         val startX = margin
-        val topY =  margin + minibufRow * cellHeight
 
         val baseY = topToBase(topY)
-
-        drawBorder(canvas, topY)
-
         val statusText = rhinocs.statusText
 
         // エコー領域優先
