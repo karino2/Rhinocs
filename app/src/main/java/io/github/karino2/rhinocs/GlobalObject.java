@@ -14,8 +14,6 @@ import org.mozilla.javascript.ScriptableObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import kotlin.Pair;
-
 
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
@@ -67,6 +65,10 @@ public class GlobalObject  extends ImporterTopLevel {
             "enter_minibuffer",
             "leave_minibuffer",
             "request_function_execute",
+            "split_window",
+            "delete_window",
+            "other_window",
+            "delete_other_windows",
     };
 
     public static final int REQUEST_SELECT_FILE=1;
@@ -626,4 +628,40 @@ public class GlobalObject  extends ImporterTopLevel {
         glob.pushDelayedCallRequest(jsfunc);
         return Context.getUndefinedValue();
     }
+
+    /*
+      今の所ターゲットはselected_windowのみ。
+     */
+    public static Object split_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Rhinocs rhinocs = glob.getRhinocs();
+        return rhinocs.splitWindow(rhinocs.getMainActiveWindow());
+    }
+    /*
+      今の所ターゲットはselected_windowのみ。
+     */
+    public static Object delete_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Rhinocs rhinocs = glob.getRhinocs();
+        return rhinocs.deleteWindow(rhinocs.getMainActiveWindow());
+    }
+
+    /*
+      次のWindowにフォーカスを移す
+     */
+    public static Object other_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Rhinocs rhinocs = glob.getRhinocs();
+        return rhinocs.switchToOtherWindow();
+    }
+
+    /*
+      現在カーソルがあるウィンドウ以外のウィンドウを削除
+     */
+    public static Object delete_other_windows(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Rhinocs rhinocs = glob.getRhinocs();
+        return rhinocs.deleteOtherWindows();
+    }
+
 }

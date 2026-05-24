@@ -261,6 +261,10 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-k", kill_line);
   keymap.defineKey("C-y", yank);
   keymap.defineKey("M-x", execute_extended_command);
+  keymap.defineKey(["C-x", "2"], split_window);
+  keymap.defineKey(["C-x", "0"], delete_window);
+  keymap.defineKey(["C-x", "o"], other_window);
+  keymap.defineKey(["C-x", "1"], delete_other_windows);
   return keymap;
 }
 
@@ -359,9 +363,6 @@ function read_string(prompt) {
 function execute_extended_command() {
   read_string("M-x ").then((cmd)=> {
     request_function_execute(global[cmd]);
-  }).catch((e) => {
-    show_toast("exception: " + e);
-    print("execption: " + e);
   });
 }
 

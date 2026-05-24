@@ -10,12 +10,14 @@ import android.net.Uri
 class Rhinocs {
     val windowList = ArrayList<Window>().apply{ add(Window()) }
 
+    var lastMainActiveIndex = 0
+
     /*
       基本的にはactiveはウィンドウを返すがminibufferにenterしている時は
       minibufferに入る直前のWindowを返す（ミニバッファからでたらアクティブになるWindow
      */
     val mainActiveWindow : Window
-        get() = windowList[0]
+        get() = windowList[lastMainActiveIndex]
 
     var miniBufferWindow: MiniBufferWindow? = null
 
@@ -105,5 +107,80 @@ class Rhinocs {
 
     fun resetModeLineFormat() {
         modeLineFormat = defaultModeFmt
+    }
+
+    fun splitWindow(baseWin: Window) : Boolean{
+        if(baseWin == miniBufferWindow?.window)
+            return false
+
+        // 今の所分割は２つまで
+        if(windowList.size == 2)
+            return false
+
+
+        val newWin = Window()
+        newWin.numCols = baseWin.numCols
+        newWin.numRows = baseWin.numRows/2
+        baseWin.numRows = (baseWin.numRows+1)/2
+        newWin.buffer = baseWin.buffer
+        newWin.point = baseWin.point
+        newWin.lastOffset = baseWin.lastOffset
+        newWin.goalColumn = baseWin.goalColumn
+        newWin.isSelected = false
+
+        windowList.add(newWin)
+        return true
+    }
+
+    fun deleteWindow(targetWin: Window) : Boolean{
+        if(targetWin == miniBufferWindow?.window)
+            return false
+
+        if(windowList.size == 1)
+            return false
+
+        val targetIndex = windowList.indexOf(targetWin)
+        // 起こらないはずだが、変なのを渡しているケース
+        if (targetIndex == -1)
+            return false
+
+        // 一つなので手抜き
+        val otherWin = getNextWindow(targetIndex)
+        otherWin.numRows += targetWin.numRows
+        lastMainActiveIndex = 0
+        if(targetWin.isSelected)
+            otherWin.isSelected = true
+
+        windowList.remove(targetWin)
+        return true
+    }
+
+    private fun getNextWindow(targetIndex: Int): Window {
+        assert(windowList.size >= 2)
+        return windowList[(targetIndex+1)%windowList.size]
+    }
+
+
+    fun switchToOtherWindow() : Boolean {
+        if (windowList.size == 1)
+            return false
+
+        val lastSelected = windowList[lastMainActiveIndex].isSelected
+        windowList[lastMainActiveIndex].isSelected = false
+        lastMainActiveIndex = (lastMainActiveIndex+1)%windowList.size
+        windowList[lastMainActiveIndex].isSelected = lastSelected
+        return true
+    }
+
+    fun deleteOtherWindows(): Boolean {
+        if (windowList.size == 1)
+            return false
+
+        val current = mainActiveWindow
+        val delcand = windowList.filter { it != current }
+        delcand.forEach {
+            deleteWindow(it)
+        }
+        return true
     }
 }
