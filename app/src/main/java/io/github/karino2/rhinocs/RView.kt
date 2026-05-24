@@ -43,15 +43,12 @@ class RView @JvmOverloads constructor(
     val cellHeight: Float
         get() = textPaint.fontMetrics.let { it.descent - it.ascent }
 
-    private fun textCenterBase(yBase: Float): Float {
-        val fm = textPaint.fontMetrics
-        return yBase + (cellHeight / 2f) - (fm.ascent + fm.descent) / 2f
-    }
+    // ascentはbaseより上、負の値で表現
+    val ascent: Float
+        get() = textPaint.fontMetrics.ascent
 
     val numRows: Int
         get() = rhinocs.numRows
-    val numCols: Int
-        get() = rhinocs.numCols
 
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -68,12 +65,10 @@ class RView @JvmOverloads constructor(
         super.onDraw(canvas)
         val win = rhinocs.window
 
-        val fm = textPaint.fontMetrics
+        val topX = margin
+        val topY = margin
 
-        val startX = margin
-        val startY = -fm.ascent + margin
-
-        drawOneWin(win, margin, startX, startY, canvas)
+        drawOneWin(win, topX, topY, canvas)
 
         drawModeLine(canvas)
         drawMiniBufferLine(canvas)
@@ -81,11 +76,11 @@ class RView @JvmOverloads constructor(
 
     private fun drawOneWin(
         win: Window,
+        topX: Float,
         topY: Float,
-        startX: Float,
-        startY: Float,
         canvas: Canvas
     ) {
+        val topBaseY = topToBase(topY)
         val currentPos = win.pointRowCol
         win.updateOffset(currentPos.col)
 
@@ -96,15 +91,15 @@ class RView @JvmOverloads constructor(
                 if (!cell.isEmpty) {
                     val numCells = cell.widthCount
                     // textAlign = Paint.Align.CENTER なので、中心座標を指定
-                    val x = startX + (col * cellWidth) + (numCells * cellWidth / 2f)
-                    val y = startY + (row * cellHeight)
+                    val x = topX + (col * cellWidth) + (numCells * cellWidth / 2f)
+                    val y = topBaseY + (row * cellHeight)
                     canvas.drawText(cell.ch.toString(), x, y, textPaint)
                 }
             }
         }
 
         if(win.isSelected)
-            drawCaret(win, startX, topY, canvas)
+            drawCaret(win, topX, topY, canvas)
     }
 
     private fun drawCaret(
@@ -153,26 +148,27 @@ class RView @JvmOverloads constructor(
 
     private fun drawModeLine(canvas: Canvas) {
         val modeRow = numRows
-        val yBase = margin + modeRow * cellHeight
+        val topY = margin + modeRow * cellHeight
 
         val bgPaint = Paint().apply { color = Color.BLACK; style = Paint.Style.FILL }
-        canvas.drawRect(0f, yBase, width.toFloat(), yBase + cellHeight, bgPaint)
+        canvas.drawRect(0f, topY, width.toFloat(), topY + cellHeight, bgPaint)
 
         canvas.withColorAlign(Color.WHITE, Paint.Align.RIGHT) {
-            val textY = textCenterBase(yBase)
+            val baseY = topToBase(topY)
 
             val modeText = rhinocs.modeLineText
-            drawText(modeText, width.toFloat() - margin, textY, textPaint)
+            drawText(modeText, width.toFloat() - margin, baseY, textPaint)
         }
     }
 
     private fun drawMiniBufferLine(canvas: Canvas) {
         val minibufRow = numRows + 1
-        val yBase = margin + minibufRow * cellHeight
+        val startX = margin
+        val topY =  margin + minibufRow * cellHeight
 
-        drawMiniBufferBorder(canvas, yBase)
+        val baseY = topToBase(topY)
 
-        val textY = textCenterBase(yBase)
+        drawBorder(canvas, topY)
 
         val statusText = rhinocs.statusText
 
@@ -180,38 +176,43 @@ class RView @JvmOverloads constructor(
         if(statusText.isNotEmpty())
         {
             canvas.withAlign(Paint.Align.LEFT) {
-                drawText(statusText, margin, textY, textPaint)
+                drawText(statusText, startX, baseY, textPaint)
             }
         } else {
             rhinocs.miniBufferWindow?.let {mwin->
                 val prompt = mwin.miniBuffer.prompt
                 canvas.withAlign(Paint.Align.LEFT) {
-                    drawText(prompt, margin, textY, textPaint)
+                    drawText(prompt, startX, baseY, textPaint)
                 }
 
                 val promptWidth = textPaint.measureText(prompt)
-                val startX = margin + promptWidth
-                val fm = textPaint.fontMetrics
-                val startY = -fm.ascent + yBase
+                val startXAfter = startX + promptWidth
 
                 // ミニバッファのWindowのカラム数を残りの幅に合わせる
-                val remainingWidth = width.toFloat() - margin - promptWidth
-                mwin.window.numCols = (remainingWidth / cellWidth).toInt().coerceAtLeast(0)
+                mwin.window.numCols = calcRemainingColumn(startX, promptWidth)
 
-                drawOneWin(mwin.window, yBase, startX, startY, canvas)
+                drawOneWin(mwin.window, startXAfter, topY, canvas)
             }
         }
     }
 
-    private fun drawMiniBufferBorder(canvas: Canvas, yBase: Float) {
-        // 境界線とわずかな影を描画
+    // ascentはマイナス、topよりascentだけ下のbaselineを求めている
+    private fun topToBase(topY: Float) = topY - ascent
+
+    private fun calcRemainingColumn(startX: Float, promptWidth: Float): Int {
+        val remainingWidth = width.toFloat() - startX - promptWidth
+        return (remainingWidth / cellWidth).toInt().coerceAtLeast(0)
+    }
+
+    // topYからその下の2ピクセルまでの範囲で、 境界線とわずかな影を描画
+    private fun drawBorder(canvas: Canvas, topY: Float) {
         val separatorPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 1f }
         val shadowPaint = Paint().apply { color = "#E0E0E0".toColorInt(); strokeWidth = 1f }
 
         // 上側の細い境界線
-        canvas.drawLine(0f, yBase, width.toFloat(), yBase, separatorPaint)
+        canvas.drawLine(0f, topY, width.toFloat(), topY, separatorPaint)
         // そのすぐ下にさらに薄い色で影をつける
-        canvas.drawLine(0f, yBase + 1f, width.toFloat(), yBase + 1f, shadowPaint)
+        canvas.drawLine(0f, topY + 1f, width.toFloat(), topY + 1f, shadowPaint)
     }
 
     val keyMap = mapOf(
