@@ -4,6 +4,7 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.ContinuationPending
 import org.mozilla.javascript.Function
+import org.mozilla.javascript.JSFunction
 import org.mozilla.javascript.ScriptableObject
 
 class Interpreter {
@@ -42,7 +43,10 @@ class Interpreter {
 
     fun callFunction(jsFunction: Function)  {
         withContext {
-            it.callFunctionWithContinuations(jsFunction, global, emptyArray<Any>())
+            if (jsFunction is JSFunction)
+                it.callFunctionWithContinuations(jsFunction, global, emptyArray<Any>())
+            else
+                jsFunction.call(it, global, global, emptyArray<Any>())
         }
     }
 
