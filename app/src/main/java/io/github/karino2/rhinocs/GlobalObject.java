@@ -19,7 +19,7 @@ public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
             "print",
             "read_key",
-            "select_file",
+            "select_file_callback",
             "open_uri",
             "forward_char",
             "backward_char",
@@ -71,9 +71,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "delete_other_windows",
     };
 
-    public static final int REQUEST_SELECT_FILE=1;
-    public static final int REQUEST_READ_KEY=2;
-    public static final int REQUEST_TEXT_DIALOG=3;
+    public static final int REQUEST_READ_KEY=1;
+    public static final int REQUEST_TEXT_DIALOG=2;
 
     public MainActivity activity;
     public RView rview;
@@ -158,17 +157,24 @@ public class GlobalObject  extends ImporterTopLevel {
         }
     }
 
-    public static Object select_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        try (Context cx = Context.enter()) {
-            ArrayList<String> arr = new ArrayList<>();
-            for (Object arg : args) {
-                arr.add(Context.toString(arg));
-            }
-            ContinuationPending pending = cx.captureContinuation();
-            RequestArg ra = new RequestArg(REQUEST_SELECT_FILE, arr.toArray(new String[0]));
-            pending.setApplicationState(ra);
-            throw pending;
+    /*
+        select_file_callback([mimeTypes], onSuccess, onFailure)
+     */
+    public static Object select_file_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{ Scriptable.class, Function.class, Function.class });
+
+        GlobalObject glob = getInstance(funcObj);
+
+        Object[] mtypesObj = ctx.getElements((Scriptable)args[0]);
+        Function onSuccess = (Function)args[1];
+        Function onFailure = (Function)args[2];
+        ArrayList<String> arr = new ArrayList<>();
+        for (Object arg : mtypesObj) {
+            arr.add(Context.toString(arg));
         }
+
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_FILE,  new DelayedRequest.AsyncArg(arr.toArray(new String[0]), onSuccess, onFailure)));
+        return Context.getUndefinedValue();
     }
     public static Object print(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         for (int i = 0; i < args.length; i++) {

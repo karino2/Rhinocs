@@ -7,6 +7,7 @@ import org.mozilla.javascript.Function
 import org.mozilla.javascript.JSFunction
 import org.mozilla.javascript.ScriptableObject
 import java.io.FileNotFoundException
+import java.util.concurrent.Delayed
 
 class Interpreter {
     val factory: ContextFactory = object : ContextFactory() {
@@ -50,6 +51,7 @@ class Interpreter {
                 jsFunction.call(it, global, global, args)
 
             it.processMicrotasks()
+            runPendingRequest()
         }
     }
 
@@ -62,19 +64,25 @@ class Interpreter {
         runPendingRequest()
     }
 
-    fun newJSArray(arr: Array<Any>) = withContext { it.newArray(global, arr) }
-
     private fun runPendingRequest() {
         if (global.hasPendingRequest()) {
             val req = global.popDelayedRequest()
             when(req.type) {
+                DelayedRequestType.SELECT_FILE-> {
+                    val larg = req.arg as DelayedRequest.AsyncArg
+                    val mtypes = larg.arg as Array<String>
+                    global.activity.callbackArg = larg
+                    global.activity.getFileUriFromScript.launch(mtypes)
+                    return
+                }
                 DelayedRequestType.LOAD_JS -> {
-                    val larg = req.arg as DelayedRequest.JSLoadArg
+                    val larg = req.arg as DelayedRequest.AsyncArg
                     try
                     {
-                        if(!global.activity.loadPackageJS(larg.fname, mayNotExist = true))
+                        val fname = larg.arg as String
+                        if(!global.activity.loadPackageJS(fname, mayNotExist = true))
                         {
-                            global.activity.callJsFunction(larg.onFailure, arrayOf<Any>(FileNotFoundException(larg.fname)))
+                            global.activity.callJsFunction(larg.onFailure, arrayOf<Any>(FileNotFoundException(fname)))
                             return
                         }
                         global.activity.callJsFunction(larg.onSuccess, emptyArray<Any>())

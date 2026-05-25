@@ -14,10 +14,17 @@ function delete_char(n=1) {
    delete_region(beg, point());
 }
 
+function select_file(mimeTypes) {
+  return new Promise((resolve, reject)=> {
+    select_file_callback(mimeTypes, resolve, reject);
+  });
+}
+
 function find_file() {
-   let [uri, fname] = select_file("*/*");
-   print(`deb: ${uri}, ${fname}`);
-   open_uri(uri);
+  select_file(["*/*"]).then((uri, fname)=> {
+    print(`deb: ${uri}, ${fname}`);
+    open_uri(uri);
+  })
 }
 
 function saveBuffer() {

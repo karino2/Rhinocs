@@ -55,17 +55,16 @@ class MainActivity : AppCompatActivity() {
 
     fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
 
-    private val getFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
+    val getFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         uri?.let {
             contentResolver.takePersistableUriPermission(
                 it,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
-            pendingCC?.let { pcc->
+            callbackArg?.let {ca->
                 val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
-                withContinuationHandling {
-                    interpreter.resume(pcc, interpreter.newJSArray(arrayOf(it.toString(), dispName)))
-                }
+                // val arg = interpreter.newJSArray(arrayOf(it.toString(), dispName))
+                interpreter.callFunction(ca.onSuccess, arrayOf(it.toString(), dispName))
             }
         }
     }
@@ -109,6 +108,7 @@ class MainActivity : AppCompatActivity() {
 
 
     var pendingCC: ContinuationPending? = null
+    var callbackArg: DelayedRequest.AsyncArg? = null
 
     private val rview: RView
         get() = findViewById<RView>(R.id.rView)!!
@@ -311,7 +311,6 @@ class MainActivity : AppCompatActivity() {
             rview.invalidate()
             val rarg = e.applicationState as RequestArg
             when (rarg.requestId) {
-                GlobalObject.REQUEST_SELECT_FILE -> getFileUriFromScript.launch(rarg.arg as Array<String>)
                 GlobalObject.REQUEST_READ_KEY-> {
                     pendingReadKey = true
                     showMessage(rarg.arg as String)
