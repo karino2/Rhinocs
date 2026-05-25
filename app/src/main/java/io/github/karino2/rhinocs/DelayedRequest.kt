@@ -6,6 +6,7 @@ enum class DelayedRequestType {
     LOAD_JS,
     CALL_FUNCTION,
     SELECT_FILE,
+    QUERY_TEXT_DIALOG,
 }
 
 class DelayedRequest(val type: DelayedRequestType, val arg: Any) {

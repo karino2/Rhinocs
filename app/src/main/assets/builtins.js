@@ -14,6 +14,12 @@ function delete_char(n=1) {
    delete_region(beg, point());
 }
 
+function query_text_dialog(label) {
+  return new Promise((resolve, reject)=> {
+    query_text_dialog_callback(label, resolve, reject);
+  });
+}
+
 function select_file(mimeTypes) {
   return new Promise((resolve, reject)=> {
     select_file_callback(mimeTypes, resolve, reject);

@@ -90,13 +90,20 @@ class Interpreter {
                         global.activity.callJsFunction(larg.onFailure, arrayOf<Any>(e))
                     }
                 }
+                DelayedRequestType.QUERY_TEXT_DIALOG -> {
+                    val larg = req.arg as DelayedRequest.AsyncArg
+                    val label = larg.arg as String
+                    global.activity.queryTextDialog(label, larg)
+                }
                 DelayedRequestType.CALL_FUNCTION -> {
                     val farg = req.arg as Function
                     callFunction(farg, emptyArray<Any>())
                 }
+
             }
         }
     }
+
 
 
     fun setGlobalKey(strKey: String) {

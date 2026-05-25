@@ -57,7 +57,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "current_clipboard",
             "put_pref_string",
             "get_pref_string",
-            "query_text_dialog",
+            "query_text_dialog_callback",
             "set_mode_line_format",
             "get_mode_line_format",
             "is_eol",
@@ -72,7 +72,6 @@ public class GlobalObject  extends ImporterTopLevel {
     };
 
     public static final int REQUEST_READ_KEY=1;
-    public static final int REQUEST_TEXT_DIALOG=2;
 
     public MainActivity activity;
     public RView rview;
@@ -518,15 +517,19 @@ public class GlobalObject  extends ImporterTopLevel {
         return glob.activity.getPrefString(key, defaultValue);
     }
 
-    public static Object query_text_dialog(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[]{String.class});
+    /*
+        query_text_dialog_callback(label, onSuccess, onFailure)
+     */
+    public static Object query_text_dialog_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{ String.class, Function.class, Function.class });
 
-        try (Context cx = Context.enter()) {
-            ContinuationPending pending = cx.captureContinuation();
-            RequestArg ra = new RequestArg(REQUEST_TEXT_DIALOG, Context.toString(args[0]));
-            pending.setApplicationState(ra);
-            throw pending;
-        }
+        GlobalObject glob = getInstance(funcObj);
+
+        String label = Context.toString(args[0]);
+        Function onSuccess = (Function)args[1];
+        Function onFailure = (Function)args[2];
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.QUERY_TEXT_DIALOG,  new DelayedRequest.AsyncArg(label, onSuccess, onFailure)));
+        return Context.getUndefinedValue();
     }
 
     /*(non-Javadoc)

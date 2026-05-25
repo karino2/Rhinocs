@@ -238,10 +238,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun queryTextDialog(label: String, callback: DelayedRequest.AsyncArg) {
+        callbackArg = callback
+        val bundle = Bundle().apply { putString("DIALOG_TEXT_LABEL", label) }
+        showDialog(DIALOG_ID_TEXT, bundle)
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onCreateDialog(id: Int, args: Bundle?): Dialog? {
         when(id) {
-            DIALOG_ID_TEXT->return createQueryTextDialog(args!!.getString("DIALOG_TEXT_LABEL")!!, pendingCC!!)
+            DIALOG_ID_TEXT->return createQueryTextDialog(args!!.getString("DIALOG_TEXT_LABEL")!!)
         }
         return super.onCreateDialog(id, args)
     }
@@ -257,7 +263,7 @@ class MainActivity : AppCompatActivity() {
         super.onPrepareDialog(id, dialog, args)
     }
 
-    private fun createQueryTextDialog(label: String, pending: ContinuationPending) : Dialog {
+    private fun createQueryTextDialog(label: String) : Dialog {
         val editText = EditText(this).apply { id = R.id.text_edit_id }
         val layout = LinearLayout(this)
         layout.orientation = LinearLayout.VERTICAL
@@ -269,31 +275,47 @@ class MainActivity : AppCompatActivity() {
         params.setMargins(margin, 0, margin, 0)
         layout.addView(editText, params)
 
+        fun callSuccessCallback() {
+            callbackArg?.let { ca ->
+                interpreter.callFunction(ca.onSuccess, arrayOf(editText.text.toString()))
+            }
+        }
+
+        fun callCancelCallback() {
+            callbackArg?.let { ca ->
+                interpreter.callFunction(ca.onFailure, emptyArray<Any>())
+            }
+        }
+
         val dialog = AlertDialog.Builder(this)
             .setTitle(label)
             .setTitle(label)
             .setView(layout)
             .setPositiveButton("OK") { _, _ ->
-                withContinuationHandling {
-                    interpreter.resume(pending, editText.text.toString())
-                }
+                callSuccessCallback()
             }
             .setNegativeButton("Cancel") { _, _ ->
-                withContinuationHandling {
-                    interpreter.resume(pending, "")
-                }
+                callCancelCallback()
             }
             .setOnCancelListener {
-                withContinuationHandling {
-                    interpreter.resume(pending, "")
-                }
+                callCancelCallback()
             }
             .create()
 
         editText.setOnKeyListener { _, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_G && event.isCtrlPressed) {
-                dialog.cancel()
-                true
+            if (event.action == KeyEvent.ACTION_DOWN) {
+                if(keyCode == KeyEvent.KEYCODE_G && event.isCtrlPressed) {
+                    dialog.cancel()
+                    true
+                }
+                else if(keyCode == KeyEvent.KEYCODE_ENTER) {
+                    callSuccessCallback()
+                    dialog.dismiss()
+                    true
+                }
+                else {
+                    true
+                }
             } else {
                 false
             }
@@ -314,11 +336,6 @@ class MainActivity : AppCompatActivity() {
                 GlobalObject.REQUEST_READ_KEY-> {
                     pendingReadKey = true
                     showMessage(rarg.arg as String)
-                }
-                GlobalObject.REQUEST_TEXT_DIALOG -> {
-                    val label = rarg.arg as String
-                    val bundle = Bundle().apply { putString("DIALOG_TEXT_LABEL", label) }
-                    showDialog(DIALOG_ID_TEXT, bundle)
                 }
             }
         } catch (e: EcmaError) {
