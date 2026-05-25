@@ -5,7 +5,6 @@ import android.content.ClipboardManager;
 import android.net.Uri;
 
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ContinuationPending;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ImporterTopLevel;
 import org.mozilla.javascript.Scriptable;
@@ -64,7 +63,6 @@ public class GlobalObject  extends ImporterTopLevel {
             "is_bol",
             "enter_minibuffer",
             "leave_minibuffer",
-            "request_function_execute",
             "split_window",
             "delete_window",
             "other_window",
@@ -81,10 +79,6 @@ public class GlobalObject  extends ImporterTopLevel {
 
     public void pushLoadRequest(String jsPath, Function onSuccess, Function onFailure) {
         pendingRequestQueue.add( DelayedRequest.Companion.jsLoadRequest(jsPath, onSuccess, onFailure) );
-    }
-
-    public void pushDelayedCallRequest(Function jsfunc) {
-        pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.CALL_FUNCTION, jsfunc) );
     }
 
 
@@ -150,7 +144,7 @@ public class GlobalObject  extends ImporterTopLevel {
         String label = Context.toString(args[0]);
         Function onSuccess = (Function)args[1];
         Function onFailure = (Function)args[2];
-        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.READ_KEY,  new DelayedRequest.AsyncArg(label, onSuccess, onFailure)));
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.READ_KEY,  new DelayedRequest.Arg(label, onSuccess, onFailure)));
         return Context.getUndefinedValue();
     }
 
@@ -170,7 +164,7 @@ public class GlobalObject  extends ImporterTopLevel {
             arr.add(Context.toString(arg));
         }
 
-        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_FILE,  new DelayedRequest.AsyncArg(arr.toArray(new String[0]), onSuccess, onFailure)));
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_FILE,  new DelayedRequest.Arg(arr.toArray(new String[0]), onSuccess, onFailure)));
         return Context.getUndefinedValue();
     }
     public static Object print(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -526,7 +520,7 @@ public class GlobalObject  extends ImporterTopLevel {
         String label = Context.toString(args[0]);
         Function onSuccess = (Function)args[1];
         Function onFailure = (Function)args[2];
-        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.QUERY_TEXT_DIALOG,  new DelayedRequest.AsyncArg(label, onSuccess, onFailure)));
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.QUERY_TEXT_DIALOG,  new DelayedRequest.Arg(label, onSuccess, onFailure)));
         return Context.getUndefinedValue();
     }
 
@@ -614,23 +608,6 @@ public class GlobalObject  extends ImporterTopLevel {
     public static Object leave_minibuffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         return glob.getRhinocs().leaveMiniBuffer();
-    }
-
-    /*(non-Javadoc)
-     *
-     * request_function_execute(jsfunc)
-     *
-     * jsfuncをcapture continuationが出来る状態で（つまり非同期で後から）実行する。
-     *
-     * @param {function()} jsfunc
-     */
-    public static Object request_function_execute(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Function.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        Function jsfunc = (Function)args[0];
-        glob.pushDelayedCallRequest(jsfunc);
-        return Context.getUndefinedValue();
     }
 
     /*

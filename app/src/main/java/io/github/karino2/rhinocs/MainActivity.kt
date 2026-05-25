@@ -16,7 +16,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import org.mozilla.javascript.ContinuationPending
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
@@ -95,7 +94,7 @@ class MainActivity : AppCompatActivity() {
     private fun Interpreter.loadBuiltin() {
         // buildins_override.jsがあればそちらを優先
         val overwrite = packageDirUri?.let { FastFile.fromTreeUri(this@MainActivity, it).findFile("builtins_override.js")?.readText() }
-        withContinuationHandling {
+        withExceptionHandling {
             overwrite?.let {
                 run(it, "/builtins_override.js")
                 true
@@ -105,7 +104,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    var callbackArg: DelayedRequest.AsyncArg? = null
+    var callbackArg: DelayedRequest.Arg? = null
 
     private val rview: RView
         get() = findViewById<RView>(R.id.rView)!!
@@ -224,16 +223,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun runScript(script: String, fileName: String="*script*") {
-        withContinuationHandling { interpreter.run(script, fileName) }
+        withExceptionHandling { interpreter.run(script, fileName) }
     }
 
     fun callJsFunction(function: Function, args: Array<Any>) {
-        withContinuationHandling {
+        withExceptionHandling {
             interpreter.callFunction(function, args)
         }
     }
 
-    fun queryTextDialog(label: String, callback: DelayedRequest.AsyncArg) {
+    fun queryTextDialog(label: String, callback: DelayedRequest.Arg) {
         callbackArg = callback
         val bundle = Bundle().apply { putString("DIALOG_TEXT_LABEL", label) }
         showDialog(DIALOG_ID_TEXT, bundle)
@@ -319,13 +318,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var pendingReadKey = false
-    fun waitReadKey(label: String, callback: DelayedRequest.AsyncArg) {
+    fun waitReadKey(label: String, callback: DelayedRequest.Arg) {
         pendingReadKey = true
         callbackArg = callback
         showMessage(label)
     }
 
-    private fun withContinuationHandling(run: () -> Unit) {
+    private fun withExceptionHandling(run: () -> Unit) {
         try {
             run()
         } catch (e: EcmaError) {

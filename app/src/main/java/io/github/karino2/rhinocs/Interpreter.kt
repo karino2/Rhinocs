@@ -7,7 +7,6 @@ import org.mozilla.javascript.Function
 import org.mozilla.javascript.JSFunction
 import org.mozilla.javascript.ScriptableObject
 import java.io.FileNotFoundException
-import java.util.concurrent.Delayed
 
 class Interpreter {
     val factory: ContextFactory = object : ContextFactory() {
@@ -69,17 +68,17 @@ class Interpreter {
             val req = global.popDelayedRequest()
             when(req.type) {
                 DelayedRequestType.SELECT_FILE-> {
-                    val larg = req.arg as DelayedRequest.AsyncArg
-                    val mtypes = larg.arg as Array<String>
+                    val larg = req.arg
+                    val mtypes = larg.userArg as Array<String>
                     global.activity.callbackArg = larg
                     global.activity.getFileUriFromScript.launch(mtypes)
                     return
                 }
                 DelayedRequestType.LOAD_JS -> {
-                    val larg = req.arg as DelayedRequest.AsyncArg
+                    val larg = req.arg
                     try
                     {
-                        val fname = larg.arg as String
+                        val fname = larg.userArg as String
                         if(!global.activity.loadPackageJS(fname, mayNotExist = true))
                         {
                             global.activity.callJsFunction(larg.onFailure, arrayOf<Any>(FileNotFoundException(fname)))
@@ -91,20 +90,15 @@ class Interpreter {
                     }
                 }
                 DelayedRequestType.QUERY_TEXT_DIALOG -> {
-                    val larg = req.arg as DelayedRequest.AsyncArg
-                    val label = larg.arg as String
+                    val larg = req.arg
+                    val label = larg.userArg as String
                     global.activity.queryTextDialog(label, larg)
                 }
                 DelayedRequestType.READ_KEY -> {
-                    val larg = req.arg as DelayedRequest.AsyncArg
-                    val label = larg.arg as String
+                    val larg = req.arg
+                    val label = larg.userArg as String
                     global.activity.waitReadKey(label, larg)
                 }
-                DelayedRequestType.CALL_FUNCTION -> {
-                    val farg = req.arg as Function
-                    callFunction(farg, emptyArray<Any>())
-                }
-
             }
         }
     }

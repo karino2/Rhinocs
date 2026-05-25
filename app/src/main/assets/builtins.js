@@ -372,7 +372,7 @@ function read_string(prompt) {
 
 function execute_extended_command() {
   read_string("M-x ").then((cmd)=> {
-    request_function_execute(global[cmd]);
+    global[cmd]();
   });
 }
 
