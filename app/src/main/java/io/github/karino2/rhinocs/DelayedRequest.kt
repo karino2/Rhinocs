@@ -8,11 +8,11 @@ enum class DelayedRequestType {
 }
 
 class DelayedRequest(val type: DelayedRequestType, val arg: Any) {
-    class JSLoadArg(val fname: String, val callAfter: Function?)
+    class JSLoadArg(val fname: String, val onSuccess: Function, val onFailure: Function)
     companion object {
-        fun jsLoadRequest(fname: String, callAfter: Function?)
+        fun jsLoadRequest(fname: String, onSuccess: Function, onFailure: Function)
         = DelayedRequest(
             DelayedRequestType.LOAD_JS,
-            JSLoadArg(fname, callAfter))
+            JSLoadArg(fname, onSuccess, onFailure))
     }
 }

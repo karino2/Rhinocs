@@ -232,9 +232,9 @@ class MainActivity : AppCompatActivity() {
         withContinuationHandling { interpreter.run(script, fileName) }
     }
 
-    fun callJsFunction(function: Function) {
+    fun callJsFunction(function: Function, args: Array<Any>) {
         withContinuationHandling {
-            interpreter.callFunction(function)
+            interpreter.callFunction(function, args)
         }
     }
 

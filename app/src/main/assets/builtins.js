@@ -108,21 +108,6 @@ function kill_region() {
   });
 }
 
-/*
-  (kill-region (point)
-	       (progn
-		 (cond ((null lines)
-			(if (eolp)
-			    (forward-line 1)
-			  (goto-eol)))
-		       ((zerop lines)
-			(if (bolp)
-			    (forward-line -1)
-			  (goto-bol)))
-		       (t
-			(forward-line lines)))
-		 (point))))
-*/
 function kill_line() {
   let beg = point();
   if (is_eol()) {
@@ -163,6 +148,12 @@ function join_path(...parts) {
     if (part.startsWith("/")) part = part.slice(1);
     return acc + part;
   }, "");
+}
+
+function load_js(fname) {
+  return new Promise((resolve, reject)=> {
+    load_js_callback(fname, resolve, reject);
+  });
 }
 
 /*

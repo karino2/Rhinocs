@@ -45,7 +45,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "scroll_window",
             "read_gzip_file",
             "load_gzip_skk_dictionary",
-            "request_load_js",
+            "load_js_callback",
             "get_buffer_create",
             "switch_to_buffer",
             "message",
@@ -83,8 +83,8 @@ public class GlobalObject  extends ImporterTopLevel {
 
     ArrayList<DelayedRequest> pendingRequestQueue;
 
-    public void pushLoadRequest(String jsPath, Function callAfter) {
-        pendingRequestQueue.add( DelayedRequest.Companion.jsLoadRequest(jsPath, callAfter) );
+    public void pushLoadRequest(String jsPath, Function onSuccess, Function onFailure) {
+        pendingRequestQueue.add( DelayedRequest.Companion.jsLoadRequest(jsPath, onSuccess, onFailure) );
     }
 
     public void pushDelayedCallRequest(Function jsfunc) {
@@ -285,19 +285,16 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     // load_jsは再入してしまうと以下のexceptionがでてしまったので、リクエストをpushするだけにして遅延ロードするようにする。
-    // たぶんコンテキストとかをちゃんと使い回せば平気なんだろうけれど、その中からopen_fileなどのpending continuation系が呼ばれるとややこしいので。
     // org.mozilla.javascript.WrappedException: Wrapped java.lang.IllegalStateException: Cannot have any pending top calls when executing a script with continuations
-    public static Object request_load_js(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        if (args.length < 1 || args.length > 2) {
-            throw new IllegalArgumentException("request_load_js arguments must be 1 or 2.");
-        }
+    //
+    public static Object load_js_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class, Function.class, Function.class });
+
         GlobalObject glob = getInstance(funcObj);
         String fname = Context.toString(args[0]);
-        Function after = null;
-        if(args.length == 2) {
-            after = (Function) args[1];
-        }
-        glob.pushLoadRequest(fname, after);
+        Function onSuccess = (Function)args[1];
+        Function onFailure = (Function)args[2];
+        glob.pushLoadRequest(fname, onSuccess, onFailure);
         return Context.getUndefinedValue();
     }
 
