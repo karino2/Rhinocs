@@ -18,7 +18,7 @@ import java.util.List;
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
             "print",
-            "read_key",
+            "read_key_callback",
             "select_file_callback",
             "open_uri",
             "forward_char",
@@ -70,8 +70,6 @@ public class GlobalObject  extends ImporterTopLevel {
             "other_window",
             "delete_other_windows",
     };
-
-    public static final int REQUEST_READ_KEY=1;
 
     public MainActivity activity;
     public RView rview;
@@ -144,16 +142,16 @@ public class GlobalObject  extends ImporterTopLevel {
         }
     }
 
-    public static Object read_key(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+    public static Object read_key_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class, Function.class, Function.class  });
 
-        String msg = Context.toString(args[0]);
-        try (Context cx = Context.enter()) {
-            ContinuationPending pending = cx.captureContinuation();
-            RequestArg ra = new RequestArg(REQUEST_READ_KEY, msg);
-            pending.setApplicationState(ra);
-            throw pending;
-        }
+        GlobalObject glob = getInstance(funcObj);
+
+        String label = Context.toString(args[0]);
+        Function onSuccess = (Function)args[1];
+        Function onFailure = (Function)args[2];
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.READ_KEY,  new DelayedRequest.AsyncArg(label, onSuccess, onFailure)));
+        return Context.getUndefinedValue();
     }
 
     /*

@@ -95,6 +95,11 @@ class Interpreter {
                     val label = larg.arg as String
                     global.activity.queryTextDialog(label, larg)
                 }
+                DelayedRequestType.READ_KEY -> {
+                    val larg = req.arg as DelayedRequest.AsyncArg
+                    val label = larg.arg as String
+                    global.activity.waitReadKey(label, larg)
+                }
                 DelayedRequestType.CALL_FUNCTION -> {
                     val farg = req.arg as Function
                     callFunction(farg, emptyArray<Any>())

@@ -20,6 +20,12 @@ function query_text_dialog(label) {
   });
 }
 
+function read_key(label) {
+  return new Promise((resolve, reject)=> {
+    read_key_callback(label, resolve, reject);
+  });
+}
+
 function select_file(mimeTypes) {
   return new Promise((resolve, reject)=> {
     select_file_callback(mimeTypes, resolve, reject);

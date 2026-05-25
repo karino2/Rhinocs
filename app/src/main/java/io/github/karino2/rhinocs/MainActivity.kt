@@ -23,8 +23,6 @@ import org.mozilla.javascript.EcmaError
 import org.mozilla.javascript.Function
 import org.mozilla.javascript.WrappedException
 
-data class RequestArg(val requestId: Int, val arg: Any)
-
 class MainActivity : AppCompatActivity() {
     companion object {
         const val  PACKAGE_DIR_URI_KEY = "last_uri_path"
@@ -107,7 +105,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    var pendingCC: ContinuationPending? = null
     var callbackArg: DelayedRequest.AsyncArg? = null
 
     private val rview: RView
@@ -129,10 +126,8 @@ class MainActivity : AppCompatActivity() {
             if (pendingReadKey)
             {
                 pendingReadKey = false
-                pendingCC?.let { pcc->
-                    withContinuationHandling {
-                        interpreter.resume(pcc, keyStr)
-                    }
+                callbackArg?.let { ca->
+                    interpreter.callFunction(ca.onSuccess, arrayOf<Any>(keyStr))
                 }
             } else {
                 interpreter.setGlobalKey(keyStr)
@@ -324,20 +319,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var pendingReadKey = false
+    fun waitReadKey(label: String, callback: DelayedRequest.AsyncArg) {
+        pendingReadKey = true
+        callbackArg = callback
+        showMessage(label)
+    }
 
     private fun withContinuationHandling(run: () -> Unit) {
         try {
             run()
-        } catch (e: ContinuationPending) {
-            pendingCC = e
-            rview.invalidate()
-            val rarg = e.applicationState as RequestArg
-            when (rarg.requestId) {
-                GlobalObject.REQUEST_READ_KEY-> {
-                    pendingReadKey = true
-                    showMessage(rarg.arg as String)
-                }
-            }
         } catch (e: EcmaError) {
             val msg = "$e"
             showMessage(this, "$e")
