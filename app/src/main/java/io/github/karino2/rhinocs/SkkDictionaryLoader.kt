@@ -8,11 +8,46 @@ import org.mozilla.javascript.ScriptableObject
   このファイルはjmuk版のdictionary_loader.jsのevalDataを元にgeminiに書き直してもらったものです。
  */
 
-class SkkDictionary {
-    fun parseData(ctx: Context, scope: Scriptable, content: String): Scriptable {
+data class SkkEntry(val word: String, val annotation: String?) {
+    fun toJSObject(ctx: Context, scope: Scriptable) : Scriptable{
+        val result = ctx.newObject(scope)
+        ScriptableObject.putProperty(result, "word", word)
+        annotation?.let {
+            ScriptableObject.putProperty(result, "annotation", it)
+        }
+        return result
+    }
+}
+
+class SkkDictionary() : ScriptableObject() {
+    override fun getClassName(): String {
+        return "SkkNativeDictionary"
+    }
+
+    val entryDict = HashMap<String, Array<SkkEntry>>()
+
+    override fun get(name: String, start: Scriptable): Any? {
+        val entries = entryDict[name] ?: return super.get(name, start)
+
+        // on demandにSkkEntryからJavaScriptのオブジェクトの配列に変換する
+        val ctx = Context.getCurrentContext()
+        val jsArray = ctx.newArray(parentScope, entries.size)
+        entries.forEachIndexed { index, entry ->
+            ScriptableObject.putProperty(jsArray, index, entry.toJSObject(ctx, parentScope))
+        }
+        return jsArray
+    }
+
+}
+
+
+class SkkDictionaryLoader {
+    fun parseData(ctx: Context, scope: Scriptable, content: String): SkkDictionary {
         val startTime = System.currentTimeMillis()
         val lines = content.split("\n")
-        val result = ctx.newObject(scope)
+
+        val result = SkkDictionary()
+        result.parentScope = scope
 
         lines.forEachIndexed { i, line ->
             if (line.isEmpty() || line.startsWith(";")) {
@@ -26,14 +61,9 @@ class SkkDictionary {
             val entriesStrings = entriesPart.split("/")
 
             val entries = entriesStrings.filter { it.isNotEmpty() }.map { entryStr ->
-                parseEntry(ctx, scope, entryStr)
+                parseEntry(entryStr)
             }
-            
-            val entriesArray = ctx.newArray(scope, entries.size)
-            entries.forEachIndexed { index, entry ->
-                ScriptableObject.putProperty(entriesArray, index, entry)
-            }
-            ScriptableObject.putProperty(result, reading, entriesArray)
+            result.entryDict[reading] = entries.toTypedArray()
 
             /*
             if (i % 1000 == 0) {
@@ -88,15 +118,12 @@ class SkkDictionary {
         return result.toString()
     }
 
-    private fun parseEntry(ctx: Context, scope: Scriptable, entry: String): Scriptable {
+    private fun parseEntry(entry: String): SkkEntry {
         val semicolon = entry.indexOf(';')
-        val result = ctx.newObject(scope)
-        if (semicolon < 0) {
-            ScriptableObject.putProperty(result, "word", evalSexp(entry))
+        return if (semicolon < 0) {
+            SkkEntry(evalSexp(entry), null)
         } else {
-            ScriptableObject.putProperty(result, "word", evalSexp(entry.substring(0, semicolon)))
-            ScriptableObject.putProperty(result, "annotation", evalSexp(entry.substring(semicolon + 1)))
+            SkkEntry(evalSexp(entry.substring(0, semicolon)), evalSexp(entry.substring(semicolon + 1)))
         }
-        return result
     }
 }

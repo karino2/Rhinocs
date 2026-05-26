@@ -277,7 +277,7 @@ public class GlobalObject  extends ImporterTopLevel {
         String fname = Context.toString(args[0]);
         String content = glob.activity.readGZIPFileContent(fname);
         
-        SkkDictionary skk = new SkkDictionary();
+        SkkDictionaryLoader skk = new SkkDictionaryLoader();
         return skk.parseData(ctx, funcObj.getParentScope(), content);
     }
 
