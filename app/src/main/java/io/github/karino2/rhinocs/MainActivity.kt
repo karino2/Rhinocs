@@ -60,8 +60,7 @@ class MainActivity : AppCompatActivity() {
             )
             callbackArg?.let {ca->
                 val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
-                // val arg = interpreter.newJSArray(arrayOf(it.toString(), dispName))
-                interpreter.callFunction(ca.onSuccess, arrayOf(it.toString(), dispName))
+                interpreter.callSuccess(ca, it.toString(), dispName)
             }
         }
     }
@@ -126,8 +125,9 @@ class MainActivity : AppCompatActivity() {
             {
                 pendingReadKey = false
                 callbackArg?.let { ca->
-                    interpreter.callFunction(ca.onSuccess, arrayOf<Any>(keyStr))
+                    interpreter.callSuccess(ca, keyStr)
                 }
+                rview.invalidate()
             } else {
                 interpreter.setGlobalKey(keyStr)
                 runScript($$"onKeyDown($key);")
@@ -226,12 +226,6 @@ class MainActivity : AppCompatActivity() {
         withExceptionHandling { interpreter.run(script, fileName) }
     }
 
-    fun callJsFunction(function: Function, args: Array<Any>) {
-        withExceptionHandling {
-            interpreter.callFunction(function, args)
-        }
-    }
-
     fun queryTextDialog(label: String, callback: DelayedRequest.Arg) {
         callbackArg = callback
         val bundle = Bundle().apply { putString("DIALOG_TEXT_LABEL", label) }
@@ -271,13 +265,13 @@ class MainActivity : AppCompatActivity() {
 
         fun callSuccessCallback() {
             callbackArg?.let { ca ->
-                interpreter.callFunction(ca.onSuccess, arrayOf(editText.text.toString()))
+                interpreter.callSuccess(ca, editText.text.toString())
             }
         }
 
         fun callCancelCallback() {
             callbackArg?.let { ca ->
-                interpreter.callFunction(ca.onFailure, emptyArray<Any>())
+                interpreter.callFail(ca)
             }
         }
 

@@ -33,7 +33,7 @@ function select_file(mimeTypes) {
 }
 
 function find_file() {
-  select_file(["*/*"]).then((uri, fname)=> {
+  select_file(["*/*"]).then(([uri, fname])=> {
     print(`deb: ${uri}, ${fname}`);
     open_uri(uri);
   })
