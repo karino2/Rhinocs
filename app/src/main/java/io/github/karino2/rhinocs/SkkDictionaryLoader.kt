@@ -4,78 +4,49 @@ import org.mozilla.javascript.Context
 import org.mozilla.javascript.Scriptable
 import org.mozilla.javascript.ScriptableObject
 
-/*
-  このファイルはjmuk版のdictionary_loader.jsのevalDataを元にgeminiに書き直してもらったものです。
- */
 
-data class SkkEntry(val word: String, val annotation: String?) {
-    fun toJSObject(ctx: Context, scope: Scriptable) : Scriptable{
-        val result = ctx.newObject(scope)
-        ScriptableObject.putProperty(result, "word", word)
-        annotation?.let {
-            ScriptableObject.putProperty(result, "annotation", it)
-        }
-        return result
-    }
-}
-
-class SkkDictionary() : ScriptableObject() {
+class SkkDictionary : ScriptableObject() {
     override fun getClassName(): String {
         return "SkkNativeDictionary"
     }
 
-    val entryDict = HashMap<String, Array<SkkEntry>>()
+    // エントリをパース前の文字列 ("単語1/単語2;注釈/") のまま保持してメモリを節約する
+    val entryDict = HashMap<String, String>()
 
     override fun get(name: String, start: Scriptable): Any? {
-        val entries = entryDict[name] ?: return super.get(name, start)
+        val entriesPart = entryDict[name] ?: return super.get(name, start)
 
-        // on demandにSkkEntryからJavaScriptのオブジェクトの配列に変換する
+        // オンデマンドに行の後半部分をパースして JS オブジェクトの配列に変換する
         val ctx = Context.getCurrentContext()
-        val jsArray = ctx.newArray(parentScope, entries.size)
-        entries.forEachIndexed { index, entry ->
-            ScriptableObject.putProperty(jsArray, index, entry.toJSObject(ctx, parentScope))
+        val entriesStrings = entriesPart.split("/")
+        val filtered = entriesStrings.filter { it.isNotEmpty() }
+        
+        val jsArray = ctx.newArray(parentScope, filtered.size)
+        filtered.forEachIndexed { index, entryStr ->
+            val entryJS = parseEntry(ctx, parentScope, entryStr)
+            putProperty(jsArray, index, entryJS)
         }
         return jsArray
     }
 
-}
+    private fun parseEntry(ctx: Context, scope: Scriptable, entry: String): Scriptable {
+        val semicolon = entry.indexOf(';')
+        val result = ctx.newObject(scope)
 
-
-class SkkDictionaryLoader {
-    fun parseData(ctx: Context, scope: Scriptable, content: String): SkkDictionary {
-        val startTime = System.currentTimeMillis()
-        val lines = content.split("\n")
-
-        val result = SkkDictionary()
-        result.parentScope = scope
-
-        lines.forEachIndexed { i, line ->
-            if (line.isEmpty() || line.startsWith(";")) {
-                return@forEachIndexed
-            }
-            val spacePos = line.indexOf(' ')
-            if (spacePos < 0) return@forEachIndexed
-
-            val reading = line.substring(0, spacePos)
-            val entriesPart = line.substring(spacePos + 1)
-            val entriesStrings = entriesPart.split("/")
-
-            val entries = entriesStrings.filter { it.isNotEmpty() }.map { entryStr ->
-                parseEntry(entryStr)
-            }
-            result.entryDict[reading] = entries.toTypedArray()
-
-            /*
-            if (i % 1000 == 0) {
-                println("parsing: progress=$i, total=${lines.size}")
-            }
-             */
+        if (semicolon < 0) {
+            putProperty(result, "word", evalSexp(entry))
+        } else {
+            val word = evalSexp(entry.substring(0, semicolon))
+            val annotation = evalSexp(entry.substring(semicolon + 1))
+            putProperty(result, "word", word)
+            putProperty(result, "annotation", annotation)
         }
-        val endTime = System.currentTimeMillis()
-        println("parsing: finished in ${endTime - startTime} ms")
         return result
     }
 
+    /*
+      このメソッドはjmuk版のdictionary_loader.jsのevalSexpを元にgeminiに書き直してもらったものです。
+     */
     private fun evalSexp(word: String): String {
         if (!word.startsWith("(concat ") || !word.endsWith(")")) {
             return word
@@ -117,13 +88,32 @@ class SkkDictionaryLoader {
         }
         return result.toString()
     }
+}
 
-    private fun parseEntry(entry: String): SkkEntry {
-        val semicolon = entry.indexOf(';')
-        return if (semicolon < 0) {
-            SkkEntry(evalSexp(entry), null)
-        } else {
-            SkkEntry(evalSexp(entry.substring(0, semicolon)), evalSexp(entry.substring(semicolon + 1)))
+
+class SkkDictionaryLoader {
+    fun parseData(ctx: Context, scope: Scriptable, content: String): SkkDictionary {
+        val startTime = System.currentTimeMillis()
+
+        val result = SkkDictionary()
+        result.parentScope = scope
+
+        // lineSequence() を使って一行ずつ lazy に処理する
+        content.lineSequence().forEach { line ->
+            if (line.isEmpty() || line.startsWith(";")) {
+                return@forEach
+            }
+            val spacePos = line.indexOf(' ')
+            if (spacePos < 0) return@forEach
+
+            val reading = line.substring(0, spacePos)
+            val entriesPart = line.substring(spacePos + 1)
+            
+            // オブジェクトを作らず文字列のまま格納
+            result.entryDict[reading] = entriesPart
         }
+        val endTime = System.currentTimeMillis()
+        println("parsing: finished in ${endTime - startTime} ms")
+        return result
     }
 }
