@@ -15,7 +15,11 @@ class Marker(val buffer: Buffer, pos: Long) {
         }
 }
 
-class Buffer {
+class Buffer() {
+
+    constructor(bname: String) : this() {
+        this.name = bname
+    }
 
     // 対応するfileがあれば入る。なければnull
     var url: Uri? = null
@@ -227,7 +231,4 @@ class Buffer {
         return lines[point.linenum].length == point.offset
     }
 
-    companion object {
-        fun fromText(text: String) = Buffer().apply { load(text) }
-    }
 }

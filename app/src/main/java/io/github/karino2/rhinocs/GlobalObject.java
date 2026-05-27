@@ -405,8 +405,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String bname = Context.toString(args[0]);
-        Buffer buf = new Buffer();
-        buf.setName(bname);
+        Buffer buf = glob.getRhinocs().getBufferCreate(bname);
         return Context.javaToJS(buf, glob);
     }
 

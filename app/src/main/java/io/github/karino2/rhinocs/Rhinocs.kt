@@ -8,7 +8,8 @@ import android.net.Uri
  * Editor全体を表す。
  */
 class Rhinocs {
-    val windowList = ArrayList<Window>().apply{ add(Window()) }
+    val bufferCollection = BufferCollection()
+    val windowList = ArrayList<Window>().apply{ add(Window(bufferCollection.getBufferCreate("*scratch*"))) }
 
     var lastMainActiveIndex = 0
 
@@ -70,8 +71,15 @@ class Rhinocs {
     }
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
-        mainActiveWindow.loadFile(resolver, uri)
+        FastFile.fromDocUri(resolver, uri)?.let {
+            val buf = bufferCollection.newBuffer(it.name)
+            buf.load(it.readText())
+            buf.url = uri
+            mainActiveWindow.buffer = buf
+        }
     }
+
+    fun getBufferCreate(bname: String) = bufferCollection.getBufferCreate(bname)
 
     var statusText = ""
 
@@ -118,11 +126,10 @@ class Rhinocs {
             return false
 
 
-        val newWin = Window()
+        val newWin = Window(baseWin.buffer)
         newWin.numCols = baseWin.numCols
         newWin.numRows = baseWin.numRows/2
         baseWin.numRows = (baseWin.numRows+1)/2
-        newWin.buffer = baseWin.buffer
         newWin.point = baseWin.point
         newWin.lastOffset = baseWin.lastOffset
         newWin.goalColumn = baseWin.goalColumn

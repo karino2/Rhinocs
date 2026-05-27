@@ -5,18 +5,19 @@ import android.net.Uri
 import kotlin.math.max
 import kotlin.math.min
 
-class Window {
+class Window(initBuf: Buffer) {
     fun isEOL() = buffer.isEOL(point)
 
     fun isBOL() = point.offset == 0
 
     var point = Point(0, 0, 0)
-    var buffer: Buffer = Buffer().apply { name = "*scratch*" }
+    var buffer: Buffer = initBuf
         set(newBuf) {
             field = newBuf
 
             lastOffset = RowCol(0, 0)
             point = Point(0, 0, 0)
+            resetGoalGolumn()
         }
 
     var isSelected = true
@@ -43,15 +44,6 @@ class Window {
 
     val pointMax: Long
         get() = buffer.pointMax
-
-    fun loadFile(resolver: ContentResolver, uri: Uri) {
-        FastFile.fromDocUri(resolver, uri)?.let {
-            buffer = Buffer.fromText(it.readText())
-            buffer.url = uri
-            buffer.name = it.name
-            resetGoalGolumn()
-        }
-    }
 
     fun saveBuffer(resolver: ContentResolver) : Boolean {
         return buffer.url?.let {
