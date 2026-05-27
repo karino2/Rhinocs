@@ -70,6 +70,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "delete_other_windows",
             "get_floating_list",
             "eval_script",
+            "buffer_list",
     };
 
     public MainActivity activity;
@@ -663,5 +664,14 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         String source = Context.toString(args[0]);
         return ctx.evaluateString(glob, source, "*eval*", 1, null);
+    }
+
+    /*
+    作成済みのバッファのリストを返す。ただし今の所minibufferは含まない（emacs lispと違うので注意）
+     */
+    public static Object buffer_list(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        List<Buffer> blist = glob.getRhinocs().getBufferCollection().getBuffers();
+        return Context.javaToJS(blist, glob);
     }
 }

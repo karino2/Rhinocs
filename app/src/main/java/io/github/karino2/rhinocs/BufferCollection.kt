@@ -5,6 +5,9 @@ class BufferCollection {
 
     fun clear() { bufferMap.clear() }
 
+    val buffers: List<Buffer>
+        get() = bufferMap.values.toList()
+
     fun newName(nameCand: String) : String {
         if(!bufferMap.containsKey(nameCand))
             return nameCand
