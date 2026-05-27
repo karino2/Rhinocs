@@ -75,7 +75,68 @@ class RView @JvmOverloads constructor(
 
         val modeY = (height-margin)-2*cellHeight
         topY = drawModeLine(modeY, canvas)
+        drawFloatingList(canvas, modeY,rhinocs.floatingList)
+
         drawMiniBufferLine(topY, canvas)
+    }
+
+    private fun drawFloatingList(canvas: Canvas, fromY: Float, floatingList: FloatingList) {
+        if (floatingList.isEmpty()) return
+
+        val popupHeight = floatingList.numItems * cellHeight
+
+        val topY = fromY - popupHeight
+        
+        val hMargin = margin * 3f
+        val rectLeft = hMargin
+        val rectRight = width.toFloat() - hMargin
+
+        // 背景と枠線を描画
+        // 影用のPaint (少しぼかしを入れる)
+        val shadowPaint = Paint().apply {
+            color = Color.argb(80, 0, 0, 0)
+            style = Paint.Style.FILL
+        }
+        // 影を描画 (少しずらす)
+        canvas.drawRect(rectLeft + 4f, topY + 4f, rectRight + 4f, fromY + 4f, shadowPaint)
+
+        val bgPaint = Paint().apply { color = Color.WHITE; style = Paint.Style.FILL }
+        // 枠線を少し太く、色を濃く
+        val borderPaint = Paint().apply { color = Color.GRAY; style = Paint.Style.STROKE; strokeWidth = 2f }
+        
+        canvas.drawRect(rectLeft, topY, rectRight, fromY, bgPaint)
+        canvas.drawRect(rectLeft, topY, rectRight, fromY, borderPaint)
+
+        val startX = rectLeft + margin
+
+        floatingList.items.forEachIndexed { index, item ->
+            val itemY = topY + index * cellHeight
+            val baseY = topToBase(itemY)
+            val isSelected = index == floatingList.selectedIndex
+
+            // 選択中のアイテムを反転表示
+            if (isSelected) {
+                val highlightPaint =
+                    Paint().apply { color = "#4285F4".toColorInt(); style = Paint.Style.FILL }
+                canvas.drawRect(
+                    rectLeft + 1f,
+                    itemY,
+                    rectRight - 1f,
+                    itemY + cellHeight,
+                    highlightPaint
+                )
+            }
+
+            canvas.withAlign(Paint.Align.LEFT) {
+                if (isSelected) {
+                    withColor(Color.WHITE) {
+                        drawText(item, startX, baseY, textPaint)
+                    }
+                } else {
+                    drawText(item, startX, baseY, textPaint)
+                }
+            }
+        }
     }
 
 

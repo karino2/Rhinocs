@@ -190,4 +190,6 @@ class Rhinocs {
         }
         return true
     }
+
+    val floatingList = FloatingList()
 }

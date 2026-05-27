@@ -67,6 +67,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "delete_window",
             "other_window",
             "delete_other_windows",
+            "get_floating_list",
     };
 
     public MainActivity activity;
@@ -642,6 +643,16 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         Rhinocs rhinocs = glob.getRhinocs();
         return rhinocs.deleteOtherWindows();
+    }
+
+    /*
+    FloatingListオブジェクトを返す。
+    このitemsに文字列の配列をセットするとフローティングリストが表示される。
+     */
+    public static Object get_floating_list(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        FloatingList flist = glob.getRhinocs().getFloatingList();
+        return Context.javaToJS(flist, glob);
     }
 
 }
