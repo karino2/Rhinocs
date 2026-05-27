@@ -103,7 +103,7 @@ function withRegion(f) {
 function eval_region() {
   withRegion((beg, end) => {
     let text = buffer_substring(beg, end);
-    eval(text);
+    eval_script(text);
   });
 }
 

@@ -7,6 +7,7 @@ import android.net.Uri;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ImporterTopLevel;
+import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -68,6 +69,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "other_window",
             "delete_other_windows",
             "get_floating_list",
+            "eval_script",
     };
 
     public MainActivity activity;
@@ -655,4 +657,11 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.javaToJS(flist, glob);
     }
 
+    public static Object eval_script(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        String source = Context.toString(args[0]);
+        return ctx.evaluateString(glob, source, "*eval*", 1, null);
+    }
 }
