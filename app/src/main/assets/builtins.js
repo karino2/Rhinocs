@@ -183,6 +183,47 @@ function is_minibuffer() {
 }
 
 /*
+  hook 関連
+*/
+function RunHook() {
+  this.hooks = [];
+}
+
+RunHook.prototype.runAll = function(...args) {
+  for(let hook of this.hooks) {
+    hook(args);
+  }
+}
+
+RunHook.prototype.add = function(hook) {
+  this.hooks.push(hook);
+}
+
+RunHook.prototype.remove = function(hook) {
+  this.hooks = this.hooks.filter((h) => h !== hook);
+}
+
+
+
+let g_hooks = {
+  hookMap: {},
+  addHook(name, hook) {
+    if(!this.hookMap[name])
+      this.hookMap[name] = new RunHook();
+
+    this.hookMap[name].add(hook);
+  },
+  removeHook(name, hook) {
+    if(!this.hookMap[name]) return;
+    this.hookMap[name].remove(hook);
+  },
+  runHook(name) {
+    if(!this.hookMap[name]) return;
+    this.hookMap[name].runAll();
+  }
+};
+
+/*
   KeyMap関連。ひとまずここに置く。
 */
 
@@ -206,6 +247,25 @@ KeyMap.prototype.defineKey = function(keySeq, func) {
   }
   current[keySeq[keySeq.length-1]] = func
 }
+
+KeyMap.prototype.removeKey = function(keySeq) {
+  if (typeof keySeq === 'string') {
+    delete this.keyMap[keySeq];
+    return;
+  }
+
+  let current = this.keyMap;
+  for (let i = 0; i < keySeq.length-1; i++) {
+    let k = keySeq[i];
+    if (!current || typeof current !== 'object' || !(k in current)) return;
+    current = current[k];
+  }
+
+  if (current && typeof current === 'object') {
+    delete current[keySeq[keySeq.length-1]];
+  }
+}
+
 
 KeyMap.prototype.lookupLastMap = function(keySeq) {
   if(keySeq.length == 0)
@@ -286,12 +346,50 @@ function CreateDefaultKeyMap() {
 }
 
 
-let g_defaultKeyMap = CreateDefaultKeyMap();
+function CreateDefaultMiniBufferKeyMap()
+{
+  let keymap = CreateDefaultKeyMap();
+  keymap.removeKey("Return");
+  keymap.removeKey(["C-x", "C-s"]);
+  keymap.removeKey(["C-x", "C-f"]);
+  keymap.removeKey("C-j");
+  keymap.removeKey("M-x");
+  keymap.removeKey(["C-x", "2"]);
+  keymap.removeKey(["C-x", "0"]);
+  keymap.removeKey(["C-x", "o"]);
+  keymap.removeKey(["C-x", "1"]);
+  return keymap;
+}
+
+function CreateKeyMapStack(iniKeyMap) {
+  return {
+    keyMapStack: [iniKeyMap],
+
+    currentKeyMap() {
+      return this.keyMapStack[this.keyMapStack.length - 1];
+    },
+
+    pushKeyMap(keymap) {
+      this.keyMapStack.push(keymap);
+    },
+
+    popKeyMap() {
+      if (this.keyMapStack.length > 1) {
+        this.keyMapStack.pop();
+      }
+    },
+    length() { return this.keyMapStack.length; },
+    getKeyMap(i) { return this.keyMapStack[i]; },
+  };
+}
+
 
 let g_keyMapHandler = {
   lastKeySequence: [],
   delegateRequest: false,
-  keyMapStack: [g_defaultKeyMap],
+  isMiniBuffer: false,
+  keyMapStack: CreateKeyMapStack(CreateDefaultKeyMap()),
+  miniKeyMapStack: CreateKeyMapStack(CreateDefaultMiniBufferKeyMap()),
 
   handleOneKeyMap(keymap, str) {
     let lmap = keymap.lookupLastMap(this.lastKeySequence);
@@ -320,9 +418,16 @@ let g_keyMapHandler = {
     return this.lastKeySequence.length > 0;
   },
 
+  currentKeyMapStack() {
+    if(this.isMiniBuffer)
+      return this.miniKeyMapStack;
+    return this.keyMapStack;
+  },
+
   handleKeyDown(str) {
-    for (let i = this.keyMapStack.length - 1; i >= 0; i--) {
-      if (this.handleOneKeyMap(this.keyMapStack[i], str)) {
+    let kstack = this.currentKeyMapStack();
+    for (let i = kstack.length() - 1; i >= 0; i--) {
+      if (this.handleOneKeyMap(kstack.getKeyMap(i), str)) {
         return;
       }
     }
@@ -331,18 +436,12 @@ let g_keyMapHandler = {
     this.lastKeySequence.length = 0;
   },
 
-  currentKeyMap() {
-    return this.keyMapStack[this.keyMapStack.length - 1];
-  },
-
   pushKeyMap(keymap) {
-    this.keyMapStack.push(keymap);
+    this.currentKeyMapStack().pushKeyMap(keymap);
   },
 
   popKeyMap() {
-    if (this.keyMapStack.length > 1) {
-      this.keyMapStack.pop();
-    }
+    this.currentKeyMapStack().popKeyMap();
   },
 
   requestDelegateKeyHandle() {
@@ -355,25 +454,40 @@ let g_keyMapHandler = {
 */
 
 function global_set_key(keyPat, func) {
-    g_keyMapHandler.currentKeyMap().defineKey(keyPat, func);
+    g_keyMapHandler.keyMapStack.currentKeyMap().defineKey(keyPat, func);
+}
+
+/*
+minibufferのキーマップにセット
+*/
+function global_mini_set_key(keyPat, func) {
+    g_keyMapHandler.miniKeyMapStack.currentKeyMap().defineKey(keyPat, func);
 }
 
 function read_string(prompt) {
+  function leave() {
+      g_keyMapHandler.popKeyMap();
+      g_keyMapHandler.isMiniBuffer = false;
+      g_hooks.runHook("exit_minibuffer_hook");
+      return leave_minibuffer();
+  }
+
   let miniKeyMap = new KeyMap();
   let promise = new Promise((resolve, reject)=> {
     miniKeyMap.defineKey("Return", ()=> {
-      g_keyMapHandler.popKeyMap();
-      let ret = leave_minibuffer()
+      let ret = leave();
       resolve(ret);
     });
     miniKeyMap.defineKey("C-g", ()=> {
-      g_keyMapHandler.popKeyMap();
-      leave_minibuffer();
+      leave();
       reject();
     });
   });
+
+  g_keyMapHandler.isMiniBuffer = true
   g_keyMapHandler.pushKeyMap(miniKeyMap);
   enter_minibuffer(prompt);
+  g_hooks.runHook("enter_minibuffer_hook")
   return promise;
 }
 
