@@ -103,7 +103,10 @@ function withRegion(f) {
 function eval_region() {
   withRegion((beg, end) => {
     let text = buffer_substring(beg, end);
-    eval_script(text);
+    let res = eval_script(text);
+    insert("\n");
+    insert(res);
+    insert("\n");
   });
 }
 
@@ -173,6 +176,10 @@ function load_js(fname) {
   return new Promise((resolve, reject)=> {
     load_js_callback(fname, resolve, reject);
   });
+}
+
+function is_minibuffer() {
+  return selected_buffer().isMiniBuffer();
 }
 
 /*

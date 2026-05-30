@@ -10,6 +10,8 @@ class Window(initBuf: Buffer) {
 
     fun isBOL() = point.offset == 0
 
+    var isMiniBuffer = false
+
     var point = Point(0, 0, 0)
     var buffer: Buffer = initBuf
         set(newBuf) {

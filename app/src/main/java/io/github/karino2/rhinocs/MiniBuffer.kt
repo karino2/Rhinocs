@@ -12,6 +12,7 @@ class MiniBufferWindow {
     val miniBuffer = MiniBuffer()
     val window = Window(miniBuffer.buffer).apply {
         numRows = 1
+        isMiniBuffer = true
     }
     var numCols: Int
         get() = window.numCols

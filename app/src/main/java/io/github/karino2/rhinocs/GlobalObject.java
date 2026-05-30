@@ -71,6 +71,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "get_floating_list",
             "eval_script",
             "buffer_list",
+            "selected_buffer",
+            "selected_window",
     };
 
     public MainActivity activity;
@@ -673,5 +675,18 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         List<Buffer> blist = glob.getRhinocs().getBufferCollection().getBuffers();
         return Context.javaToJS(blist, glob);
+    }
+
+    /*
+    現在のバッファを返す。ミニバッファの事もある。
+     */
+    public static Object selected_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return Context.javaToJS(glob.selectedBuffer(), glob);
+    }
+
+    public static Object selected_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return Context.javaToJS(glob.selectedWindow(), glob);
     }
 }
