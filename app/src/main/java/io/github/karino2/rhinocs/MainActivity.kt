@@ -19,7 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
-import org.mozilla.javascript.Function
+import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.WrappedException
 
 class MainActivity : AppCompatActivity() {
@@ -322,13 +322,16 @@ class MainActivity : AppCompatActivity() {
         try {
             run()
         } catch (e: EcmaError) {
-            val msg = "$e"
-            showMessage(this, "$e")
-            println(msg)
+            showError("$e")
         } catch (e: WrappedException) {
-            val msg = "$e"
-            showMessage(this, "$e")
-            println(msg)
+            showError("$e")
+        } catch (e: EvaluatorException) {
+            showError("$e")
         }
+    }
+
+    private fun showError(msg: String) {
+        showMessage(this, msg)
+        println(msg)
     }
 }

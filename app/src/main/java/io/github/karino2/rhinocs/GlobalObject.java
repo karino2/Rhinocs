@@ -661,7 +661,7 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object eval_script(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+        verifyArgs(funcObj, args, new Class<?>[]{String.class});
 
         GlobalObject glob = getInstance(funcObj);
         String source = Context.toString(args[0]);
