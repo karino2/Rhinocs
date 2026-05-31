@@ -1,187 +1,3 @@
-function self_insert() {
-   insert($key);
-}
-
-function delete_backward_char(n=1) {
-   let end = point();
-   backward_char(n);
-   delete_region(point(), end);
-}
-
-function delete_char(n=1) {
-   let beg = point();
-   forward_char(n);
-   delete_region(beg, point());
-}
-
-function query_text_dialog(label) {
-  return new Promise((resolve, reject)=> {
-    query_text_dialog_callback(label, resolve, reject);
-  });
-}
-
-function read_key(label) {
-  return new Promise((resolve, reject)=> {
-    read_key_callback(label, resolve, reject);
-  });
-}
-
-function select_file(mimeTypes) {
-  return new Promise((resolve, reject)=> {
-    select_file_callback(mimeTypes, resolve, reject);
-  });
-}
-
-function find_file() {
-  select_file(["*/*"]).then(([uri, fname])=> {
-    print(`deb: ${uri}, ${fname}`);
-    open_uri(uri);
-  })
-}
-
-function saveBuffer() {
-   save_buffer();
-   message("Saved!");
-}
-
-function next_line(delta=1) {
-    let goal = goal_column();
-    forward_line(delta);
-    goto_column(goal);
-    set_goal_column(goal);
-}
-
-function previous_line(delta=1) {
-    let goal = goal_column();
-    backward_line(delta);
-    goto_column(goal);
-    set_goal_column(goal);
-}
-
-function beginning_of_buffer() {
-  goto_char(0)
-}
-
-function end_of_buffer() {
-  goto_char(point_max());
- }
-
-function next_page() {
-  scroll_window(Math.floor(window_height()-2))
-}
-
-function previous_page() {
-  scroll_window(-Math.floor(window_height()-2))
-}
-
-function beginning_of_line() { goto_bol(); }
-function end_of_line() { goto_eol(); }
-
-function set_mark_command() {
-  let marker = mark_marker();
-  set_marker(marker, point());
-  message("mark set");
-}
-
-function exchange_point_and_mark() {
-  let marker = mark_marker();
-  let mark = marker_position(marker);
-  set_marker(marker, point());
-  goto_char(mark);
-}
-
-function withRegion(f) {
-  let beg = point();
-  let end = marker_position(mark_marker());
-  if (end < 0) {
-    message("No mark set");
-    return;
-  }
-  return f(Math.min(beg, end), Math.max(beg, end));
-}
-
-function eval_region() {
-  withRegion((beg, end) => {
-    let text = buffer_substring(beg, end);
-    let res = eval_script(text);
-    insert("\n");
-    insert(res);
-    insert("\n");
-  });
-}
-
-function copy_region() {
-  withRegion((beg, end) => {
-    let text = buffer_substring(beg, end);
-    copy_to_clipboard(text);
-    message("Copied");
-  });
-}
-
-function kill_region_inner(beg, end) {
-    let text = buffer_substring(beg, end);
-    copy_to_clipboard(text);
-    delete_region(beg, end);
-}
-
-function kill_region() {
-  withRegion((beg, end) => {
-    kill_region_inner(beg, end);
-  });
-}
-
-function kill_line() {
-  let beg = point();
-  if (is_eol()) {
-    forward_line(1);
-  } else {
-    goto_eol();
-  }
-  let end = point();
-  if (end > beg) {
-    kill_region_inner(beg, end);
-  }
-}
-
-function yank() {
-  let text = current_clipboard();
-  insert(text);
-}
-
-function set_device_id(devid) {
-  put_pref_string("device_id", devid);
-  message("set: " + devid);
-}
-
-function get_device_id() {
-  return get_pref_string("device_id", "Default");
-}
-
-function get_per_device_storage() {
-  return `/storage/per_device/${get_device_id()}/`;
-}
-
-function join_path(...parts) {
-  if (parts.length === 0) return "";
-  return parts.reduce((acc, part, idx) => {
-    part = String(part);
-    if (idx === 0) return part;
-    if (!acc.endsWith("/")) acc += "/";
-    if (part.startsWith("/")) part = part.slice(1);
-    return acc + part;
-  }, "");
-}
-
-function load_js(fname) {
-  return new Promise((resolve, reject)=> {
-    load_js_callback(fname, resolve, reject);
-  });
-}
-
-function is_minibuffer() {
-  return selected_buffer().isMiniBuffer();
-}
-
 /*
   hook 関連
 */
@@ -224,7 +40,7 @@ let g_hooks = {
 };
 
 /*
-  KeyMap関連。ひとまずここに置く。
+  KeyMap関連。
 */
 
 function KeyMap() {
@@ -450,8 +266,198 @@ let g_keyMapHandler = {
 };
 
 /*
-  g_keyMapHandlerが必要なAPI
+コマンド
 */
+
+function self_insert() {
+   insert($key);
+}
+
+function delete_backward_char(n=1) {
+   let end = point();
+   backward_char(n);
+   delete_region(point(), end);
+}
+
+function delete_char(n=1) {
+   let beg = point();
+   forward_char(n);
+   delete_region(beg, point());
+}
+
+function query_text_dialog(label) {
+  return new Promise((resolve, reject)=> {
+    query_text_dialog_callback(label, resolve, reject);
+  });
+}
+
+function read_key(label) {
+  return new Promise((resolve, reject)=> {
+    read_key_callback(label, resolve, reject);
+  });
+}
+
+function select_file(mimeTypes) {
+  return new Promise((resolve, reject)=> {
+    select_file_callback(mimeTypes, resolve, reject);
+  });
+}
+
+function find_file() {
+  select_file(["*/*"]).then(([uri, fname])=> {
+    print(`deb: ${uri}, ${fname}`);
+    open_uri(uri);
+  })
+}
+
+function saveBuffer() {
+   save_buffer();
+   message("Saved!");
+}
+
+function next_line(delta=1) {
+    let goal = goal_column();
+    forward_line(delta);
+    goto_column(goal);
+    set_goal_column(goal);
+}
+
+function previous_line(delta=1) {
+    let goal = goal_column();
+    backward_line(delta);
+    goto_column(goal);
+    set_goal_column(goal);
+}
+
+function beginning_of_buffer() {
+  goto_char(0)
+}
+
+function end_of_buffer() {
+  goto_char(point_max());
+ }
+
+function next_page() {
+  scroll_window(Math.floor(window_height()-2))
+}
+
+function previous_page() {
+  scroll_window(-Math.floor(window_height()-2))
+}
+
+function beginning_of_line() { goto_bol(); }
+function end_of_line() { goto_eol(); }
+
+function set_mark_command() {
+  let marker = mark_marker();
+  set_marker(marker, point());
+  message("mark set");
+}
+
+function exchange_point_and_mark() {
+  let marker = mark_marker();
+  let mark = marker_position(marker);
+  set_marker(marker, point());
+  goto_char(mark);
+}
+
+function withRegion(f) {
+  let beg = point();
+  let end = marker_position(mark_marker());
+  if (end < 0) {
+    message("No mark set");
+    return;
+  }
+  return f(Math.min(beg, end), Math.max(beg, end));
+}
+
+function eval_region() {
+  withRegion((beg, end) => {
+    let text = buffer_substring(beg, end);
+    let res = eval_script(text);
+    insert("\n");
+    let out = "";
+    try {
+      if (res !== null && res !== undefined) out = String(res);
+    } catch (e) {
+      out = "";
+    }
+    insert(out);
+    insert("\n");
+  });
+}
+
+function copy_region() {
+  withRegion((beg, end) => {
+    let text = buffer_substring(beg, end);
+    copy_to_clipboard(text);
+    message("Copied");
+  });
+}
+
+function kill_region_inner(beg, end) {
+    let text = buffer_substring(beg, end);
+    copy_to_clipboard(text);
+    delete_region(beg, end);
+}
+
+function kill_region() {
+  withRegion((beg, end) => {
+    kill_region_inner(beg, end);
+  });
+}
+
+function kill_line() {
+  let beg = point();
+  if (is_eol()) {
+    forward_line(1);
+  } else {
+    goto_eol();
+  }
+  let end = point();
+  if (end > beg) {
+    kill_region_inner(beg, end);
+  }
+}
+
+function yank() {
+  let text = current_clipboard();
+  insert(text);
+}
+
+function set_device_id(devid) {
+  put_pref_string("device_id", devid);
+  message("set: " + devid);
+}
+
+function get_device_id() {
+  return get_pref_string("device_id", "Default");
+}
+
+function get_per_device_storage() {
+  return `/storage/per_device/${get_device_id()}/`;
+}
+
+function join_path(...parts) {
+  if (parts.length === 0) return "";
+  return parts.reduce((acc, part, idx) => {
+    part = String(part);
+    if (idx === 0) return part;
+    if (!acc.endsWith("/")) acc += "/";
+    if (part.startsWith("/")) part = part.slice(1);
+    return acc + part;
+  }, "");
+}
+
+function load_js(fname) {
+  return new Promise((resolve, reject)=> {
+    load_js_callback(fname, resolve, reject);
+  });
+}
+
+function is_minibuffer() {
+  return selected_buffer().isMiniBuffer();
+}
 
 function global_set_key(keyPat, func) {
     g_keyMapHandler.keyMapStack.currentKeyMap().defineKey(keyPat, func);
@@ -495,10 +501,6 @@ function execute_extended_command() {
   read_string("M-x ").then((cmd)=> {
     global[cmd]();
   });
-}
-
-function defaultOnKeyDown(str) {
-   g_keyMapHandler.handleKeyDown(str);
 }
 
 function onKeyDown(str) {
