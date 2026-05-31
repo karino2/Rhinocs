@@ -50,6 +50,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "load_gzip_skk_dictionary",
             "load_js_callback",
             "get_buffer_create",
+            "generate_new_buffer",
             "set_buffer",
             "message",
             "mark_marker",
@@ -444,6 +445,23 @@ public class GlobalObject  extends ImporterTopLevel {
         Buffer buf = glob.getRhinocs().getBufferCreate(bname);
         return Context.javaToJS(buf, glob);
     }
+
+    /*
+        generate_new_buffer(candname)
+
+        新しくバッファを作成して返す。
+        candnameが存在しなければcandnameを名前とするバッファを作成。
+        既にあればcandname-1を、それもあればcandname-2を…という風にまだ存在しない名前をつけて新しくバッファを作る。
+     */
+    public static Object generate_new_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { String.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        String bname = Context.toString(args[0]);
+        Buffer buf = glob.getRhinocs().getBufferCollection().newBuffer(bname, null);
+        return Context.javaToJS(buf, glob);
+    }
+
 
     public static Object set_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { Buffer.class });

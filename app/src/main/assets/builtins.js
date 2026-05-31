@@ -147,6 +147,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-d", delete_char);
   keymap.defineKey(["C-x", "C-s"], saveBuffer);
   keymap.defineKey(["C-x", "C-f"], find_file);
+  keymap.defineKey(["C-x", "C-n"], new_file);
   keymap.defineKey("M->", end_of_buffer);
   keymap.defineKey("M-<", beginning_of_buffer);
   keymap.defineKey("C-v", next_page)
@@ -405,6 +406,11 @@ function find_file() {
     open_uri(uri);
     g_hooks.runHook("visit_newfile_hook", uri, fname);
   })
+}
+
+function new_file() {
+  let buf = generate_new_buffer("Untitled");
+  set_buffer(buf);
 }
 
 function saveBuffer() {
