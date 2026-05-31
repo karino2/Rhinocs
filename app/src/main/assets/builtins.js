@@ -403,7 +403,6 @@ function select_new_file(defName) {
 function find_file() {
   select_open_file(["*/*"]).then(([uri, fname])=> {
     open_uri(uri);
-    print("deb1: uri=" + uri);
     g_hooks.runHook("visit_newfile_hook", uri, fname);
   })
 }
@@ -420,7 +419,6 @@ function saveBuffer() {
       if(set_buffer_url(buf, uri)){
         save_buffer();
         message("Saved!");
-        print("deb2: uri=" + uri);
         g_hooks.runHook("visit_newfile_hook", uri, fname);
       }
     })
