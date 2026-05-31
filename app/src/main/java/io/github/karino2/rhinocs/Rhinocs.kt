@@ -71,12 +71,24 @@ class Rhinocs {
     }
 
     fun loadFile(resolver: ContentResolver, uri: Uri) {
+        bufferCollection.getByUri(uri)?.let {
+            mainActiveWindow.buffer = it
+            return
+        }
         FastFile.fromDocUri(resolver, uri)?.let {
-            val buf = bufferCollection.newBuffer(it.name)
+            val buf = bufferCollection.newBuffer(it.name, uri)
             buf.load(it.readText())
             buf.url = uri
             mainActiveWindow.buffer = buf
         }
+    }
+
+    fun setBufferUrl(resolver: ContentResolver, buf: Buffer, uri: Uri) : Boolean {
+        return FastFile.fromDocUri(resolver, uri)?.let {
+            buf.url = uri
+            bufferCollection.renameBuffer(buf, it.name, uri)
+            true
+        } ?: false
     }
 
     fun getBufferCreate(bname: String) = bufferCollection.getBufferCreate(bname)

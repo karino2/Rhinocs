@@ -4,7 +4,8 @@ import org.mozilla.javascript.Function
 
 enum class DelayedRequestType {
     LOAD_JS,
-    SELECT_FILE,
+    SELECT_OPEN_FILE,
+    SELECT_NEW_FILE,
     QUERY_TEXT_DIALOG,
     READ_KEY,
 }

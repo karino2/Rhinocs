@@ -7,7 +7,6 @@ import android.net.Uri;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ImporterTopLevel;
-import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -21,7 +20,9 @@ public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
             "print",
             "read_key_callback",
-            "select_file_callback",
+            "select_open_file_callback",
+            "select_new_file_callback",
+            "set_buffer_url",
             "open_uri",
             "forward_char",
             "backward_char",
@@ -157,23 +158,50 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     /*
-        select_file_callback([mimeTypes], onSuccess, onFailure)
+        select_open_file_callback([mimeTypes], onSuccess, onFailure)
      */
-    public static Object select_file_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+    public static Object select_open_file_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[]{ Scriptable.class, Function.class, Function.class });
 
         GlobalObject glob = getInstance(funcObj);
 
-        Object[] mtypesObj = ctx.getElements((Scriptable)args[0]);
-        Function onSuccess = (Function)args[1];
-        Function onFailure = (Function)args[2];
+        Object[] mtypesObj = ctx.getElements((Scriptable) args[0]);
+        Function onSuccess = (Function) args[1];
+        Function onFailure = (Function) args[2];
         ArrayList<String> arr = new ArrayList<>();
         for (Object arg : mtypesObj) {
             arr.add(Context.toString(arg));
         }
 
-        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_FILE,  new DelayedRequest.Arg(arr.toArray(new String[0]), onSuccess, onFailure)));
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_OPEN_FILE, new DelayedRequest.Arg(arr.toArray(new String[0]), onSuccess, onFailure)));
         return Context.getUndefinedValue();
+    }
+
+    /*
+        select_new_file_callback(defaultName, onSuccess, onFailure)
+     */
+    public static Object select_new_file_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{ String.class, Function.class, Function.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        String defName = Context.toString(args[0]);
+        Function onSuccess = (Function) args[1];
+        Function onFailure = (Function) args[2];
+
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_NEW_FILE, new DelayedRequest.Arg(defName, onSuccess, onFailure)));
+        return Context.getUndefinedValue();
+    }
+
+    /*
+        set_buffer_url(buf, url)
+     */
+    public static Object set_buffer_url(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{Buffer.class, String.class});
+        GlobalObject glob = getInstance(funcObj);
+
+        Buffer buf = (Buffer)Context.jsToJava(args[0], Buffer.class);
+        String url = Context.toString(args[1]);
+        return glob.getRhinocs().setBufferUrl(glob.activity.getContentResolver(), buf, Uri.parse(url));
     }
     public static Object print(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         for (int i = 0; i < args.length; i++) {

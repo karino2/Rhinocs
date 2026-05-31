@@ -1,5 +1,6 @@
 package io.github.karino2.rhinocs
 
+import android.content.ContentResolver
 import android.net.Uri
 import kotlin.math.max
 import kotlin.math.min
@@ -233,6 +234,15 @@ class Buffer() {
         if (lines.isEmpty())
             return true
         return lines[point.linenum].length == point.offset
+    }
+
+    fun save(resolver: ContentResolver) : Boolean {
+        return url?.let {
+            FastFile.fromDocUri(resolver, it)?.let {ff->
+                ff.writeText(toText())
+                true
+            }
+        } ?: false
     }
 
 }

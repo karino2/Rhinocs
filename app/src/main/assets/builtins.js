@@ -5,14 +5,15 @@
   - minibuffer_modified_hook
   - enter_minibuffer_hook
   - exit_minibuffer_hook
+  - visit_newfile_hook(uri, fname)
 */
 function RunHook() {
   this.hooks = [];
 }
 
-RunHook.prototype.runAll = function(...args) {
+RunHook.prototype.runAll = function(args) {
   for(let hook of this.hooks) {
-    hook(args);
+    hook.apply(null, args);
   }
 }
 
@@ -387,22 +388,43 @@ function read_key(label) {
   });
 }
 
-function select_file(mimeTypes) {
+function select_open_file(mimeTypes) {
   return new Promise((resolve, reject)=> {
-    select_file_callback(mimeTypes, resolve, reject);
+    select_open_file_callback(mimeTypes, resolve, reject);
+  });
+}
+
+function select_new_file(defName) {
+  return new Promise((resolve, reject)=> {
+    select_new_file_callback(defName, resolve, reject);
   });
 }
 
 function find_file() {
-  select_file(["*/*"]).then(([uri, fname])=> {
-    print(`deb: ${uri}, ${fname}`);
+  select_open_file(["*/*"]).then(([uri, fname])=> {
     open_uri(uri);
+    print("deb1: uri=" + uri);
+    g_hooks.runHook("visit_newfile_hook", uri, fname);
   })
 }
 
 function saveBuffer() {
-   save_buffer();
-   message("Saved!");
+  let buf = selected_buffer();
+  if(buf.url)
+  {
+    save_buffer();
+    message("Saved!");
+  } else {
+    select_new_file(buf.name)
+    .then(([uri, fname])=> {
+      if(set_buffer_url(buf, uri)){
+        save_buffer();
+        message("Saved!");
+        print("deb2: uri=" + uri);
+        g_hooks.runHook("visit_newfile_hook", uri, fname);
+      }
+    })
+  }
 }
 
 function next_line(delta=1) {

@@ -90,11 +90,18 @@ class Interpreter {
         if (global.hasPendingRequest()) {
             val req = global.popDelayedRequest()
             when(req.type) {
-                DelayedRequestType.SELECT_FILE-> {
+                DelayedRequestType.SELECT_OPEN_FILE-> {
                     val larg = req.arg
                     val mtypes = larg.userArg as Array<String>
                     global.activity.callbackArg = larg
-                    global.activity.getFileUriFromScript.launch(mtypes)
+                    global.activity.getOpenFileUriFromScript.launch(mtypes)
+                    return
+                }
+                DelayedRequestType.SELECT_NEW_FILE-> {
+                    val larg = req.arg
+                    val defName = larg.userArg as String
+                    global.activity.callbackArg = larg
+                    global.activity.getNewFileUriFromScript.launch(defName)
                     return
                 }
                 DelayedRequestType.LOAD_JS -> {

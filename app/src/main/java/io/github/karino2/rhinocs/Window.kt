@@ -47,14 +47,7 @@ class Window(initBuf: Buffer) {
     val pointMax: Long
         get() = buffer.pointMax
 
-    fun saveBuffer(resolver: ContentResolver) : Boolean {
-        return buffer.url?.let {
-            FastFile.fromDocUri(resolver, it)?.let {ff->
-                ff.writeText(buffer.toText())
-                true
-            }
-        } ?: false
-    }
+    fun saveBuffer(resolver: ContentResolver) = buffer.save(resolver)
 
     val lineBuilder = LineAnalyzer()
 

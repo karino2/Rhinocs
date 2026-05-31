@@ -21,6 +21,7 @@ import androidx.core.net.toUri
 import org.mozilla.javascript.EcmaError
 import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.WrappedException
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -52,7 +53,20 @@ class MainActivity : AppCompatActivity() {
 
     fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
 
-    val getFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
+    val getOpenFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            callbackArg?.let {ca->
+                val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
+                interpreter.callSuccess(ca, it.toString(), dispName)
+            }
+        }
+    }
+
+    val getNewFileUriFromScript = registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri->
         uri?.let {
             contentResolver.takePersistableUriPermission(
                 it,
