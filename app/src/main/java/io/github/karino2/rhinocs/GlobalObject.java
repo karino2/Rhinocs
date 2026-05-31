@@ -49,7 +49,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "load_gzip_skk_dictionary",
             "load_js_callback",
             "get_buffer_create",
-            "switch_to_buffer",
+            "set_buffer",
             "message",
             "mark_marker",
             "set_marker",
@@ -417,7 +417,7 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.javaToJS(buf, glob);
     }
 
-    public static Object switch_to_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+    public static Object set_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { Buffer.class });
 
         GlobalObject glob = getInstance(funcObj);
@@ -687,13 +687,24 @@ public class GlobalObject  extends ImporterTopLevel {
         return ctx.evaluateString(glob, source, "*eval*", 1, null);
     }
 
+    public <T> Scriptable toJSArray(Context ctx, List<T> objs)
+    {
+        Scriptable jsArray = ctx.newArray(this, objs.size());
+        for (int i = 0; i < objs.size(); i++) {
+            Object jsobj = Context.javaToJS(objs.get(i), this);
+            ScriptableObject.putProperty(jsArray, i, jsobj);
+        }
+        return jsArray;
+    }
+
     /*
     作成済みのバッファのリストを返す。ただし今の所minibufferは含まない（emacs lispと違うので注意）
      */
     public static Object buffer_list(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         List<Buffer> blist = glob.getRhinocs().getBufferCollection().getBuffers();
-        return Context.javaToJS(blist, glob);
+
+        return glob.toJSArray(ctx, blist);
     }
 
     /*

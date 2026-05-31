@@ -163,6 +163,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey(["C-x", "0"], delete_window);
   keymap.defineKey(["C-x", "o"], other_window);
   keymap.defineKey(["C-x", "1"], delete_other_windows);
+  keymap.defineKey(["C-x", "b"], switch_to_buffer);
   return keymap;
 }
 
@@ -585,6 +586,17 @@ function execute_extended_command() {
   read_string("M-x ").then((cmd)=> {
     global[cmd]();
   });
+}
+
+function switch_to_buffer() {
+  let bufs = buffer_list();
+  let names = bufs.map(b=>b.name);
+  read_filtering_list(names)
+     .then(n=> {
+      let index = names.indexOf(n);
+      let buf = bufs[index];
+      set_buffer(buf);
+     });
 }
 
 function onKeyDown(str) {
