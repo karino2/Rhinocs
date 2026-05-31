@@ -1,5 +1,10 @@
 /*
   hook 関連
+
+  既存のhook
+  - minibuffer_modified_hook
+  - enter_minibuffer_hook
+  - exit_minibuffer_hook
 */
 function RunHook() {
   this.hooks = [];
@@ -33,9 +38,9 @@ let g_hooks = {
     if(!this.hookMap[name]) return;
     this.hookMap[name].remove(hook);
   },
-  runHook(name) {
+  runHook(name, ...args) {
     if(!this.hookMap[name]) return;
-    this.hookMap[name].runAll();
+    this.hookMap[name].runAll(args);
   }
 };
 
@@ -266,6 +271,90 @@ let g_keyMapHandler = {
 };
 
 /*
+  ミニバッファ用のキーマップを指定してenterする処理とleaveする処理の共通処理。
+*/
+function enter_minibuffer_common(miniKeyMap, prompt) {
+  g_keyMapHandler.isMiniBuffer = true
+  g_keyMapHandler.pushKeyMap(miniKeyMap);
+  enter_minibuffer(prompt);
+  g_hooks.runHook("enter_minibuffer_hook")
+}
+
+function leave_minibuffer_common() {
+  g_keyMapHandler.popKeyMap();
+  g_keyMapHandler.isMiniBuffer = false;
+  g_hooks.runHook("exit_minibuffer_hook");
+  return leave_minibuffer();
+}
+
+/*
+  FilteringList
+  ミニバッファを用いた絞り込みリスト
+*/
+function read_filtering_list(candidates) {
+  let filtering =  {
+    candidates: candidates,
+    filtered: candidates.slice(),
+    doFilter(text) {
+      if(text === "")
+        this.filtered = this.candidates;
+      else
+        this.filtered = this.candidates.filter((item)=> -1 != item.indexOf(text));
+    },
+    shown() {
+      if(this.matchExists())
+        return this.filtered;
+      return ["No mathing results"];
+    },
+    matchExists(){ return this.filtered.length > 0 },
+    selected(index) {
+      if(this.matchExists())
+        return this.filtered[index];
+      return undefined;
+    }
+  };
+
+  let flist = get_floating_list();
+  flist.items = candidates;
+
+  let onModified = (text)=> {
+    filtering.doFilter(text);
+    flist.items = filtering.shown();
+  };
+  g_hooks.addHook("minibuffer_modified_hook", onModified);
+
+  let leave = ()=> {
+    g_hooks.removeHook("minibuffer_modified_hook", onModified);
+    leave_minibuffer_common();
+  }
+
+  let miniKeyMap = new KeyMap();
+  miniKeyMap.defineKey("C-p", ()=>flist.moveUp());
+  miniKeyMap.defineKey("Up", ()=>flist.moveUp());
+  miniKeyMap.defineKey("C-n", ()=>flist.moveDown());
+  miniKeyMap.defineKey("Down", ()=>flist.moveDown());
+  let promise = new Promise((resolve, reject)=> {
+    miniKeyMap.defineKey("Return", ()=> {
+      leave();
+      let res = filtering.selected(flist.selectedIndex);
+      flist.clear();
+      if(res) {
+        resolve(res);
+      } else {
+        reject();
+      }
+    });
+    miniKeyMap.defineKey("C-g", ()=> {
+      leave();
+      reject();
+    });
+  });
+
+  enter_minibuffer_common(miniKeyMap, "Filgtering: ");
+  return promise;
+}
+
+/*
 コマンド
 */
 
@@ -375,6 +464,11 @@ function eval_region() {
   withRegion((beg, end) => {
     let text = buffer_substring(beg, end);
     let res = eval_script(text);
+
+    // ミニバッファに行く関数をevalした時とかは結果を挿入しない。
+    if (is_minibuffer())
+      return;
+
     insert("\n");
     let out = "";
     try {
@@ -471,29 +565,19 @@ function global_mini_set_key(keyPat, func) {
 }
 
 function read_string(prompt) {
-  function leave() {
-      g_keyMapHandler.popKeyMap();
-      g_keyMapHandler.isMiniBuffer = false;
-      g_hooks.runHook("exit_minibuffer_hook");
-      return leave_minibuffer();
-  }
-
   let miniKeyMap = new KeyMap();
   let promise = new Promise((resolve, reject)=> {
     miniKeyMap.defineKey("Return", ()=> {
-      let ret = leave();
+      let ret = leave_minibuffer_common();
       resolve(ret);
     });
     miniKeyMap.defineKey("C-g", ()=> {
-      leave();
+      leave_minibuffer_common();
       reject();
     });
   });
 
-  g_keyMapHandler.isMiniBuffer = true
-  g_keyMapHandler.pushKeyMap(miniKeyMap);
-  enter_minibuffer(prompt);
-  g_hooks.runHook("enter_minibuffer_hook")
+  enter_minibuffer_common(miniKeyMap, prompt);
   return promise;
 }
 

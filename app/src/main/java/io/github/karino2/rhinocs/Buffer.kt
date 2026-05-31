@@ -55,6 +55,8 @@ class Buffer() {
         }
     }
 
+    var onModified: () -> Unit = {}
+
     fun insert(at: Point, content: String) : Point {
         val clines = content.split('\n')
 
@@ -70,6 +72,7 @@ class Buffer() {
             lines[at.linenum+restLines.size].append(restOfFirstLine)
         }
         adjustAfterInsert(at, content.length)
+        onModified()
         return forwardChar(at, content.length)
     }
 
@@ -201,6 +204,7 @@ class Buffer() {
         }
         val delNum =  pTo.point - pFrom.point
         adjustAfterDelete(from, delNum)
+        onModified()
         return delNum
     }
 

@@ -14,6 +14,8 @@ import org.mozilla.javascript.ScriptableObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import kotlin.Unit;
+
 
 public class GlobalObject  extends ImporterTopLevel {
     private static final String[] TOP_COMMANDS = {
@@ -598,7 +600,14 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String prompt = Context.toString(args[0]);
-        glob.getRhinocs().enterMiniBuffer(prompt);
+        MiniBufferWindow mwin = glob.getRhinocs().enterMiniBuffer(prompt);
+        mwin.getMiniBuffer().getBuffer().setOnModified(()->{
+            ScriptableObject hook = (ScriptableObject)glob.get("g_hooks", glob);
+            Function runHook = (Function)hook.get("runHook", hook);
+            String text = mwin.getMiniBuffer().getText();
+            runHook.call(ctx, glob, hook, new Object[]{"minibuffer_modified_hook", text});
+            return Unit.INSTANCE;
+        });
         return Context.getUndefinedValue();
     }
 

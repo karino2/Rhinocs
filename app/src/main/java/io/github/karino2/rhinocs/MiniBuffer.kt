@@ -6,6 +6,9 @@ class MiniBuffer {
     val buffer = Buffer("*Mini Buffer*").apply{
         isMiniBuffer = true
     }
+
+    val text : String
+        get() = buffer.lines[0].toString()
 }
 
 class MiniBufferWindow {

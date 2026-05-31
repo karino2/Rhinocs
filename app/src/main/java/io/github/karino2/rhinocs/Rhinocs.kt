@@ -50,10 +50,9 @@ class Rhinocs {
             miniBufferWindow?.numCols = value
         }
 
-    fun enterMiniBuffer(prompt: String) {
+    fun enterMiniBuffer(prompt: String): MiniBufferWindow {
         if(miniBufferWindow != null)
             throw Error("Recursive minibuffer enter, NYI.")
-
 
         val mwin = MiniBufferWindow()
         mwin.numCols = numCols
@@ -61,6 +60,7 @@ class Rhinocs {
         mwin.miniBuffer.prompt = prompt
         miniBufferWindow = mwin
         mainActiveWindow.isSelected = false
+        return mwin
     }
 
     fun leaveMiniBuffer() : String {
