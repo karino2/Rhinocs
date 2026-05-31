@@ -662,6 +662,16 @@ public class GlobalObject  extends ImporterTopLevel {
     /*
     FloatingListオブジェクトを返す。
     このitemsに文字列の配列をセットするとフローティングリストが表示される。
+    clearで消去される。
+    キーボードのハンドリングなどは何もしない。JS側で適切に行う前提。
+
+    let floating = get_floating_list();
+    floating.items = ["abc", "def", "ghi"];
+    floating.moveUp();
+    floating.moveDown();
+    let res = floating.selectedIndex;
+
+    floating.clear();
      */
     public static Object get_floating_list(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
