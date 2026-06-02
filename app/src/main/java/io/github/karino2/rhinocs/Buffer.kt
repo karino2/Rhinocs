@@ -256,4 +256,49 @@ class Buffer() {
         } ?: false
     }
 
+    @JvmOverloads
+    fun searchForward(from: Point, word: String, limit: Long? = null) : Point? {
+        if (word.isEmpty()) return from
+        val lp = limit?.let { toPoint(it) }
+
+        for (i in from.linenum until lines.size) {
+            lp?.let { if (i > it.linenum) return null }
+
+            val startOffset = if (i == from.linenum) from.offset else 0
+            val line = lines[i]
+            val index = line.indexOf(word, startOffset)
+            if (index != -1) {
+                lp?.let { if (i == it.linenum && index > it.offset) return null }
+                return toPoint(i, index)
+            }
+        }
+        return null
+    }
+
+    @JvmOverloads
+    fun searchBackward(from: Point, word: String, limit: Long? = null): Point? {
+        if (word.isEmpty()) return from
+        val lp = limit?.let { toPoint(it) }
+
+        for (i in from.linenum downTo 0) {
+            lp?.let { if (i < it.linenum) return null }
+
+            val line = lines[i]
+            val maxStartOffset = if (i == from.linenum) {
+                (from.offset - word.length).coerceAtMost(line.length)
+            } else {
+                line.length
+            }
+
+            if (maxStartOffset < 0) continue
+
+            val index = line.lastIndexOf(word, maxStartOffset)
+            if (index != -1) {
+                lp?.let { if (i == it.linenum && index < it.offset) return null }
+                return toPoint(i, index)
+            }
+        }
+        return null
+    }
+
 }

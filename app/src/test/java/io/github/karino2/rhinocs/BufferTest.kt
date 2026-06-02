@@ -1,7 +1,6 @@
 package io.github.karino2.rhinocs
 
 import org.junit.Test
-
 import org.junit.Assert.*
 
 class BufferTest {
@@ -179,7 +178,6 @@ class BufferTest {
         val buf = BufferFromText("abc\ndef")
         buf.mark.position = 5
         assertEquals(5, buf.mark.position)
-
     }
 
     @Test
@@ -249,10 +247,96 @@ class BufferTest {
         val actual = buf.substring(1, 4)
         assertEquals("b\nc", actual)
     }
+
     @Test
     fun substring_diffLineBetween() {
         val buf = BufferFromText("ab\ncd\nef")
         val actual = buf.substring(1, 7)
         assertEquals("b\ncd\ne", actual)
+    }
+
+    @Test
+    fun searchForward_basic() {
+        val buf = BufferFromText("abcde")
+        val actual = buf.searchForward(buf.toPoint(0), "cd")
+        assertEquals(buf.toPoint(2), actual)
+    }
+
+    @Test
+    fun searchForward_secondLine() {
+        val buf = BufferFromText("abc\ndef")
+        val actual = buf.searchForward(buf.toPoint(0), "de")
+        assertEquals(buf.toPoint(4), actual)
+    }
+
+    @Test
+    fun searchForward_fromMiddle() {
+        val buf = BufferFromText("abcabc")
+        // Start search after first 'abc'
+        val actual = buf.searchForward(buf.toPoint(1), "abc")
+        assertEquals(buf.toPoint(3), actual)
+    }
+
+    @Test
+    fun searchForward_notFound() {
+        val buf = BufferFromText("abc")
+        val actual = buf.searchForward(buf.toPoint(0), "z")
+        assertNull(actual)
+    }
+
+    @Test
+    fun searchForward_empty() {
+        val buf = BufferFromText("abc")
+        val start = buf.toPoint(1)
+        val actual = buf.searchForward(start, "")
+        assertEquals(start, actual)
+    }
+
+    @Test
+    fun searchBackward_basic() {
+        val buf = BufferFromText("abcde")
+        val actual = buf.searchBackward(buf.toPoint(5), "cd")
+        assertEquals(buf.toPoint(2), actual)
+    }
+
+    @Test
+    fun searchBackward_prevLine() {
+        val buf = BufferFromText("abc\ndef")
+        val actual = buf.searchBackward(buf.toPoint(7), "bc")
+        assertEquals(buf.toPoint(1), actual)
+    }
+
+    @Test
+    fun searchBackward_sameLineMultiple() {
+        val buf = BufferFromText("abcabc")
+        val actual = buf.searchBackward(buf.toPoint(6), "abc")
+        assertEquals(buf.toPoint(3), actual)
+    }
+
+    @Test
+    fun searchBackward_notFound() {
+        val buf = BufferFromText("abc")
+        val actual = buf.searchBackward(buf.toPoint(3), "z")
+        assertNull(actual)
+    }
+
+    @Test
+    fun searchForward_limit() {
+        val buf = BufferFromText("abcabc")
+        val actual1 = buf.searchForward(buf.toPoint(0), "abc", 2)
+        assertEquals(buf.toPoint(0), actual1)
+
+        val actual2 = buf.searchForward(buf.toPoint(1), "abc", 2)
+        assertNull(actual2)
+    }
+
+    @Test
+    fun searchBackward_limit() {
+        val buf = BufferFromText("abcabc")
+        val actual1 = buf.searchBackward(buf.toPoint(6), "abc", 3)
+        assertEquals(buf.toPoint(3), actual1)
+
+        val actual2 = buf.searchBackward(buf.toPoint(6), "abc", 4)
+        assertNull(actual2)
     }
 }
