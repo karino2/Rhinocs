@@ -78,7 +78,6 @@ class Rhinocs {
         FastFile.fromDocUri(resolver, uri)?.let {
             val buf = bufferCollection.newBuffer(it.name, uri)
             buf.load(it.readText())
-            buf.url = uri
             mainActiveWindow.buffer = buf
         }
     }
@@ -95,7 +94,7 @@ class Rhinocs {
 
     var statusText = ""
 
-    val defaultModeFmt = "\${bufferName} [\${lineNum}:\${column}]"
+    val defaultModeFmt = "\${bufferModified} \${bufferName} [\${lineNum}:\${column}]"
     var modeLineFormat = defaultModeFmt
 
     val modeLineText: String
@@ -109,9 +108,10 @@ class Rhinocs {
                     if (end != -1) {
                         val symbol = modeLineFormat.substring(i + 2, end)
                         val value = when (symbol) {
-                            "bufferName" -> selectedWindow.buffer.name
+                            "bufferName" -> selectedBuffer.name
                             "column" -> selectedWindow.point.offset + 1
                             "lineNum" -> selectedWindow.point.linenum + 1
+                            "bufferModified" -> if(selectedBuffer.isModified) "●" else " "
                             else -> "\${$symbol}"
                         }
                         res.append(value)

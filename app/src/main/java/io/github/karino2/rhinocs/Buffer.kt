@@ -28,6 +28,8 @@ class Buffer() {
     var name = ""
     var isMiniBuffer = false
 
+    var isModified = false
+
     val lines = ArrayList<StringBuilder>().apply { add(StringBuilder()) }
     val numLines: Int
         get() = lines.size
@@ -35,6 +37,7 @@ class Buffer() {
     val mark = Marker(this, -1)
 
     fun load(text: String) {
+        isModified = false
         lines.clear()
         text.split("\n").forEach {line->
             StringBuilder().let {
@@ -56,9 +59,16 @@ class Buffer() {
         }
     }
 
+    fun notifyModified() {
+        isModified = true
+        onModified()
+    }
+
     var onModified: () -> Unit = {}
 
     fun insert(at: Point, content: String) : Point {
+        if(content.isEmpty()) return at
+
         val clines = content.split('\n')
 
         lines[at.linenum].insert(at.offset, clines[0])
@@ -73,7 +83,7 @@ class Buffer() {
             lines[at.linenum+restLines.size].append(restOfFirstLine)
         }
         adjustAfterInsert(at, content.length)
-        onModified()
+        notifyModified()
         return forwardChar(at, content.length)
     }
 
@@ -205,7 +215,7 @@ class Buffer() {
         }
         val delNum =  pTo.point - pFrom.point
         adjustAfterDelete(from, delNum)
-        onModified()
+        notifyModified()
         return delNum
     }
 
@@ -240,6 +250,7 @@ class Buffer() {
         return url?.let {
             FastFile.fromDocUri(resolver, it)?.let {ff->
                 ff.writeText(toText())
+                isModified = false
                 true
             }
         } ?: false

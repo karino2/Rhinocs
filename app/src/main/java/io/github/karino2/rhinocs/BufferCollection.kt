@@ -36,6 +36,7 @@ class BufferCollection {
         nameMap[bname] = buf
         uri?.let {
             uriMap[it] = buf
+            buf.url = it
         }
         return buf
     }
