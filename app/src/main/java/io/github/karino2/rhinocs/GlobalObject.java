@@ -77,6 +77,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "buffer_list",
             "selected_buffer",
             "selected_window",
+            "set_font_size",
+            "get_font_size",
     };
 
     public MainActivity activity;
@@ -765,4 +767,29 @@ public class GlobalObject  extends ImporterTopLevel {
         GlobalObject glob = getInstance(funcObj);
         return Context.javaToJS(glob.selectedWindow(), glob);
     }
+
+    /*
+    set_font_size(fontSize)
+
+    フォントサイズをfloatで指定。
+    AndroidのPaintオブジェクトのtextSize。
+     */
+    public static Object set_font_size(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
+
+        GlobalObject glob = getInstance(funcObj);
+        float fontSize = (float) Context.toNumber(args[0]);
+        glob.rview.setFontSize(fontSize);
+        return Context.getUndefinedValue();
+    }
+
+    /*
+    現在のfont_sizeをfloatで返す。
+    AndroidのPaintのtextPaintを返す。
+     */
+    public static Object get_font_size(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        return glob.rview.getFontSize();
+    }
+
 }

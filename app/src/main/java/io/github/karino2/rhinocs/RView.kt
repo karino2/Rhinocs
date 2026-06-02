@@ -30,6 +30,13 @@ class RView @JvmOverloads constructor(
         textAlign = Paint.Align.CENTER
     }
 
+    var fontSize: Float
+        get() = textPaint.textSize
+        set(value) {
+            textPaint.textSize = value
+            recalcRowColNum(width, height)
+        }
+
     private val caretPaint = Paint().apply {
         color = "#4285F4".toColorInt() // Android標準に近い青色
         style = Paint.Style.FILL
@@ -51,11 +58,15 @@ class RView @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
+        recalcRowColNum(w, h)
+    }
+
+    private fun recalcRowColNum(w: Int, h: Int) {
         rhinocs.numCols = ((w - margin) / cellWidth).toInt()
         // モード行とステータス行の分と、ウィンドウsplit時の境界線の分
-        rhinocs.numRows = ((h - margin-borderThick) / cellHeight).toInt() - 2
+        rhinocs.numRows = ((h - margin - borderThick) / cellHeight).toInt() - 2
     }
-    
+
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         rhinocs.loadFile(resolver, uri)
     }
