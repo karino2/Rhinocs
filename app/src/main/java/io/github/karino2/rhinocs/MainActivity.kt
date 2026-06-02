@@ -156,6 +156,7 @@ class MainActivity : AppCompatActivity() {
             rhinocs.resetModeLineFormat()
             showMessage("Interpreter reset.")
         }
+        rview.requestFocus()
 
         // loadBuiltinしておく
         initInterpreter()
