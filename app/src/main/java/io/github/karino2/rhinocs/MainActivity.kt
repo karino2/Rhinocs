@@ -281,12 +281,14 @@ class MainActivity : AppCompatActivity() {
         fun callSuccessCallback() {
             callbackArg?.let { ca ->
                 interpreter.callSuccess(ca, editText.text.toString())
+                rview.invalidate()
             }
         }
 
         fun callCancelCallback() {
             callbackArg?.let { ca ->
                 interpreter.callFail(ca)
+                rview.invalidate()
             }
         }
 
