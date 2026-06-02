@@ -25,7 +25,7 @@ class RView @JvmOverloads constructor(
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.BLACK
-        textSize = 40f
+        textSize = 35f
         typeface = Typeface.createFromAsset(context.assets, "fonts/JetBrainsMono-Regular.ttf")
         textAlign = Paint.Align.CENTER
     }
