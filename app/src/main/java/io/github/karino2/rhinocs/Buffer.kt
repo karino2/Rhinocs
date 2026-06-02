@@ -54,7 +54,7 @@ class Buffer() {
     fun getLine(linenum: Int) = lines[linenum].toString()
 
     fun adjustAfterInsert(at: Point, contentSize: Int) {
-        if(mark.position > at.point) {
+        if(mark.position > at.position) {
             mark.position += contentSize
         }
     }
@@ -98,7 +98,7 @@ class Buffer() {
     }
 
     fun forwardChar(from: Point, delta: Int) : Point {
-        val point = from.point+delta
+        val point = from.position+delta
         var rest = delta
         var offset = from.offset
         var linenum = from.linenum
@@ -124,11 +124,11 @@ class Buffer() {
 
     fun backwardChar(from: Point, delta: Int) : Point {
         // 正常ならいつもpointはこれ。
-        val point = from.point - delta
+        val point = from.position - delta
 
         // 現在の行で十分な場合は計算が単純なので特別扱い
         if (from.offset >= delta)
-            return from.copy(offset = from.offset - delta, point = from.point - delta)
+            return from.copy(offset = from.offset - delta, position = from.position - delta)
 
 
         var rest = delta-from.offset-1
@@ -176,7 +176,7 @@ class Buffer() {
 
     val positionMax : Long
         get() = lines.sumOf { it.length.toLong() }+(lines.size-1)
-    
+
     fun adjustAfterDelete(from: Long, delNum: Long) {
         if(mark.position > from) {
             mark.position = (mark.position-delNum).coerceAtLeast(from)
@@ -189,7 +189,7 @@ class Buffer() {
         val pFrom = toPoint(from)
         val pTo = toPoint(to)
 
-        if (pFrom.point == pTo.point)
+        if (pFrom.position == pTo.position)
             return 0
 
         if (pFrom.linenum == pTo.linenum) {
@@ -202,7 +202,7 @@ class Buffer() {
                 lines.removeAt(i)
             }
         }
-        val delNum =  pTo.point - pFrom.point
+        val delNum =  pTo.position - pFrom.position
         adjustAfterDelete(from, delNum)
         notifyModified()
         return delNum

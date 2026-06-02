@@ -105,12 +105,12 @@ class Window(initBuf: Buffer) {
         val count = buffer.deleteRegion(from, to)
         val debPrev = point
         // pointの補正
-        if (count > 0 && point.point > from) {
+        if (count > 0 && point.position > from) {
             // 削除の範囲内ならfromにする
-            if(point.point < from+count)
+            if(point.position < from+count)
                 point = buffer.toPoint(from)
             else // 削除した範囲よりも外側ならcount分だけ前にずらす
-                point = buffer.toPoint(point.point - count)
+                point = buffer.toPoint(point.position - count)
         }
         // println("debDelRegion: ($from, $to): $debPrev, ${point}, $count")
         return count

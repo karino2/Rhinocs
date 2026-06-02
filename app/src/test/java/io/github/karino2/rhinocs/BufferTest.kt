@@ -94,7 +94,7 @@ class BufferTest {
     fun toPoint_linenumarg_secondLine() {
         val buf = BufferFromText("abc\ndef")
         val pt = buf.toPoint(1, 0)
-        assertEquals(4, pt.point)
+        assertEquals(4, pt.position)
     }
 
     @Test
@@ -137,7 +137,7 @@ class BufferTest {
         val actual = buf.forwardChar(buf.toPoint(3), 1)
         assertEquals(1, actual.linenum)
         assertEquals(0, actual.offset)
-        assertEquals(4, actual.point)
+        assertEquals(4, actual.position)
     }
 
     @Test
@@ -146,7 +146,7 @@ class BufferTest {
         val actual = buf.forwardChar(buf.toPoint(7), 1)
         assertEquals(1, actual.linenum)
         assertEquals(3, actual.offset)
-        assertEquals(7, actual.point)
+        assertEquals(7, actual.position)
     }
 
     @Test

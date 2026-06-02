@@ -5,4 +5,4 @@ package io.github.karino2.rhinocs
   linenumはrowと全く同じものだが、PointはどちらかといえばBuffer内の文字の位置を表すもので、
   行数とoffsetなのは現在のバッファが行ごとの配列になっているからという事情による。
  */
-data class Point(val linenum: Int, val offset: Int, val point: Long)
+data class Point(val linenum: Int, val offset: Int, val position: Long)

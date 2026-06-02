@@ -338,7 +338,7 @@ public class GlobalObject  extends ImporterTopLevel {
     public static Object point(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         GlobalObject glob = getInstance(funcObj);
         Point pt = glob.selectedWindow().getPoint();
-        return pt.getPoint();
+        return pt.getPosition();
     }
 
     public static Object delete_region(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
