@@ -319,7 +319,7 @@ class MainActivity : AppCompatActivity() {
                     true
                 }
                 else {
-                    true
+                    false
                 }
             } else {
                 false
