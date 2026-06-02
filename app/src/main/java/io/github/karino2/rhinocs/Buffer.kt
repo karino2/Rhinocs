@@ -9,7 +9,7 @@ class Marker(val buffer: Buffer, pos: Long) {
     var position: Long = pos
         set(newPos) {
             when {
-                newPos > buffer.pointMax -> field = buffer.pointMax
+                newPos > buffer.positionMax -> field = buffer.positionMax
                 // 負の値も設定出来るようにしておく。-1で設定されてないとする。
                 else -> field = newPos
             }
@@ -112,7 +112,7 @@ class Buffer() {
 
             // 最後の行でも終わりまで行けなかった。最後のPointを返す
             if(linenum == lines.size-1) {
-                return Point(linenum, line.length, pointMax)
+                return Point(linenum, line.length, positionMax)
             }
 
             rest -= line.length+1-offset
@@ -174,20 +174,9 @@ class Buffer() {
         return Point(linenum, offset, prev+offset)
     }
 
-    val pointMax : Long
+    val positionMax : Long
         get() = lines.sumOf { it.length.toLong() }+(lines.size-1)
-
-    fun findLine(pos: Long): Int {
-        var total = 0L
-        lines.forEachIndexed { index, line ->
-            total += line.length
-            if (pos < total) {
-                return index
-            }
-        }
-        return (lines.size - 1).coerceAtLeast(0)
-    }
-
+    
     fun adjustAfterDelete(from: Long, delNum: Long) {
         if(mark.position > from) {
             mark.position = (mark.position-delNum).coerceAtLeast(from)

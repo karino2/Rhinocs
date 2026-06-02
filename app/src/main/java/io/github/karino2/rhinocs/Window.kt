@@ -1,9 +1,6 @@
 package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
-import android.net.Uri
-import kotlin.math.max
-import kotlin.math.min
 
 class Window(initBuf: Buffer) {
     fun isEOL() = buffer.isEOL(point)
@@ -45,7 +42,7 @@ class Window(initBuf: Buffer) {
     }
 
     val pointMax: Long
-        get() = buffer.pointMax
+        get() = buffer.positionMax
 
     fun saveBuffer(resolver: ContentResolver) = buffer.save(resolver)
 

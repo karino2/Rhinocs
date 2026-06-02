@@ -100,19 +100,19 @@ class BufferTest {
     @Test
     fun pointMax_empty() {
         val buf = Buffer()
-        assertEquals(0, buf.pointMax)
+        assertEquals(0, buf.positionMax)
     }
 
     @Test
     fun pointMax_oneLine() {
         val buf = BufferFromText("abc")
-        assertEquals(3, buf.pointMax)
+        assertEquals(3, buf.positionMax)
     }
 
     @Test
     fun pointMax_twoLine() {
         val buf = BufferFromText("abc\ndef")
-        assertEquals(7, buf.pointMax)
+        assertEquals(7, buf.positionMax)
     }
 
     @Test
