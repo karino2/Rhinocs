@@ -33,7 +33,7 @@ class Interpreter {
 
     fun run(script: String, fileName:String ="*script*") {
         withContext {
-            global.rhinocs.statusText = ""
+            global.rhinocs.echoText = ""
             val script = it.compileString(script, fileName, 1, null)
             it.executeScriptWithContinuations(script, global)
             it.processMicrotasks()

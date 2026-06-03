@@ -92,7 +92,7 @@ class Rhinocs {
 
     fun getBufferCreate(bname: String) = bufferCollection.getBufferCreate(bname)
 
-    var statusText = ""
+    var echoText = ""
 
     val defaultModeFmt = "\${bufferModified} \${bufferName} [\${lineNum}:\${column}]"
     var modeLineFormat = defaultModeFmt

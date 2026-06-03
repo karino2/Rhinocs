@@ -246,13 +246,13 @@ class RView @JvmOverloads constructor(
         val startX = margin
 
         val baseY = topToBase(topY)
-        val statusText = rhinocs.statusText
+        val echoText = rhinocs.echoText
 
         // エコー領域優先
-        if(statusText.isNotEmpty())
+        if(echoText.isNotEmpty())
         {
             canvas.withAlign(Paint.Align.LEFT) {
-                drawText(statusText, startX, baseY, textPaint)
+                drawText(echoText, startX, baseY, textPaint)
             }
         } else {
             rhinocs.miniBufferWindow?.let {mwin->

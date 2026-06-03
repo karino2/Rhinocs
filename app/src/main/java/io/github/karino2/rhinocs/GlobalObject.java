@@ -480,7 +480,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String msg = Context.toString(args[0]);
-        glob.getRhinocs().setStatusText(msg);
+        glob.getRhinocs().setEchoText(msg);
         return Context.getUndefinedValue();
     }
 
