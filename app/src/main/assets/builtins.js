@@ -247,77 +247,50 @@ let gotoChar = (pos) => {
   lastMatchPos = pos;
 };
 
-let newSearchForward = (text) => {
-    let res = targetBuf.searchForward(orgPos, text);
+let newSearchForwardFromOrg = (text) => targetBuf.searchForward(orgPos, text);
+let newSearchForwardWrap = (text) => targetBuf.searchForward(0, text, orgPos);
+let newSearchBackwardFromOrg = (text) => targetBuf.searchBackward(orgPos, text);
+let newSearchBackwardWrap = (text) => targetBuf.searchBackward(targetBuf.getPositionMax(), text, orgPos);
+
+let newSearch = (fromOrg, wrap, text) => {
+    let res = fromOrg(text);
     if (res) {
       gotoChar(res);
     } else {
-      let wrapped = targetBuf.searchForward(0, text, orgPos);
+      let wrapped = wrap(text);
       if (wrapped) {
         gotoChar(wrapped);
       } else {
         gotoChar(orgPos);
-        message("No matches");
-      }
-    }
-  };
-
-let searchNextForward = () => {
-    if (lastMatchText === "") return;
-
-    let res = targetBuf.searchForward(lastMatchPos + 1, lastMatchText);
-    if (res) {
-      gotoChar(res);
-    } else {
-      let wrapped = targetBuf.searchForward(0, lastMatchText, lastMatchPos);
-      if (wrapped) {
-        if (wrapped == lastMatchPos) {
-          message("No more matches");
-          return;
-        }
-        gotoChar(wrapped);
-        message("Wrapped");
-      } else {
-        message("No matches");
-      }
-    }
-  };
-
-let newSearchBackward = (text) => {
-    let res = targetBuf.searchBackward(orgPos, text);
-    if (res) {
-      gotoChar(res);
-    } else {
-      let wrapped = targetBuf.searchBackward(targetBuf.getPositionMax(), text, orgPos);
-      if (wrapped) {
-        gotoChar(wrapped);
-      } else {
-        gotoChar(orgPos);
-        message("No matches");
-      }
-    }
-  };
-
-let searchNextBackward = () => {
-    if (lastMatchText === "") return;
-
-    let res = targetBuf.searchBackward(lastMatchPos - 1, lastMatchText);
-    if (res) {
-      gotoChar(res);
-    } else {
-      let wrapped = targetBuf.searchBackward(targetBuf.getPositionMax(), lastMatchText, lastMatchPos);
-      if (wrapped) {
-        if (wrapped == lastMatchPos) {
-          message("No more matches");
-          return;
-        }
-        gotoChar(wrapped);
-        message("Wrapped");
-      } else {
         message("No matches");
       }
     }
 };
+
+let searchNextFromLastMatch = (text) => targetBuf.searchForward(lastMatchPos + 1, text);
+let searchNextBackwardFromLastMatch = (text) => targetBuf.searchBackward(lastMatchPos - 1, text);
+let searchNextWrapLastMatchForward = (text) => targetBuf.searchForward(0, text, lastMatchPos);
+let searchNextWrapLastMatchBackward = (text) => targetBuf.searchBackward(targetBuf.getPositionMax(), text, lastMatchPos);
+
+let searchNext = (fromLastMatch, wrapLastMatch) => {
+    if (lastMatchText === "") return;
+
+    let res = fromLastMatch(lastMatchText);
+    if (res) {
+      gotoChar(res);
+    } else {
+      let wrapped = wrapLastMatch(lastMatchText);
+      if (wrapped) {
+        gotoChar(wrapped);
+        message("Wrapped");
+      } else {
+        message("No matches");
+      }
+    }
+  };
+
+let searchNextForward = () => searchNext(searchNextFromLastMatch, searchNextWrapLastMatchForward);
+let searchNextBackward = () =>  searchNext(searchNextBackwardFromLastMatch, searchNextWrapLastMatchBackward);
 
 function isearch_common(newSearch) {
   targetBuf = selected_buffer();
@@ -360,10 +333,14 @@ function isearch_common(newSearch) {
 
 
 function isearch_forward() {
+  let newSearchForward = (text)=> newSearch(newSearchForwardFromOrg, newSearchForwardWrap, text);
+
   isearch_common(newSearchForward);
 }
 
 function isearch_backward() {
+  let newSearchBackward = (text)=> newSearch(newSearchBackwardFromOrg, newSearchBackwardWrap, text);
+
   isearch_common(newSearchBackward);
 }
 
