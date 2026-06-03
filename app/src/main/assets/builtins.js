@@ -126,66 +126,6 @@ KeyMap.prototype.clone = function() {
   return newMap;
 }
 
-function CreateDefaultKeyMap() {
-  let keymap = new KeyMap();
-  keymap.defineDefaultSelfInsert();
-  keymap.defineKey("Space", ()=> { insert(" "); })
-  keymap.defineKey("Return", ()=> { insert("\n"); })
-  keymap.defineKey("Backspace", delete_backward_char)
-  keymap.defineKey("Delete", delete_char);
-  keymap.defineKey("Left", backward_char)
-  keymap.defineKey("Right", forward_char)
-  keymap.defineKey("Down", next_line)
-  keymap.defineKey("Up", previous_line)
-  keymap.defineKey("C-b", backward_char)
-  keymap.defineKey("C-f", forward_char)
-  keymap.defineKey("C-n", next_line);
-  keymap.defineKey("C-p", previous_line);
-  keymap.defineKey("C-a", beginning_of_line)
-  keymap.defineKey("C-e", end_of_line)
-  keymap.defineKey("C-h", delete_backward_char)
-  keymap.defineKey("C-d", delete_char);
-  keymap.defineKey(["C-x", "C-s"], saveBuffer);
-  keymap.defineKey(["C-x", "C-f"], find_file);
-  keymap.defineKey(["C-x", "C-n"], new_file);
-  keymap.defineKey("M->", end_of_buffer);
-  keymap.defineKey("M-<", beginning_of_buffer);
-  keymap.defineKey("C-v", next_page)
-  keymap.defineKey("M-v", previous_page)
-  keymap.defineKey("C-Space", set_mark_command);
-  keymap.defineKey("C-@", set_mark_command);
-  keymap.defineKey(["C-x", "C-x"], exchange_point_and_mark);
-  keymap.defineKey("C-j", eval_region);
-  keymap.defineKey("M-w", copy_region);
-  keymap.defineKey("C-w", kill_region);
-  keymap.defineKey("C-k", kill_line);
-  keymap.defineKey("C-y", yank);
-  keymap.defineKey("M-x", execute_extended_command);
-  keymap.defineKey(["C-x", "2"], split_window);
-  keymap.defineKey(["C-x", "0"], delete_window);
-  keymap.defineKey(["C-x", "o"], other_window);
-  keymap.defineKey(["C-x", "1"], delete_other_windows);
-  keymap.defineKey(["C-x", "b"], switch_to_buffer);
-  keymap.defineKey("C-s", isearch_forward);
-  keymap.defineKey("C-r", isearch_backward);
-  return keymap;
-}
-
-
-function CreateDefaultMiniBufferKeyMap()
-{
-  let keymap = CreateDefaultKeyMap();
-  keymap.removeKey("Return");
-  keymap.removeKey(["C-x", "C-s"]);
-  keymap.removeKey(["C-x", "C-f"]);
-  keymap.removeKey("C-j");
-  keymap.removeKey("M-x");
-  keymap.removeKey(["C-x", "2"]);
-  keymap.removeKey(["C-x", "0"]);
-  keymap.removeKey(["C-x", "o"]);
-  keymap.removeKey(["C-x", "1"]);
-  return keymap;
-}
 
 function CreateKeyMapStack(iniKeyMap) {
   return {
@@ -209,71 +149,6 @@ function CreateKeyMapStack(iniKeyMap) {
   };
 }
 
-
-let g_keyMapHandler = {
-  lastKeySequence: [],
-  delegateRequest: false,
-  isMiniBuffer: false,
-  keyMapStack: CreateKeyMapStack(CreateDefaultKeyMap()),
-  miniKeyMapStack: CreateKeyMapStack(CreateDefaultMiniBufferKeyMap()),
-
-  handleOneKeyMap(keymap, str) {
-    let lmap = keymap.lookupLastMap(this.lastKeySequence);
-    if (lmap) {
-      let v = lmap[str];
-      if (typeof v === 'function') {
-        this.lastKeySequence.length = 0;
-        v();
-        if (this.delegateRequest) {
-          this.delegateRequest = false;
-          return false;
-        }
-        return true;
-      }
-      if (v !== null && typeof v === 'object') {
-        this.lastKeySequence.push(str);
-        message(`${this.lastKeySequence.join(" ")}:`);
-        return true;
-      }
-    }
-
-    return false;
-  },
-
-  isWaitingNextKey() {
-    return this.lastKeySequence.length > 0;
-  },
-
-  currentKeyMapStack() {
-    if(this.isMiniBuffer)
-      return this.miniKeyMapStack;
-    return this.keyMapStack;
-  },
-
-  handleKeyDown(str) {
-    let kstack = this.currentKeyMapStack();
-    for (let i = kstack.length() - 1; i >= 0; i--) {
-      if (this.handleOneKeyMap(kstack.getKeyMap(i), str)) {
-        return;
-      }
-    }
-
-    message(`unknown key: ${str}, ${JSON.stringify(this.lastKeySequence)}`);
-    this.lastKeySequence.length = 0;
-  },
-
-  pushKeyMap(keymap) {
-    this.currentKeyMapStack().pushKeyMap(keymap);
-  },
-
-  popKeyMap() {
-    this.currentKeyMapStack().popKeyMap();
-  },
-
-  requestDelegateKeyHandle() {
-    this.delegateRequest = true;
-  }
-};
 
 /*
   ミニバッファ用のキーマップを指定してenterする処理とleaveする処理の共通処理。
@@ -372,44 +247,7 @@ let gotoChar = (pos) => {
   lastMatchPos = pos;
 };
 
-
-function isearch_common(label, snextKey, onModified, searchNext) {
-  targetBuf = selected_buffer();
-  targetWin = selected_window();
-  orgPos = point();
-  lastMatchPos = orgPos;
-  lastMatchText = "";
-  targetWin.setDrawCaret(true);
-
-  g_hooks.addHook("minibuffer_modified_hook", onModified);
-  let leave = ()=> {
-    targetWin.setDrawCaret(false);
-    g_hooks.removeHook("minibuffer_modified_hook", onModified);
-    leave_minibuffer_common();
-  }
-  let commitResult = () => {    
-    leave();
-  };
-  let cancelResult = () => {
-    gotoChar(orgPos);
-    leave();
-  }
-  let miniKeyMap = new KeyMap();
-  miniKeyMap.defineKey(snextKey, searchNext);
-  miniKeyMap.defineKey("Return", commitResult);
-  miniKeyMap.defineKey("C-g", cancelResult);
-  enter_minibuffer_common(miniKeyMap, label);
-}
-
-
-function isearch_forward() {
-
-  let onModified = (text) => {
-    lastMatchText = text;
-    if (text === "") {
-      gotoChar(orgPos);
-      return;
-    }
+let newSearchForward = (text) => {
     let res = targetBuf.searchForward(orgPos, text);
     if (res) {
       gotoChar(res);
@@ -424,8 +262,9 @@ function isearch_forward() {
     }
   };
 
-  let searchNext = () => {
+let searchNextForward = () => {
     if (lastMatchText === "") return;
+
     let res = targetBuf.searchForward(lastMatchPos + 1, lastMatchText);
     if (res) {
       gotoChar(res);
@@ -444,17 +283,7 @@ function isearch_forward() {
     }
   };
 
-  isearch_common("isearch: ", "C-s", onModified, searchNext);
-}
-
-function isearch_backward() {
-
-  let onModified = (text) => {
-    lastMatchText = text;
-    if (text === "") {
-      gotoChar(orgPos);
-      return;
-    }
+let newSearchBackward = (text) => {
     let res = targetBuf.searchBackward(orgPos, text);
     if (res) {
       gotoChar(res);
@@ -469,8 +298,9 @@ function isearch_backward() {
     }
   };
 
-  let searchNext = () => {
+let searchNextBackward = () => {
     if (lastMatchText === "") return;
+
     let res = targetBuf.searchBackward(lastMatchPos - 1, lastMatchText);
     if (res) {
       gotoChar(res);
@@ -487,15 +317,59 @@ function isearch_backward() {
         message("No matches");
       }
     }
+};
+
+function isearch_common(newSearch) {
+  targetBuf = selected_buffer();
+  targetWin = selected_window();
+  orgPos = point();
+  lastMatchPos = orgPos;
+  lastMatchText = "";
+  targetWin.setDrawCaret(true);
+
+  let onModified = (text) => {
+    lastMatchText = text;
+    if (text === "") {
+      gotoChar(orgPos);
+      return;
+    }
+    newSearch(text);
   };
 
-  isearch_common("isearch back: ", "C-r", onModified, searchNext);
+  g_hooks.addHook("minibuffer_modified_hook", onModified);
+  let leave = ()=> {
+    targetWin.setDrawCaret(false);
+    g_hooks.removeHook("minibuffer_modified_hook", onModified);
+    leave_minibuffer_common();
+  }
+  
+  let commitResult = () => {    
+    leave();
+  };
+  let cancelResult = () => {
+    gotoChar(orgPos);
+    leave();
+  }
+  let miniKeyMap = new KeyMap();
+  miniKeyMap.defineKey("C-r", searchNextBackward);
+  miniKeyMap.defineKey("C-s", searchNextForward);
+  miniKeyMap.defineKey("Return", commitResult);
+  miniKeyMap.defineKey("C-g", cancelResult);
+  enter_minibuffer_common(miniKeyMap, "isearch: ");
+}
+
+
+function isearch_forward() {
+  isearch_common(newSearchForward);
+}
+
+function isearch_backward() {
+  isearch_common(newSearchBackward);
 }
 
 global.isearch_forward = isearch_forward;
 global.isearch_backward = isearch_backward;
 })();
-
 
 /*
 コマンド
@@ -763,6 +637,136 @@ function switch_to_buffer() {
       let buf = bufs[index];
       set_buffer(buf);
      });
+}
+
+
+/*
+  isearchなど複雑なものはglobal.isearch_forwardとかを使うので、hoistされないから最後にCreateDefaultKeyMapとその呼出を持ってくる。
+*/
+let g_keyMapHandler = {
+  lastKeySequence: [],
+  delegateRequest: false,
+  isMiniBuffer: false,
+  keyMapStack: CreateKeyMapStack(CreateDefaultKeyMap()),
+  miniKeyMapStack: CreateKeyMapStack(CreateDefaultMiniBufferKeyMap()),
+
+  handleOneKeyMap(keymap, str) {
+    let lmap = keymap.lookupLastMap(this.lastKeySequence);
+    if (lmap) {
+      let v = lmap[str];
+      if (typeof v === 'function') {
+        this.lastKeySequence.length = 0;
+        v();
+        if (this.delegateRequest) {
+          this.delegateRequest = false;
+          return false;
+        }
+        return true;
+      }
+      if (v !== null && typeof v === 'object') {
+        this.lastKeySequence.push(str);
+        message(`${this.lastKeySequence.join(" ")}:`);
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  isWaitingNextKey() {
+    return this.lastKeySequence.length > 0;
+  },
+
+  currentKeyMapStack() {
+    if(this.isMiniBuffer)
+      return this.miniKeyMapStack;
+    return this.keyMapStack;
+  },
+
+  handleKeyDown(str) {
+    let kstack = this.currentKeyMapStack();
+    for (let i = kstack.length() - 1; i >= 0; i--) {
+      if (this.handleOneKeyMap(kstack.getKeyMap(i), str)) {
+        return;
+      }
+    }
+
+    message(`unknown key: ${str}, ${JSON.stringify(this.lastKeySequence)}`);
+    this.lastKeySequence.length = 0;
+  },
+
+  pushKeyMap(keymap) {
+    this.currentKeyMapStack().pushKeyMap(keymap);
+  },
+
+  popKeyMap() {
+    this.currentKeyMapStack().popKeyMap();
+  },
+
+  requestDelegateKeyHandle() {
+    this.delegateRequest = true;
+  }
+};
+
+function CreateDefaultKeyMap() {
+  let keymap = new KeyMap();
+  keymap.defineDefaultSelfInsert();
+  keymap.defineKey("Space", ()=> { insert(" "); })
+  keymap.defineKey("Return", ()=> { insert("\n"); })
+  keymap.defineKey("Backspace", delete_backward_char)
+  keymap.defineKey("Delete", delete_char);
+  keymap.defineKey("Left", backward_char)
+  keymap.defineKey("Right", forward_char)
+  keymap.defineKey("Down", next_line)
+  keymap.defineKey("Up", previous_line)
+  keymap.defineKey("C-b", backward_char)
+  keymap.defineKey("C-f", forward_char)
+  keymap.defineKey("C-n", next_line);
+  keymap.defineKey("C-p", previous_line);
+  keymap.defineKey("C-a", beginning_of_line)
+  keymap.defineKey("C-e", end_of_line)
+  keymap.defineKey("C-h", delete_backward_char)
+  keymap.defineKey("C-d", delete_char);
+  keymap.defineKey(["C-x", "C-s"], saveBuffer);
+  keymap.defineKey(["C-x", "C-f"], find_file);
+  keymap.defineKey(["C-x", "C-n"], new_file);
+  keymap.defineKey("M->", end_of_buffer);
+  keymap.defineKey("M-<", beginning_of_buffer);
+  keymap.defineKey("C-v", next_page)
+  keymap.defineKey("M-v", previous_page)
+  keymap.defineKey("C-Space", set_mark_command);
+  keymap.defineKey("C-@", set_mark_command);
+  keymap.defineKey(["C-x", "C-x"], exchange_point_and_mark);
+  keymap.defineKey("C-j", eval_region);
+  keymap.defineKey("M-w", copy_region);
+  keymap.defineKey("C-w", kill_region);
+  keymap.defineKey("C-k", kill_line);
+  keymap.defineKey("C-y", yank);
+  keymap.defineKey("M-x", execute_extended_command);
+  keymap.defineKey(["C-x", "2"], split_window);
+  keymap.defineKey(["C-x", "0"], delete_window);
+  keymap.defineKey(["C-x", "o"], other_window);
+  keymap.defineKey(["C-x", "1"], delete_other_windows);
+  keymap.defineKey(["C-x", "b"], switch_to_buffer);
+  keymap.defineKey("C-s", isearch_forward);
+  keymap.defineKey("C-r", isearch_backward);
+  return keymap;
+}
+
+
+function CreateDefaultMiniBufferKeyMap()
+{
+  let keymap = CreateDefaultKeyMap();
+  keymap.removeKey("Return");
+  keymap.removeKey(["C-x", "C-s"]);
+  keymap.removeKey(["C-x", "C-f"]);
+  keymap.removeKey("C-j");
+  keymap.removeKey("M-x");
+  keymap.removeKey(["C-x", "2"]);
+  keymap.removeKey(["C-x", "0"]);
+  keymap.removeKey(["C-x", "o"]);
+  keymap.removeKey(["C-x", "1"]);
+  return keymap;
 }
 
 function onKeyDown(str) {
