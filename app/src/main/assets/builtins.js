@@ -166,6 +166,8 @@ function CreateDefaultKeyMap() {
   keymap.defineKey(["C-x", "o"], other_window);
   keymap.defineKey(["C-x", "1"], delete_other_windows);
   keymap.defineKey(["C-x", "b"], switch_to_buffer);
+  keymap.defineKey("C-s", isearch_forward);
+  keymap.defineKey("C-r", isearch_backward);
   return keymap;
 }
 
@@ -356,6 +358,144 @@ function read_filtering_list(candidates) {
   enter_minibuffer_common(miniKeyMap, "Filgtering: ");
   return promise;
 }
+
+(function() {
+
+let targetBuf;
+let targetWin;
+let orgPos;
+let lastMatchPos;
+let lastMatchText;
+
+let gotoChar = (pos) => {
+  targetWin.gotoChar(pos);
+  lastMatchPos = pos;
+};
+
+
+function isearch_common(label, snextKey, onModified, searchNext) {
+  targetBuf = selected_buffer();
+  targetWin = selected_window();
+  orgPos = point();
+  lastMatchPos = orgPos;
+  lastMatchText = "";
+  targetWin.setDrawCaret(true);
+
+  g_hooks.addHook("minibuffer_modified_hook", onModified);
+  let leave = ()=> {
+    targetWin.setDrawCaret(false);
+    g_hooks.removeHook("minibuffer_modified_hook", onModified);
+    leave_minibuffer_common();
+  }
+  let commitResult = () => {    
+    leave();
+  };
+  let cancelResult = () => {
+    gotoChar(orgPos);
+    leave();
+  }
+  let miniKeyMap = new KeyMap();
+  miniKeyMap.defineKey(snextKey, searchNext);
+  miniKeyMap.defineKey("Return", commitResult);
+  miniKeyMap.defineKey("C-g", cancelResult);
+  enter_minibuffer_common(miniKeyMap, label);
+}
+
+
+function isearch_forward() {
+
+  let onModified = (text) => {
+    lastMatchText = text;
+    if (text === "") {
+      gotoChar(orgPos);
+      return;
+    }
+    let res = targetBuf.searchForward(orgPos, text);
+    if (res) {
+      gotoChar(res);
+    } else {
+      let wrapped = targetBuf.searchForward(0, text, orgPos);
+      if (wrapped) {
+        gotoChar(wrapped);
+      } else {
+        gotoChar(orgPos);
+        message("No matches");
+      }
+    }
+  };
+
+  let searchNext = () => {
+    if (lastMatchText === "") return;
+    let res = targetBuf.searchForward(lastMatchPos + 1, lastMatchText);
+    if (res) {
+      gotoChar(res);
+    } else {
+      let wrapped = targetBuf.searchForward(0, lastMatchText, lastMatchPos);
+      if (wrapped) {
+        if (wrapped == lastMatchPos) {
+          message("No more matches");
+          return;
+        }
+        gotoChar(wrapped);
+        message("Wrapped");
+      } else {
+        message("No matches");
+      }
+    }
+  };
+
+  isearch_common("isearch: ", "C-s", onModified, searchNext);
+}
+
+function isearch_backward() {
+
+  let onModified = (text) => {
+    lastMatchText = text;
+    if (text === "") {
+      gotoChar(orgPos);
+      return;
+    }
+    let res = targetBuf.searchBackward(orgPos, text);
+    if (res) {
+      gotoChar(res);
+    } else {
+      let wrapped = targetBuf.searchBackward(targetBuf.getPositionMax(), text, orgPos);
+      if (wrapped) {
+        gotoChar(wrapped);
+      } else {
+        gotoChar(orgPos);
+        message("No matches");
+      }
+    }
+  };
+
+  let searchNext = () => {
+    if (lastMatchText === "") return;
+    let res = targetBuf.searchBackward(lastMatchPos - 1, lastMatchText);
+    if (res) {
+      gotoChar(res);
+    } else {
+      let wrapped = targetBuf.searchBackward(targetBuf.getPositionMax(), lastMatchText, lastMatchPos);
+      if (wrapped) {
+        if (wrapped == lastMatchPos) {
+          message("No more matches");
+          return;
+        }
+        gotoChar(wrapped);
+        message("Wrapped");
+      } else {
+        message("No matches");
+      }
+    }
+  };
+
+  isearch_common("isearch back: ", "C-r", onModified, searchNext);
+}
+
+global.isearch_forward = isearch_forward;
+global.isearch_backward = isearch_backward;
+})();
+
 
 /*
 コマンド

@@ -20,6 +20,8 @@ class Window(initBuf: Buffer) {
         }
 
     var isSelected = true
+    // isearchなどでミニバッファをアクティブにしつつキャレットを描きたい場合
+    var isDrawCaret = false
 
     var lastOffset = RowCol(0, 0)
 

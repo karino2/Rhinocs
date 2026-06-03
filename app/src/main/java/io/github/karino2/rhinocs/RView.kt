@@ -179,7 +179,7 @@ class RView @JvmOverloads constructor(
             }
         }
 
-        if(win.isSelected)
+        if(win.isSelected || win.isDrawCaret)
             drawCaret(win, topX, topY, canvas)
 
         return topY+win.numRows*cellHeight

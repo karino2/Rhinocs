@@ -245,7 +245,7 @@ class Buffer() {
         } ?: false
     }
 
-    @JvmOverloads
+
     fun searchForward(from: Point, word: String, limit: Long? = null) : Point? {
         if (word.isEmpty()) return from
         val lp = limit?.let { toPoint(it) }
@@ -264,7 +264,6 @@ class Buffer() {
         return null
     }
 
-    @JvmOverloads
     fun searchBackward(from: Point, word: String, limit: Long? = null): Point? {
         if (word.isEmpty()) return from
         val lp = limit?.let { toPoint(it) }
@@ -290,4 +289,13 @@ class Buffer() {
         return null
     }
 
+    @JvmOverloads
+    fun searchForward(from: Long, word: String, limit: Long? = null) : Long? {
+        return searchForward(toPoint(from), word, limit)?.position
+    }
+
+    @JvmOverloads
+    fun searchBackward(from: Long, word: String, limit: Long? = null) : Long? {
+        return searchBackward(toPoint(from), word, limit)?.position
+    }
 }
