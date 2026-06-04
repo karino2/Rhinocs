@@ -155,13 +155,13 @@ function CreateKeyMapStack(iniKeyMap) {
 */
 function enter_minibuffer_common(miniKeyMap, prompt) {
   g_keyMapHandler.isMiniBuffer = true
-  g_keyMapHandler.pushKeyMap(miniKeyMap);
+  g_keyMapHandler.pushMiniKeyMap(miniKeyMap);
   enter_minibuffer(prompt);
   g_hooks.runHook("enter_minibuffer_hook")
 }
 
 function leave_minibuffer_common() {
-  g_keyMapHandler.popKeyMap();
+  g_keyMapHandler.popMiniKeyMap();
   g_keyMapHandler.isMiniBuffer = false;
   g_hooks.runHook("exit_minibuffer_hook");
   return leave_minibuffer();
@@ -672,12 +672,20 @@ let g_keyMapHandler = {
     this.lastKeySequence.length = 0;
   },
 
-  pushKeyMap(keymap) {
-    this.currentKeyMapStack().pushKeyMap(keymap);
+  pushMainKeyMap(keymap) {
+    this.keyMapStack.pushKeyMap(keymap);
   },
 
-  popKeyMap() {
-    this.currentKeyMapStack().popKeyMap();
+  popMainKeyMap() {
+    this.keyMapStack.popKeyMap();
+  },
+
+  pushMiniKeyMap(keymap) {
+    this.miniKeyMapStack.pushKeyMap(keymap);
+  },
+
+  popMiniKeyMap() {
+    this.miniKeyMapStack.popKeyMap();
   },
 
   requestDelegateKeyHandle() {
