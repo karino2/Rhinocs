@@ -96,8 +96,7 @@ class MainActivity : AppCompatActivity() {
         get() {
             if (_interpreter == null) {
                 _interpreter = Interpreter().apply {
-                    global.activity = this@MainActivity
-                    global.rview = rview
+                    global.setup(this@MainActivity, rview)
                     loadBuiltin()
                 }
             }

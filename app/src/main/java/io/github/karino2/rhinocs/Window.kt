@@ -1,11 +1,14 @@
 package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
+import androidx.annotation.Keep
 
 class Window(initBuf: Buffer) {
-    fun isEOL() = buffer.isEOL(point)
+    @Keep
+    fun isEol() = buffer.isEol(point)
 
-    fun isBOL() = point.offset == 0
+    @Keep
+    fun isBol() = point.offset == 0
 
     var isMiniBuffer = false
 
@@ -16,7 +19,7 @@ class Window(initBuf: Buffer) {
 
             lastOffset = RowCol(0, 0)
             point = Point(0, 0, 0)
-            resetGoalGolumn()
+            resetGoalColumn()
         }
 
     var isSelected = true
@@ -30,7 +33,7 @@ class Window(initBuf: Buffer) {
 
     var goalColumn : Int? = null
 
-    fun computeGoalGolumn() : Int {
+    fun computeGoalColumn() : Int {
         goalColumn?.let {
             return it
         }
@@ -39,13 +42,15 @@ class Window(initBuf: Buffer) {
         return col
     }
 
-    fun resetGoalGolumn() {
+    fun resetGoalColumn() {
         goalColumn = null
     }
 
+    @get:Keep
     val pointMax: Long
         get() = buffer.positionMax
 
+    @Keep
     fun saveBuffer(resolver: ContentResolver) = buffer.save(resolver)
 
     val lineBuilder = LineAnalyzer()
@@ -95,14 +100,16 @@ class Window(initBuf: Buffer) {
         return lineBuilder.buildInfo(line, lastOffset.col, numCols)
     }
 
+    @Keep
     fun insert(content: String, recordUndo: Boolean = true) {
         // val debPrev = point
         point = buffer.insert(point, content, recordUndo)
-        resetGoalGolumn()
+        resetGoalColumn()
         // println("insert: $debPrev, ${point}, $content")
     }
 
     // 削除した文字数を返す
+    @Keep
     fun deleteRegion(from: Long, to: Long, recordUndo: Boolean = true) : Long {
         val count = buffer.deleteRegion(from, to, recordUndo)
         val debPrev = point
@@ -118,8 +125,9 @@ class Window(initBuf: Buffer) {
         return count
     }
 
+    @Keep
     fun moveCharDelta(delta: Int) {
-        resetGoalGolumn()
+        resetGoalColumn()
         // val debPrev = point
 
         if(delta > 0)
@@ -131,7 +139,7 @@ class Window(initBuf: Buffer) {
 
     fun moveLineDelta(delta: Int) {
         // val debPrev = point
-        resetGoalGolumn()
+        resetGoalColumn()
 
         if(delta > 0)
             point = buffer.forwardLine(point, delta)
@@ -140,7 +148,8 @@ class Window(initBuf: Buffer) {
         // println("moveLineDelta: $debPrev, ${point}, $delta")
     }
 
-    fun pontToColumn(pos: Long): Int {
+    @Keep
+    fun pointToColumn(pos: Long): Int {
         val pt = buffer.toPoint(pos)
         return lineBuilder.pointToColumn(buffer, pt)
     }
@@ -164,11 +173,13 @@ class Window(initBuf: Buffer) {
         return actual
     }
 
+    @Keep
     fun gotoChar(pos: Long) {
-        resetGoalGolumn()
+        resetGoalColumn()
         point = buffer.toPoint(pos)
     }
 
+    @Keep
     fun scrollWindow(delta: Int) : Boolean{
         val goalLine = (point.linenum+delta).coerceAtLeast(0)
         if (goalLine == point.linenum)
@@ -179,31 +190,35 @@ class Window(initBuf: Buffer) {
 
         lastOffset = lastOffset.copy(row=goalLine)
         moveLineDelta(delta)
-        gotoColumn(computeGoalGolumn())
+        gotoColumn(computeGoalColumn())
         return true
     }
 
+    @Keep
     fun gotoBol() {
-        resetGoalGolumn()
+        resetGoalColumn()
         point = buffer.gotoBol(point)
     }
 
+    @Keep
     fun gotoEol() {
-        resetGoalGolumn()
+        resetGoalColumn()
         point = buffer.gotoEol(point)
     }
 
+    @Keep
     fun undo() {
         buffer.undo()?.let {
             point = it
-            resetGoalGolumn()
+            resetGoalColumn()
         }
     }
 
+    @Keep
     fun redo() {
         buffer.redo()?.let {
             point = it
-            resetGoalGolumn()
+            resetGoalColumn()
         }
     }
 }

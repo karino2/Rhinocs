@@ -2,6 +2,7 @@ package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
 import android.net.Uri
+import androidx.annotation.Keep
 
 /**
  * Windowやミニバッファなどを持つモデル側の一番外側のクラス。
@@ -82,6 +83,7 @@ class Rhinocs {
         }
     }
 
+    @Keep
     fun setBufferUrl(resolver: ContentResolver, buf: Buffer, uri: Uri) : Boolean {
         return FastFile.fromDocUri(resolver, uri)?.let {
             buf.url = uri
@@ -90,6 +92,7 @@ class Rhinocs {
         } ?: false
     }
 
+    @Keep
     fun getBufferCreate(bname: String) = bufferCollection.getBufferCreate(bname)
 
     var echoText = ""
@@ -129,6 +132,7 @@ class Rhinocs {
         modeLineFormat = defaultModeFmt
     }
 
+    @Keep
     fun splitWindow(baseWin: Window) : Boolean{
         if(baseWin == miniBufferWindow?.window)
             return false
@@ -179,7 +183,7 @@ class Rhinocs {
         return windowList[(targetIndex+1)%windowList.size]
     }
 
-
+    @Keep
     fun switchToOtherWindow() : Boolean {
         if (windowList.size == 1)
             return false
@@ -191,6 +195,7 @@ class Rhinocs {
         return true
     }
 
+    @Keep
     fun deleteOtherWindows(): Boolean {
         if (windowList.size == 1)
             return false

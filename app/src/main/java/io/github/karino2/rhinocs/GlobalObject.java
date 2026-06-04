@@ -22,67 +22,27 @@ public class GlobalObject  extends ImporterTopLevel {
             "read_key_callback",
             "select_open_file_callback",
             "select_new_file_callback",
-            "set_buffer_url",
-            "open_uri",
-            "forward_char",
-            "backward_char",
-            "forward_line",
-            "backward_line",
-            "insert",
-            "default_self_insert_keys",
-            "read_file",
-            "write_file",
-            "point",
-            "delete_region",
-            "save_buffer",
+            "create_uri",
             "show_toast",
-            "point_column",
-            "set_goal_column",
-            "goal_column",
-            "goto_column",
-            "point_max",
-            "goto_char",
-            "goto_eol",
-            "goto_bol",
-            "window_height",
-            "scroll_window",
-            "read_gzip_file",
             "load_gzip_skk_dictionary",
             "load_js_callback",
-            "get_buffer_create",
-            "generate_new_buffer",
-            "set_buffer",
-            "message",
-            "mark_marker",
-            "set_marker",
-            "marker_position",
-            "buffer_substring",
             "copy_to_clipboard",
             "current_clipboard",
-            "put_pref_string",
-            "get_pref_string",
             "query_text_dialog_callback",
-            "set_mode_line_format",
-            "get_mode_line_format",
-            "is_eol",
-            "is_bol",
             "enter_minibuffer",
             "leave_minibuffer",
-            "split_window",
-            "delete_window",
-            "other_window",
-            "delete_other_windows",
-            "get_floating_list",
             "eval_script",
-            "buffer_list",
-            "selected_buffer",
-            "selected_window",
-            "set_font_size",
-            "get_font_size",
     };
 
     public MainActivity activity;
     public RView rview;
+
+    public void setup(MainActivity activity, RView rview) {
+        this.activity = activity;
+        this.rview = rview;
+        defineProperty("activity", activity, ScriptableObject.DONTENUM);
+        defineProperty("rview", rview, ScriptableObject.DONTENUM);
+    }
     public Rhinocs getRhinocs() { return rview.getRhinocs(); }
     public Window selectedWindow() { return getRhinocs().getSelectedWindow(); }
     Buffer selectedBuffer() { return getRhinocs().getSelectedBuffer(); }
@@ -195,17 +155,14 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
-    /*
-        set_buffer_url(buf, url)
-     */
-    public static Object set_buffer_url(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[]{Buffer.class, String.class});
+    public static Object create_uri(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{String.class});
         GlobalObject glob = getInstance(funcObj);
 
-        Buffer buf = (Buffer)Context.jsToJava(args[0], Buffer.class);
-        String url = Context.toString(args[1]);
-        return glob.getRhinocs().setBufferUrl(glob.activity.getContentResolver(), buf, Uri.parse(url));
+        String uri = Context.toString(args[0]);
+        return Context.javaToJS(Uri.parse(uri), glob);
     }
+
     public static Object print(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         for (int i = 0; i < args.length; i++) {
             if (i > 0)
@@ -214,99 +171,6 @@ public class GlobalObject  extends ImporterTopLevel {
         }
         System.out.print("\n");
         return Context.getUndefinedValue();
-    }
-
-    public static Object open_uri(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String uriStr = Context.toString(args[0]);
-        glob.openUri(Uri.parse(uriStr));
-        return Context.getUndefinedValue();
-    }
-    public static Object forward_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        int delta = 1;
-        if (args.length != 0)
-            delta = (int) Context.toNumber(args[0]);
-        glob.selectedWindow().moveCharDelta(delta);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object backward_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        int delta = 1;
-        if (args.length != 0)
-            delta = (int) Context.toNumber(args[0]);
-        glob.selectedWindow().moveCharDelta(-delta);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object forward_line(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        int delta = 1;
-        if (args.length != 0)
-            delta = (int) Context.toNumber(args[0]);
-        glob.selectedWindow().moveLineDelta(delta);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object backward_line(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        int delta = 1;
-        if (args.length != 0)
-            delta = (int) Context.toNumber(args[0]);
-        glob.selectedWindow().moveLineDelta(-delta);
-        return Context.getUndefinedValue();
-    }
-
-    /*(non-Javadoc)
-     *
-     * insert(content)
-     *
-     * 文字列を現在の位置に挿入してその分forwardする。
-     *
-     * @param {string} content - 挿入する文字列
-     */
-    public static Object insert(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String content = Context.toString(args[0]);
-        glob.selectedWindow().insert(content, true);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object default_self_insert_keys(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        List<String> strs = glob.rview.selfInsertKeys();
-        return ctx.newArray(glob, strs.toArray());
-    }
-
-    public static Object read_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String fname = Context.toString(args[0]);
-        return glob.activity.readFileContent(fname);
-    }
-
-    // elispの (write-region start end filename) に合わせて wirte_file(content, path)にする。
-    public static Object write_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class, String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String content = Context.toString(args[0]);
-        String path = Context.toString(args[1]);
-        return glob.activity.writeFileContent(path, content);
-    }
-
-    public static Object read_gzip_file(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String fname = Context.toString(args[0]);
-        return glob.activity.readGZIPFileContent(fname);
     }
 
     public static Object load_gzip_skk_dictionary(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
@@ -334,31 +198,6 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
-
-    public static Object point(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        Point pt = glob.selectedWindow().getPoint();
-        return pt.getPosition();
-    }
-
-    public static Object delete_region(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class, Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-
-        long p1 = (long)Context.toNumber(args[0]);
-        long p2 = (long)Context.toNumber(args[1]);
-        long start = Math.min(p1, p2);
-        long end = Math.max(p1, p2);
-
-        return glob.selectedWindow().deleteRegion(start, end, true);
-    }
-
-    public static Object save_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.selectedWindow().saveBuffer(glob.activity.getContentResolver());
-    }
-
     public static Object show_toast(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { String.class });
 
@@ -367,160 +206,6 @@ public class GlobalObject  extends ImporterTopLevel {
         return Context.getUndefinedValue();
     }
 
-    public static Object point_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        long pos = (long)Context.toNumber(args[0]);
-        return glob.selectedWindow().pontToColumn(pos);
-    }
-
-    public static Object set_goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        int column = (int) Context.toNumber(args[0]);
-        glob.selectedWindow().setGoalColumn(column);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object goal_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.selectedWindow().computeGoalGolumn();
-    }
-
-    public static Object goto_column(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        int column = (int) Context.toNumber(args[0]);
-        return glob.selectedWindow().gotoColumn(column);
-    }
-    public static Object point_max(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.selectedWindow().getPointMax();
-    }
-
-    public static Object goto_char(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        long pos = (long) Context.toNumber(args[0]);
-        glob.selectedWindow().gotoChar(pos);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object goto_bol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        glob.selectedWindow().gotoBol();
-        return Context.getUndefinedValue();
-    }
-
-    public static Object goto_eol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        glob.selectedWindow().gotoEol();
-        return Context.getUndefinedValue();
-    }
-
-    public static Object window_height(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.selectedWindow().getNumRows();
-    }
-
-    public static Object scroll_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        int delta = (int) Context.toNumber(args[0]);
-        glob.selectedWindow().scrollWindow(delta);
-        return Context.getUndefinedValue();
-    }
-    public void openUri(Uri uri) {
-        rview.loadFile(activity.getContentResolver(), uri);
-    }
-
-    public static Object get_buffer_create(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String bname = Context.toString(args[0]);
-        Buffer buf = glob.getRhinocs().getBufferCreate(bname);
-        return Context.javaToJS(buf, glob);
-    }
-
-    /*
-        generate_new_buffer(candname)
-
-        新しくバッファを作成して返す。
-        candnameが存在しなければcandnameを名前とするバッファを作成。
-        既にあればcandname-1を、それもあればcandname-2を…という風にまだ存在しない名前をつけて新しくバッファを作る。
-     */
-    public static Object generate_new_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String bname = Context.toString(args[0]);
-        Buffer buf = glob.getRhinocs().getBufferCollection().newBuffer(bname, null);
-        return Context.javaToJS(buf, glob);
-    }
-
-
-    public static Object set_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Buffer.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        //  || !(args[0] instanceof Buffer)
-        Buffer buf = (Buffer)Context.jsToJava(args[0], Buffer.class);
-        glob.selectedWindow().setBuffer(buf);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object message(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String msg = Context.toString(args[0]);
-        glob.getRhinocs().setEchoText(msg);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object mark_marker(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        Marker mark = glob.selectedBuffer().getMark();
-        return Context.javaToJS(mark, glob);
-    }
-
-    public static Object set_marker(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Marker.class, Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
-        long pos = (long)Context.toNumber(args[1]);
-        marker.setPosition(pos);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object marker_position(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Marker.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        Marker marker = (Marker)Context.jsToJava(args[0], Marker.class);
-        return marker.getPosition();
-    }
-
-    // 今の所第三引数（bufferオブジェクト）はサポートしないが、名前はbuffer_substringにしておく。
-    public static Object buffer_substring(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class, Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        long beg = (long)Context.toNumber(args[0]);
-        long end = (long)Context.toNumber(args[1]);
-        // 選択されてないケース。一応ここでもガードしておく。
-        if (beg < 0 || end < 0)
-            return "";
-        return glob.selectedBuffer().substring(Math.min(beg, end), Math.max(beg, end));
-    }
-    
     public static Object copy_to_clipboard(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[] { String.class });
 
@@ -545,25 +230,6 @@ public class GlobalObject  extends ImporterTopLevel {
         return "";
     }
 
-    public static Object put_pref_string(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[]{String.class, String.class});
-
-        GlobalObject glob = getInstance(funcObj);
-        String key = Context.toString(args[0]);
-        String value = Context.toString(args[1]);
-        glob.activity.putPrefString(key, value);
-        return Context.getUndefinedValue();
-    }
-
-    public static Object get_pref_string(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[]{String.class, String.class});
-
-        GlobalObject glob = getInstance(funcObj);
-        String key = Context.toString(args[0]);
-        String defaultValue = Context.toString(args[1]);
-        return glob.activity.getPrefString(key, defaultValue);
-    }
-
     /*
         query_text_dialog_callback(label, onSuccess, onFailure)
      */
@@ -577,62 +243,6 @@ public class GlobalObject  extends ImporterTopLevel {
         Function onFailure = (Function)args[2];
         glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.QUERY_TEXT_DIALOG,  new DelayedRequest.Arg(label, onSuccess, onFailure)));
         return Context.getUndefinedValue();
-    }
-
-    /*(non-Javadoc)
-     *
-     * set_mode_line_format(fmt)
-     *
-     * モード行フォーマットを設定する
-     *
-     * @param {string} fmt
-     */
-    public static Object set_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { String.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        String fmt = Context.toString(args[0]);
-        glob.getRhinocs().setModeLineFormat(fmt);
-        return Context.getUndefinedValue();
-    }
-
-    /*(non-Javadoc)
-     *
-     * get_mode_line_format()
-     *
-     * 現在のモード行フォーマットを返す
-     *
-     * @return {string}
-     */
-    public static Object get_mode_line_format(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.getRhinocs().getModeLineFormat();
-    }
-
-    /*(non-Javadoc)
-     *
-     * is_eol()
-     *
-     * 現在の位置が行末ならtrue、それ以外ならfalseを返す
-     *
-     * @return {boolean}
-     */
-    public static Object is_eol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.selectedWindow().isEOL();
-    }
-
-    /*(non-Javadoc)
-     *
-     * is_bol()
-     *
-     * 現在の位置が行頭ならtrue、それ以外ならfalseを返す
-     *
-     * @return {boolean}
-     */
-    public static Object is_bol(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.selectedWindow().isBOL();
     }
 
     /*(non-Javadoc)
@@ -672,124 +282,12 @@ public class GlobalObject  extends ImporterTopLevel {
         return glob.getRhinocs().leaveMiniBuffer();
     }
 
-    /*
-      今の所ターゲットはselected_windowのみ。
-     */
-    public static Object split_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        Rhinocs rhinocs = glob.getRhinocs();
-        return rhinocs.splitWindow(rhinocs.getMainActiveWindow());
-    }
-    /*
-      今の所ターゲットはselected_windowのみ。
-     */
-    public static Object delete_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        Rhinocs rhinocs = glob.getRhinocs();
-        return rhinocs.deleteWindow(rhinocs.getMainActiveWindow());
-    }
-
-    /*
-      次のWindowにフォーカスを移す
-     */
-    public static Object other_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        Rhinocs rhinocs = glob.getRhinocs();
-        return rhinocs.switchToOtherWindow();
-    }
-
-    /*
-      現在カーソルがあるウィンドウ以外のウィンドウを削除
-     */
-    public static Object delete_other_windows(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        Rhinocs rhinocs = glob.getRhinocs();
-        return rhinocs.deleteOtherWindows();
-    }
-
-    /*
-    FloatingListオブジェクトを返す。
-    このitemsに文字列の配列をセットするとフローティングリストが表示される。
-    clearで消去される。
-    キーボードのハンドリングなどは何もしない。JS側で適切に行う前提。
-
-    let floating = get_floating_list();
-    floating.items = ["abc", "def", "ghi"];
-    floating.moveUp();
-    floating.moveDown();
-    let res = floating.selectedIndex;
-
-    floating.clear();
-     */
-    public static Object get_floating_list(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        FloatingList flist = glob.getRhinocs().getFloatingList();
-        return Context.javaToJS(flist, glob);
-    }
-
     public static Object eval_script(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[]{String.class});
 
         GlobalObject glob = getInstance(funcObj);
         String source = Context.toString(args[0]);
         return ctx.evaluateString(glob, source, "*eval*", 1, null);
-    }
-
-    public <T> Scriptable toJSArray(Context ctx, List<T> objs)
-    {
-        Scriptable jsArray = ctx.newArray(this, objs.size());
-        for (int i = 0; i < objs.size(); i++) {
-            Object jsobj = Context.javaToJS(objs.get(i), this);
-            ScriptableObject.putProperty(jsArray, i, jsobj);
-        }
-        return jsArray;
-    }
-
-    /*
-    作成済みのバッファのリストを返す。ただし今の所minibufferは含まない（emacs lispと違うので注意）
-     */
-    public static Object buffer_list(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        List<Buffer> blist = glob.getRhinocs().getBufferCollection().getBuffers();
-
-        return glob.toJSArray(ctx, blist);
-    }
-
-    /*
-    現在のバッファを返す。ミニバッファの事もある。
-     */
-    public static Object selected_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return Context.javaToJS(glob.selectedBuffer(), glob);
-    }
-
-    public static Object selected_window(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return Context.javaToJS(glob.selectedWindow(), glob);
-    }
-
-    /*
-    set_font_size(fontSize)
-
-    フォントサイズをfloatで指定。
-    AndroidのPaintオブジェクトのtextSize。
-     */
-    public static Object set_font_size(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        verifyArgs(funcObj, args, new Class<?>[] { Number.class });
-
-        GlobalObject glob = getInstance(funcObj);
-        float fontSize = (float) Context.toNumber(args[0]);
-        glob.rview.setFontSize(fontSize);
-        return Context.getUndefinedValue();
-    }
-
-    /*
-    現在のfont_sizeをfloatで返す。
-    AndroidのPaintのtextPaintを返す。
-     */
-    public static Object get_font_size(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
-        GlobalObject glob = getInstance(funcObj);
-        return glob.rview.getFontSize();
     }
 
 }

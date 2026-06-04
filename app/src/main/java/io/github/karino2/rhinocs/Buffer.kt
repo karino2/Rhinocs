@@ -2,6 +2,7 @@ package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
 import android.net.Uri
+import androidx.annotation.Keep
 import kotlin.math.max
 import kotlin.math.min
 
@@ -241,7 +242,7 @@ class Buffer() {
         return ret.toString()
     }
 
-    fun isEOL(point: Point) : Boolean {
+    fun isEol(point: Point) : Boolean {
         if (lines.isEmpty())
             return true
         return lines[point.linenum].length == point.offset
@@ -301,11 +302,13 @@ class Buffer() {
         return null
     }
 
+    @Keep
     @JvmOverloads
     fun searchForward(from: Long, word: String, limit: Long? = null) : Long? {
         return searchForward(toPoint(from), word, limit)?.position
     }
 
+    @Keep
     @JvmOverloads
     fun searchBackward(from: Long, word: String, limit: Long? = null) : Long? {
         return searchBackward(toPoint(from), word, limit)?.position

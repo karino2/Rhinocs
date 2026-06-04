@@ -49,7 +49,7 @@ class BufferTest {
     }
 
     @Test
-    fun deleteRegion_deleteEOL_concat() {
+    fun deleteRegion_deleteEol_concat() {
         val buf = BufferFromText("abc\ndef")
         val count = buf.deleteRegion(3, 4)
         assertEquals(1, count)
@@ -77,7 +77,7 @@ class BufferTest {
     }
 
     @Test
-    fun toPoint_eol() {
+    fun toPoint_Eol() {
         val buf = BufferFromText("abc\ndef")
         val actual = buf.toPoint(3)
         assertEquals(Point(0, 3, 3), actual)
@@ -124,7 +124,7 @@ class BufferTest {
     }
 
     @Test
-    fun forwardChar_canMoveToEOL() {
+    fun forwardChar_canMoveToEol() {
         val buf = BufferFromText("abc\ndef")
         val actual = buf.forwardChar(buf.toPoint(2), 1)
         assertEquals(0, actual.linenum)
@@ -132,7 +132,7 @@ class BufferTest {
     }
 
     @Test
-    fun forwardChar_eolToNextLine() {
+    fun forwardChar_EolToNextLine() {
         val buf = BufferFromText("abc\ndef")
         val actual = buf.forwardChar(buf.toPoint(3), 1)
         assertEquals(1, actual.linenum)
@@ -158,7 +158,7 @@ class BufferTest {
     }
 
     @Test
-    fun backwardChar_canMoveToBOL() {
+    fun backwardChar_canMoveToBol() {
         val buf = BufferFromText("abc\ndef")
         val actual = buf.backwardChar(buf.toPoint(5), 1)
         assertEquals(1, actual.linenum)
@@ -166,7 +166,7 @@ class BufferTest {
     }
 
     @Test
-    fun backwardChar_bollToPrevLine() {
+    fun backwardChar_bolToPrevLine() {
         val buf = BufferFromText("abc\ndef")
         val actual = buf.backwardChar(buf.toPoint(4), 1)
         assertEquals(0, actual.linenum)
@@ -235,7 +235,7 @@ class BufferTest {
     }
 
     @Test
-    fun substring_bol() {
+    fun substring_Bol() {
         val buf = BufferFromText("abcdefg")
         val actual = buf.substring(0, 3)
         assertEquals("abc", actual)

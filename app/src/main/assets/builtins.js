@@ -1,4 +1,289 @@
 /*
+  エディタのコアをラップするelisp類似のJSレイヤー
+*/
+function get_rhinocs() {
+  return global.rview.getRhinocs();
+}
+
+function selected_window() {
+  return get_rhinocs().getSelectedWindow();
+}
+
+/**
+ * 現在のバッファを返す。ミニバッファの事もある。
+ * @returns Buffer
+ */
+function selected_buffer() {
+  return get_rhinocs().getSelectedBuffer();
+}
+
+function get_content_resolver() {
+  return global.activity.getContentResolver();
+}
+
+function set_buffer_url(buf, url) {
+  return get_rhinocs().setBufferUrl(get_content_resolver(), buf, create_uri(url));
+}
+
+function forward_char(n=1) {
+  return selected_window().moveCharDelta(n);
+}
+
+function backward_char(n=1) {
+  return selected_window().moveCharDelta(-n);
+}
+
+function forward_line(n=1) {
+  return selected_window().moveLineDelta(n);
+}
+
+function backward_line(n=1) {
+  return selected_window().moveLineDelta(-n);
+}
+
+/**
+ * 文字列を現在の位置に挿入してその分forwardする。
+ *
+ * @param {string} content - 挿入する文字列
+ * @param {boolean} trackUndo - アンドゥをトラックするかどうか（デフォルトはtrue）。これをfalseにすると、挿入した文字列はアンドゥの対象にならない。
+ */
+function insert(text, trackUndo=true) {
+  return selected_window().insert(text, trackUndo);
+}
+
+function delete_region(beg, end, trackUndo=true) {
+  let beg1 = Math.min(beg, end);
+  let end1 = Math.max(beg, end);
+  return selected_window().deleteRegion(beg1, end1, trackUndo);
+}
+
+function default_self_insert_keys() {
+  return global.rview.selfInsertKeys();
+}
+
+function read_file(path) {
+  return global.activity.readFileContent(path);
+}
+
+// elispの (write-region start end filename) に合わせて wirte_file(content, path)にする。
+function write_file(content, path) {
+  return global.activity.writeFileContent(path, content);
+}
+
+function read_gzip_file(path) {
+  return global.activity.readGZIPFileContent(path);
+}
+
+function point() {
+  return selected_window().getPoint().getPosition();
+}
+
+function save_buffer() {
+  return selected_window().saveBuffer(get_content_resolver());
+}
+
+function point_column(point) {
+  return selected_window().pointToColumn(point);
+}
+
+function set_goal_column(col) {
+  return selected_window().setGoalColumn(col);
+}
+
+function goal_column() {
+  return selected_window().computeGoalColumn();
+}
+
+function goto_column(col) {
+  return selected_window().gotoColumn(col);
+}
+
+function goto_char(pos) {
+  return selected_window().gotoChar(pos);
+}
+
+function goto_bol() {
+  return selected_window().gotoBol();
+}
+
+function goto_eol() {
+  return selected_window().gotoEol();
+}
+
+function point_max() {
+  return selected_window().getPointMax();
+}
+
+function window_height() {
+  return selected_window().getNumRows();
+}
+
+function scroll_window(lines) {
+  return selected_window().scrollWindow(lines);
+}
+
+function open_uri(uri) {
+  return rview.loadFile(get_content_resolver(), create_uri(uri));
+}
+
+function get_buffer_create(name) {
+  return get_rhinocs().getBufferCreate(name);
+}
+
+/**
+  新しくバッファを作成して返す。
+  candnameが存在しなければcandnameを名前とするバッファを作成。
+  既にあればcandname-1を、それもあればcandname-2を…という風にまだ存在しない名前をつけて新しくバッファを作る。
+*/
+function generate_new_buffer(name) {
+  return get_rhinocs().getBufferCollection().newBuffer(name, null);
+}
+
+function set_buffer(buf) {
+  return selected_window().setBuffer(buf);
+}
+
+function message(msg) {
+  get_rhinocs().setEchoText(msg);
+}
+
+function mark_marker() {
+  return selected_buffer().getMark();
+}
+
+function set_marker(marker, pos) {
+  marker.setPosition(pos);
+}
+
+function marker_position(marker) {
+  return marker.getPosition();
+}
+
+// 今の所第三引数（bufferオブジェクト）はサポートしないが、名前はbuffer_substringにしておく。
+function buffer_substring(beg, end) {
+  return selected_buffer().substring(Math.min(beg, end), Math.max(beg, end));
+}
+
+function put_pref_string(key, value) {
+  global.activity.putPrefString(key, value);
+}
+
+function get_pref_string(key, defaultValue) {
+  return global.activity.getPrefString(key, defaultValue);
+}
+
+/** 
+ * モード行フォーマットを設定する
+ *
+ * @param {string} fmt
+ */
+function set_mode_line_format(fmt) {
+  get_rhinocs().setModeLineFormat(fmt);
+}
+
+
+/**
+ * 現在のモード行フォーマットを取得する
+ * 
+ * @returns {string}
+ */
+function get_mode_line_format() {
+  return get_rhinocs().getModeLineFormat();
+}
+
+/**
+ * 現在の位置が行末かどうか
+ * @returns {boolean}
+ */
+function is_eol() {
+  return selected_window().isEol();
+}
+
+/**
+ * 現在の位置が行頭かどうか
+ * @returns {boolean}
+ */
+function is_bol() {
+  return selected_window().isBol();
+}
+
+// 今の所targetはselected_windowのみ
+function split_window() {
+  get_rhinocs().splitWindow(get_rhinocs().getMainActiveWindow());
+}
+
+// 今の所targetはselected_windowのみ
+function delete_window() {
+  get_rhinocs().deleteWindow(get_rhinocs().getMainActiveWindow());
+}
+
+/**
+ * 次のウィンドウにフォーカスを移す
+ */
+function other_window() {
+  get_rhinocs().switchToOtherWindow();
+}
+
+/**
+ * 現在カーソルがあるウィンドウ以外の全てのウィンドウを削除
+ */
+function delete_other_windows() {
+  get_rhinocs().deleteOtherWindows();
+}
+
+/**
+  FloatingListオブジェクトを返す。
+  このitemsに文字列の配列をセットするとフローティングリストが表示される。
+  clearで消去される。
+  キーボードのハンドリングなどは何もしない。JS側で適切に行う前提。
+
+  let floating = get_floating_list();
+  floating.items = ["abc", "def", "ghi"];
+  floating.moveUp();
+  floating.moveDown();
+  let res = floating.selectedIndex;
+
+  floating.clear();
+*/
+function get_floating_list() {
+  return get_rhinocs().getFloatingList();
+}
+
+/**
+ * 作成済みのバッファのリストを返す。ただし今の所ミニバッファを含まない（elispと違うので注意）
+ * @returns [Buffer]
+ */
+function buffer_list() {
+  let javaList = get_rhinocs().getBufferCollection().getBuffers();
+  // RhinoでJavaのList<Buffer>が帰ってきている。RhinoのJavascriptの配列に変換してreturnしたい。
+  let jsArray = [];
+  for (let i = 0; i < javaList.size(); i++) {
+    jsArray.push(javaList.get(i));
+  }
+  return jsArray;
+}
+
+/**
+ * フォントサイズをfloatで指定。
+ * AndroidのPaintオブジェクトのtextSize
+ * @param {Number} size 
+ */
+function set_font_size(size) {
+  global.rview.setFontSize(size);
+}
+
+/**
+ * 現在のフォントサイズをfloatで取得する
+ * AndroidのPaintオブジェクトのtextSize
+ * @returns {Number}
+ */
+function get_font_size() {
+  return global.rview.getFontSize();
+}
+
+
+
+/*
   hook 関連
 
   既存のhook
@@ -234,6 +519,7 @@ function read_filtering_list(candidates) {
   return promise;
 }
 
+// インクリメンタルサーチ
 (function() {
 
 let targetBuf;

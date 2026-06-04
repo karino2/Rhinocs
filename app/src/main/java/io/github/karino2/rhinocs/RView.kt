@@ -10,6 +10,7 @@ import android.net.Uri
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
+import androidx.annotation.Keep
 import androidx.core.graphics.toColorInt
 
 class RView @JvmOverloads constructor(
@@ -407,6 +408,7 @@ class RView @JvmOverloads constructor(
         KeyEvent.KEYCODE_ESCAPE to "Escape",
     )
 
+    @Keep
     fun selfInsertKeys() : List<String> {
         return keyMap.values.map { it.toString() } + shiftKeyMap.values.map { it.toString() }
     }
