@@ -192,4 +192,18 @@ class Window(initBuf: Buffer) {
         resetGoalGolumn()
         point = buffer.gotoEol(point)
     }
+
+    fun undo() {
+        buffer.undo()?.let {
+            point = it
+            resetGoalGolumn()
+        }
+    }
+
+    fun redo() {
+        buffer.redo()?.let {
+            point = it
+            resetGoalGolumn()
+        }
+    }
 }

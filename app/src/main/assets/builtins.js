@@ -538,11 +538,11 @@ function yank() {
 }
 
 function undo() {
-  selected_buffer().undo();
+  selected_window().undo();
 }
 
 function redo() {
-  selected_buffer().redo();
+  selected_window().redo();
 }
 
 function set_device_id(devid) {
