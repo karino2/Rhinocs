@@ -95,16 +95,16 @@ class Window(initBuf: Buffer) {
         return lineBuilder.buildInfo(line, lastOffset.col, numCols)
     }
 
-    fun insert(content: String) {
+    fun insert(content: String, recordUndo: Boolean = true) {
         // val debPrev = point
-        point = buffer.insert(point, content)
+        point = buffer.insert(point, content, recordUndo)
         resetGoalGolumn()
         // println("insert: $debPrev, ${point}, $content")
     }
 
     // 削除した文字数を返す
-    fun deleteRegion(from: Long, to: Long) : Long {
-        val count = buffer.deleteRegion(from, to)
+    fun deleteRegion(from: Long, to: Long, recordUndo: Boolean = true) : Long {
+        val count = buffer.deleteRegion(from, to, recordUndo)
         val debPrev = point
         // pointの補正
         if (count > 0 && point.position > from) {

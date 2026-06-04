@@ -28,7 +28,9 @@ class Buffer() {
     var name = ""
     var isMiniBuffer = false
 
-    var isModified = false
+    var savedRevision = 0
+    val isModified: Boolean
+        get() = undoStack.currentRevision != savedRevision
 
     val lines = ArrayList<StringBuilder>().apply { add(StringBuilder()) }
     val numLines: Int
@@ -36,8 +38,9 @@ class Buffer() {
 
     val mark = Marker(this, -1)
 
+    val undoStack = UndoStack()
+
     fun load(text: String) {
-        isModified = false
         lines.clear()
         text.split("\n").forEach {line->
             StringBuilder().let {
@@ -45,6 +48,7 @@ class Buffer() {
                 lines.add(it)
             }
         }
+        savedRevision = undoStack.currentRevision
     }
 
     fun toText() :String {
@@ -60,14 +64,17 @@ class Buffer() {
     }
 
     fun notifyModified() {
-        isModified = true
         onModified()
     }
 
     var onModified: () -> Unit = {}
 
-    fun insert(at: Point, content: String) : Point {
+    fun insert(at: Point, content: String, recordUndo: Boolean = true) : Point {
         if(content.isEmpty()) return at
+
+        if (recordUndo) {
+            undoStack.pushInsert(at, content)
+        }
 
         val clines = content.split('\n')
 
@@ -184,13 +191,18 @@ class Buffer() {
     }
 
     // 実際に削除された文字数を返す
-    fun deleteRegion(from: Long, to: Long) : Long{
+    fun deleteRegion(from: Long, to: Long, recordUndo: Boolean = true) : Long{
         if (from >= to) return 0
         val pFrom = toPoint(from)
         val pTo = toPoint(to)
 
         if (pFrom.position == pTo.position)
             return 0
+
+        if (recordUndo) {
+            val deletedText = substring(from, to)
+            undoStack.pushDelete(pFrom, deletedText)
+        }
 
         if (pFrom.linenum == pTo.linenum) {
             lines[pFrom.linenum].delete(pFrom.offset, pTo.offset)
@@ -239,7 +251,7 @@ class Buffer() {
         return url?.let {
             FastFile.fromDocUri(resolver, it)?.let {ff->
                 ff.writeText(toText())
-                isModified = false
+                savedRevision = undoStack.currentRevision
                 true
             }
         } ?: false
@@ -297,5 +309,37 @@ class Buffer() {
     @JvmOverloads
     fun searchBackward(from: Long, word: String, limit: Long? = null) : Long? {
         return searchBackward(toPoint(from), word, limit)?.position
+    }
+
+    fun undo() : Point? {
+        val data = undoStack.popUndo() ?: return null
+        return when(data.utype) {
+            UndoType.INSERT -> {
+                deleteRegion(data.at.position, data.at.position + data.text.length, recordUndo = false)
+                undoStack.pushRedo(data)
+                data.at
+            }
+            UndoType.DELETE -> {
+                insert(data.at, data.text, recordUndo = false)
+                undoStack.pushRedo(data)
+                data.at
+            }
+        }
+    }
+
+    fun redo() : Point? {
+        val data = undoStack.popRedo() ?: return null
+        return when(data.utype) {
+            UndoType.INSERT -> {
+                insert(data.at, data.text, recordUndo = false)
+                undoStack.pushUndo(data)
+                data.at
+            }
+            UndoType.DELETE -> {
+                deleteRegion(data.at.position, data.at.position + data.text.length, recordUndo = false)
+                undoStack.pushUndo(data)
+                data.at
+            }
+        }
     }
 }

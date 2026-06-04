@@ -273,7 +273,7 @@ public class GlobalObject  extends ImporterTopLevel {
 
         GlobalObject glob = getInstance(funcObj);
         String content = Context.toString(args[0]);
-        glob.selectedWindow().insert(content);
+        glob.selectedWindow().insert(content, true);
         return Context.getUndefinedValue();
     }
 
@@ -351,7 +351,7 @@ public class GlobalObject  extends ImporterTopLevel {
         long start = Math.min(p1, p2);
         long end = Math.max(p1, p2);
 
-        return glob.selectedWindow().deleteRegion(start, end);
+        return glob.selectedWindow().deleteRegion(start, end, true);
     }
 
     public static Object save_buffer(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {

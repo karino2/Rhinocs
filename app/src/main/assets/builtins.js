@@ -537,6 +537,14 @@ function yank() {
   insert(text);
 }
 
+function undo() {
+  selected_buffer().undo();
+}
+
+function redo() {
+  selected_buffer().redo();
+}
+
 function set_device_id(devid) {
   put_pref_string("device_id", devid);
   message("set: " + devid);
@@ -735,6 +743,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey(["C-x", "b"], switch_to_buffer);
   keymap.defineKey("C-s", isearch_forward);
   keymap.defineKey("C-r", isearch_backward);
+  keymap.defineKey(["C-x", "u"], undo);
   return keymap;
 }
 

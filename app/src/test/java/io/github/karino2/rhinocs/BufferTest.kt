@@ -339,4 +339,35 @@ class BufferTest {
         val actual2 = buf.searchBackward(buf.toPoint(6), "abc", 4)
         assertNull(actual2)
     }
+
+    @Test
+    fun undo_insert() {
+        val buf = BufferFromText("abc")
+        buf.insert(buf.toPoint(1), "zzz")
+        assertEquals("azzzbc", buf.toText())
+
+        buf.undo()
+        assertEquals("abc", buf.toText())
+    }
+
+    @Test
+    fun undo_delete() {
+        val buf = BufferFromText("abcde")
+        buf.deleteRegion(1, 4)
+        assertEquals("ae", buf.toText())
+
+        buf.undo()
+        assertEquals("abcde", buf.toText())
+    }
+
+    @Test
+    fun undo_multiLines() {
+        val buf = BufferFromText("abc\ndef\nghi")
+        // "c\ndef\ng" を削除
+        buf.deleteRegion(2, 9)
+        assertEquals("abhi", buf.toText())
+
+        buf.undo()
+        assertEquals("abc\ndef\nghi", buf.toText())
+    }
 }
