@@ -20,6 +20,10 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        resValues = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -27,6 +31,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+            resValue("string", "app_name", "Rhinocs (Debug)")
         }
     }
     compileOptions {
