@@ -1,6 +1,7 @@
 package io.github.karino2.rhinocs
 
 import android.app.Dialog
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -12,6 +13,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.Keep
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -23,7 +25,18 @@ import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.WrappedException
 import java.io.FileOutputStream
 
-class MainActivity : AppCompatActivity() {
+interface JSActivity {
+    fun getContentResolver() : ContentResolver
+    fun readFileContent(fileName: String) : String
+    fun writeFileContent(absPath: String, content: String) : Boolean
+    fun readGZIPFileContent(fileName: String) : String
+    fun putPrefString(key: String, value: String)
+    fun getPrefString(key: String, defaultValue: String) : String
+}
+
+class JSActivityWrapper(b: MainActivity) : JSActivity by b
+
+class MainActivity : JSActivity, AppCompatActivity() {
     companion object {
         const val  PACKAGE_DIR_URI_KEY = "last_uri_path"
         fun packageDirUriStr(ctx: Context) = sharedPreferences(ctx).getString(PACKAGE_DIR_URI_KEY, null)
@@ -47,11 +60,13 @@ class MainActivity : AppCompatActivity() {
     val rhinocs: Rhinocs
         get() = rview.rhinocs
 
-    fun putPrefString(key: String, value: String) = sharedPreferences(this).edit(commit = true) {
+    @Keep
+    override fun putPrefString(key: String, value: String) = sharedPreferences(this).edit(commit = true) {
         putString(key, value)
     }
 
-    fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
+    @Keep
+    override fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
 
     val getOpenFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         uri?.let {
@@ -199,7 +214,7 @@ class MainActivity : AppCompatActivity() {
         absPath: String
     ): FastFile? = packageRootDir?.findFileRec(trimHeadSlash(absPath))
 
-    fun readFileContent(fileName: String) : String {
+    override fun readFileContent(fileName: String) : String {
         return findSourceFile(fileName)?.readText() ?: ""
     }
 
@@ -213,9 +228,8 @@ class MainActivity : AppCompatActivity() {
         return null
     }
 
-
-
-    fun writeFileContent(absPath: String, content: String) : Boolean  {
+    @Keep
+    override fun writeFileContent(absPath: String, content: String) : Boolean  {
         val fileName = trimHeadSlash(absPath)
         findSourceFileOrCreate(fileName)?.let {
             it.writeText(content)
@@ -224,7 +238,7 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    fun readGZIPFileContent(fileName: String) : String {
+    override fun readGZIPFileContent(fileName: String) : String {
         val startTime = System.currentTimeMillis()
         val content = findSourceFile(fileName)?.readGZIPText() ?: return ""
         val endTime = System.currentTimeMillis()

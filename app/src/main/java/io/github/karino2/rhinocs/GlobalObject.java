@@ -40,7 +40,7 @@ public class GlobalObject  extends ImporterTopLevel {
     public void setup(MainActivity activity, RView rview) {
         this.activity = activity;
         this.rview = rview;
-        defineProperty("activity", activity, ScriptableObject.DONTENUM);
+        defineProperty("activity", new JSActivityWrapper(activity), ScriptableObject.DONTENUM);
         defineProperty("rview", rview, ScriptableObject.DONTENUM);
     }
     public Rhinocs getRhinocs() { return rview.getRhinocs(); }
