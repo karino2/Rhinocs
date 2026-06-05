@@ -511,6 +511,7 @@ function read_filtering_list(candidates) {
     });
     miniKeyMap.defineKey("C-g", ()=> {
       leave();
+      flist.clear();
       reject();
     });
   });
