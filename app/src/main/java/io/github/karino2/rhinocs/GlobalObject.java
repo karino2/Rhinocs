@@ -22,6 +22,8 @@ public class GlobalObject  extends ImporterTopLevel {
             "read_key_callback",
             "select_open_file_callback",
             "select_new_file_callback",
+            "select_open_dir_callback",
+            "open_dir",
             "create_uri",
             "show_toast",
             "load_gzip_skk_dictionary",
@@ -153,6 +155,36 @@ public class GlobalObject  extends ImporterTopLevel {
 
         glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_NEW_FILE, new DelayedRequest.Arg(defName, onSuccess, onFailure)));
         return Context.getUndefinedValue();
+    }
+
+    /*
+        select_open_dir_callback(onSuccess, onFailure, uri=undefined)
+     */
+    public static Object select_open_dir_callback(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        if (args.length < 2)
+            throw new IllegalArgumentException("No onSuccess, onFailure args.");
+
+        GlobalObject glob = getInstance(funcObj);
+
+        Function onSuccess = (Function) args[0];
+        Function onFailure = (Function) args[1];
+        String uri = null;
+        if (args.length >= 3)
+            uri = Context.toString(args[2]);
+
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_OPEN_DIR, new DelayedRequest.Arg(uri, onSuccess, onFailure)));
+        return Context.getUndefinedValue();
+    }
+
+    /*
+        Return FastFile of dir. You can use listFiles() and getUri().
+     */
+    public static Object open_dir(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        verifyArgs(funcObj, args, new Class<?>[]{String.class});
+        GlobalObject glob = getInstance(funcObj);
+
+        String uri = Context.toString(args[0]);
+        return FastFile.Companion.fromTreeUri(glob.activity, Uri.parse(uri));
     }
 
     public static Object create_uri(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {

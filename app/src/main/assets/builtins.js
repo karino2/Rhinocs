@@ -679,6 +679,15 @@ function select_new_file(defName) {
   });
 }
 
+function select_open_dir(defUri=undefined) {
+  return new Promise((resolve, reject)=> {
+    if (defUri)
+      select_open_dir_callback(resolve, reject, defUri);
+    else
+      select_open_dir_callback(resolve, reject);
+  });
+}
+
 function find_file() {
   select_open_file(["*/*"]).then(([uri, fname])=> {
     open_uri(uri);

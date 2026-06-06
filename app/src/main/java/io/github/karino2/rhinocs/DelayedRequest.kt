@@ -6,12 +6,13 @@ enum class DelayedRequestType {
     LOAD_JS,
     SELECT_OPEN_FILE,
     SELECT_NEW_FILE,
+    SELECT_OPEN_DIR,
     QUERY_TEXT_DIALOG,
     READ_KEY,
 }
 
 class DelayedRequest(val type: DelayedRequestType, val arg: Arg) {
-    class Arg(val userArg: Any, val onSuccess: Function, val onFailure: Function)
+    class Arg(val userArg: Any?, val onSuccess: Function, val onFailure: Function)
     companion object {
         fun jsLoadRequest(fname: String, onSuccess: Function, onFailure: Function)
         = DelayedRequest(

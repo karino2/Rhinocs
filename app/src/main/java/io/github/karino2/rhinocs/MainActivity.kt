@@ -97,6 +97,19 @@ class MainActivity : JSActivity, AppCompatActivity() {
             } ?: callCancelCallback()
         }
     }
+
+    val getOpenDirUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri->
+        callbackArg?.let {ca->
+            uri?.let {
+                contentResolver.takePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+                val dir = FastFile.fromTreeUri(this, it)
+                interpreter.callSuccess(ca, dir)
+                rview.invalidate()
+                true
+            } ?: callCancelCallback()
         }
     }
 

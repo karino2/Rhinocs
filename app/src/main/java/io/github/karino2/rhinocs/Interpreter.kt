@@ -1,5 +1,6 @@
 package io.github.karino2.rhinocs
 
+import android.net.Uri
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.ContextFactory
 import org.mozilla.javascript.ContinuationPending
@@ -7,6 +8,7 @@ import org.mozilla.javascript.Function
 import org.mozilla.javascript.JSFunction
 import org.mozilla.javascript.ScriptableObject
 import java.io.FileNotFoundException
+import androidx.core.net.toUri
 
 class Interpreter {
     val factory: ContextFactory = object : ContextFactory() {
@@ -102,6 +104,13 @@ class Interpreter {
                     val defName = larg.userArg as String
                     global.activity.callbackArg = larg
                     global.activity.getNewFileUriFromScript.launch(defName)
+                    return
+                }
+                DelayedRequestType.SELECT_OPEN_DIR-> {
+                    val larg = req.arg
+                    val uri = (larg.userArg as String?)?.toUri()
+                    global.activity.callbackArg = larg
+                    global.activity.getOpenDirUriFromScript.launch(uri)
                     return
                 }
                 DelayedRequestType.LOAD_JS -> {
