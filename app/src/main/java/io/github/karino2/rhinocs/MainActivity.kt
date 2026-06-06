@@ -69,28 +69,34 @@ class MainActivity : JSActivity, AppCompatActivity() {
     override fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
 
     val getOpenFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
-        uri?.let {
-            contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            callbackArg?.let {ca->
+        callbackArg?.let {ca->
+            uri?.let {
+                contentResolver.takePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
                 val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
                 interpreter.callSuccess(ca, it.toString(), dispName)
-            }
+                rview.invalidate()
+                true
+            } ?: callCancelCallback()
         }
     }
 
     val getNewFileUriFromScript = registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri->
-        uri?.let {
-            contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            callbackArg?.let {ca->
+        callbackArg?.let {ca->
+            uri?.let {
+                contentResolver.takePersistableUriPermission(
+                    it,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
                 val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
                 interpreter.callSuccess(ca, it.toString(), dispName)
-            }
+                rview.invalidate()
+                true
+            } ?: callCancelCallback()
+        }
+    }
         }
     }
 
@@ -279,6 +285,13 @@ class MainActivity : JSActivity, AppCompatActivity() {
         super.onPrepareDialog(id, dialog, args)
     }
 
+    fun callCancelCallback() {
+        callbackArg?.let { ca ->
+            interpreter.callFail(ca)
+            rview.invalidate()
+        }
+    }
+
     private fun createQueryTextDialog(label: String) : Dialog {
         val editText = EditText(this).apply { id = R.id.text_edit_id }
         val layout = LinearLayout(this)
@@ -298,12 +311,6 @@ class MainActivity : JSActivity, AppCompatActivity() {
             }
         }
 
-        fun callCancelCallback() {
-            callbackArg?.let { ca ->
-                interpreter.callFail(ca)
-                rview.invalidate()
-            }
-        }
 
         val dialog = AlertDialog.Builder(this)
             .setTitle(label)
