@@ -75,8 +75,7 @@ class MainActivity : JSActivity, AppCompatActivity() {
                     it,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
-                val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
-                interpreter.callSuccess(ca, it.toString(), dispName)
+                interpreter.callSuccess(ca, FastFile.fromDocUri(contentResolver, it)!!)
                 rview.invalidate()
                 true
             } ?: callCancelCallback()
@@ -90,8 +89,7 @@ class MainActivity : JSActivity, AppCompatActivity() {
                     it,
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
-                val dispName = FastFile.fromDocUri(contentResolver, it)?.name ?: ""
-                interpreter.callSuccess(ca, it.toString(), dispName)
+                interpreter.callSuccess(ca, FastFile.fromDocUri(contentResolver, it)!!)
                 rview.invalidate()
                 true
             } ?: callCancelCallback()

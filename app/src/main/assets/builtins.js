@@ -290,7 +290,7 @@ function get_font_size() {
   - minibuffer_modified_hook
   - enter_minibuffer_hook
   - exit_minibuffer_hook
-  - visit_newfile_hook(uri, fname)
+  - visit_newfile_hook(file)
 */
 function RunHook() {
   this.hooks = [];
@@ -689,9 +689,13 @@ function select_open_dir(defUri=undefined) {
 }
 
 function find_file() {
-  select_open_file(["*/*"]).then(([uri, fname])=> {
-    open_uri(uri);
-    g_hooks.runHook("visit_newfile_hook", uri, fname);
+  select_open_file(["*/*"]).then((file)=> {
+    print(file.getUri());
+    open_uri(file.getUri());
+    g_hooks.runHook("visit_newfile_hook", file);
+  }).catch(e=> {
+    print("fail sselect_open_file.");
+    print(e);
   })
 }
 
@@ -708,11 +712,11 @@ function saveBuffer() {
     message("Saved!");
   } else {
     select_new_file(buf.name)
-    .then(([uri, fname])=> {
-      if(set_buffer_url(buf, uri)){
+    .then((file)=> {
+      if(set_buffer_url(buf, file.getUri())){
         save_buffer();
         message("Saved!");
-        g_hooks.runHook("visit_newfile_hook", uri, fname);
+        g_hooks.runHook("visit_newfile_hook", file);
       }
     })
   }
