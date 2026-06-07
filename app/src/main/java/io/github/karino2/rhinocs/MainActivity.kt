@@ -32,6 +32,7 @@ interface JSActivity {
     fun readGZIPFileContent(fileName: String) : String
     fun putPrefString(key: String, value: String)
     fun getPrefString(key: String, defaultValue: String) : String
+    fun finish()
 }
 
 class JSActivityWrapper(b: MainActivity) : JSActivity by b

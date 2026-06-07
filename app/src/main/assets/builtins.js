@@ -1076,6 +1076,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-s", isearch_forward);
   keymap.defineKey("C-r", isearch_backward);
   keymap.defineKey(["C-x", "u"], undo);
+  keymap.defineKey(["C-x", "C-c"], ()=>{ activity.finish(); })
   return keymap;
 }
 
