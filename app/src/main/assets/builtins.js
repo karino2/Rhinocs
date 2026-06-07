@@ -457,16 +457,19 @@ function leave_minibuffer_common() {
   return leave_minibuffer();
 }
 
-/*
+/**
   FilteringList
   ミニバッファを用いた絞り込みリスト
 
   resolveは{index, name}を返す。  
+
+  @param {String[]} candidates 絞り込みで選ぶ候補の一覧。
 */
 function read_filtering_list(candidates) {
+  let dispCandidates = candidates.slice().reverse()
   let filtering =  {
-    candidates: candidates,
-    filtered: candidates.slice(),
+    candidates: dispCandidates,
+    filtered: dispCandidates.slice(),
     doFilter(text) {
       if(text === "")
         this.filtered = this.candidates;
@@ -487,7 +490,7 @@ function read_filtering_list(candidates) {
   };
 
   let flist = get_floating_list();
-  flist.items = candidates;
+  flist.items = dispCandidates;
 
   let onModified = (text)=> {
     filtering.doFilter(text);
