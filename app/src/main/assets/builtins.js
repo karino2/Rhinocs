@@ -460,6 +460,8 @@ function leave_minibuffer_common() {
 /*
   FilteringList
   ミニバッファを用いた絞り込みリスト
+
+  resolveは{index, name}を返す。  
 */
 function read_filtering_list(candidates) {
   let filtering =  {
@@ -509,7 +511,8 @@ function read_filtering_list(candidates) {
       let res = filtering.selected(flist.selectedIndex);
       flist.clear();
       if(res) {
-        resolve(res);
+        let index = candidates.indexOf(res);
+        resolve({index:index, name:res});
       } else {
         reject();
       }
@@ -947,8 +950,7 @@ function switch_to_buffer() {
   let bufs = buffer_list();
   let names = bufs.map(b=>b.name);
   read_filtering_list(names)
-     .then(n=> {
-      let index = names.indexOf(n);
+     .then(({index})=> {
       let buf = bufs[index];
       set_buffer(buf);
      });
