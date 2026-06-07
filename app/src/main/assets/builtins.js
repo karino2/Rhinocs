@@ -249,6 +249,15 @@ function get_floating_list() {
   return get_rhinocs().getFloatingList();
 }
 
+// RhinoでJavaのList<T>が帰ってきている場合にRhinoのJavascriptの配列に変換してreturnする。
+function to_js_array(javaList) {
+  let jsArray = [];
+  for (let i = 0; i < javaList.size(); i++) {
+    jsArray.push(javaList.get(i));
+  }
+  return jsArray;
+}
+
 /**
  * 作成済みのバッファのリストを返す。ただし今の所ミニバッファを含まない（elispと違うので注意）
  * @returns [Buffer]
@@ -256,11 +265,7 @@ function get_floating_list() {
 function buffer_list() {
   let javaList = get_rhinocs().getBufferCollection().getBuffers();
   // RhinoでJavaのList<Buffer>が帰ってきている。RhinoのJavascriptの配列に変換してreturnしたい。
-  let jsArray = [];
-  for (let i = 0; i < javaList.size(); i++) {
-    jsArray.push(javaList.get(i));
-  }
-  return jsArray;
+  return to_js_array(javaList);
 }
 
 /**
@@ -290,7 +295,7 @@ function get_font_size() {
   - minibuffer_modified_hook
   - enter_minibuffer_hook
   - exit_minibuffer_hook
-  - visit_newfile_hook(file)
+  - find_file_hook(file)
 */
 function RunHook() {
   this.hooks = [];
@@ -667,6 +672,20 @@ function read_key(label) {
   });
 }
 
+/**
+ * @typedef {Object} FastFile
+ * @prop {()=>String} getUri
+ * @prop {()=>String} getName
+ * @prop {()=>FastFile[]} listFiles
+ * @prop {()=>Number} getLastModified
+ * @prop {()=>Number} getSize
+ * @prop {()=>Boolean} isDirectory
+ * @prop {()=>Boolean} isFile
+ */
+
+/*
+  select_open_fileなどのSAFのファイル関連はFastFileを返す。
+*/
 function select_open_file(mimeTypes) {
   return new Promise((resolve, reject)=> {
     select_open_file_callback(mimeTypes, resolve, reject);
@@ -688,11 +707,22 @@ function select_open_dir(defUri=undefined) {
   });
 }
 
+/**
+ *  fastFileを開いてset_bufferする。
+ *  Emacsなどに合わせてfind_fileという名前にしておく。
+ * 
+ * @param {FastFile} fastFile 
+ */
+function find_file_ff(fastFile) {
+    open_uri(fastFile.getUri());
+    g_hooks.runHook("find_file_hook", fastFile);
+
+}
+
 function find_file() {
   select_open_file(["*/*"]).then((file)=> {
     print(file.getUri());
-    open_uri(file.getUri());
-    g_hooks.runHook("visit_newfile_hook", file);
+    find_file_ff(file);
   }).catch(e=> {
     print("fail sselect_open_file.");
     print(e);
@@ -716,7 +746,7 @@ function saveBuffer() {
       if(set_buffer_url(buf, file.getUri())){
         save_buffer();
         message("Saved!");
-        g_hooks.runHook("visit_newfile_hook", file);
+        g_hooks.runHook("find_file_hook", file);
       }
     })
   }
