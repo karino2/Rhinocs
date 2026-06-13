@@ -62,7 +62,7 @@ function default_self_insert_keys() {
 }
 
 function read_file(path) {
-  return global.activity.readFileContent(path);
+  return String(global.activity.readFileContent(path));
 }
 
 // elispの (write-region start end filename) に合わせて wirte_file(content, path)にする。
