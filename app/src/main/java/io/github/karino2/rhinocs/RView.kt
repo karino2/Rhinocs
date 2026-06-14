@@ -68,6 +68,7 @@ class RView @JvmOverloads constructor(
         rhinocs.numRows = ((h - margin - borderThick) / cellHeight).toInt() - 2
     }
 
+    @Keep
     fun loadFile(resolver: ContentResolver, uri: Uri) {
         rhinocs.loadFile(resolver, uri)
     }

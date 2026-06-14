@@ -13,21 +13,7 @@ import java.util.Date
 import java.util.zip.GZIPInputStream
 import java.util.zip.GZIPOutputStream
 
-/*
-    JSからのインターフェースとしては
-
-    - getUri()
-    - getName()
-    - listFiles()
-    - getLastModified()
-    - getSize()
-    - isDirectory()
-    - isFile()
-
-    などがある。
- */
 // similar to DocumentFile, but store metadata at first query.
-// Copied from TextTL.
 data class FastFile(val uri: Uri, val name: String, val lastModified: Long, val mimeType: String, val size: Long, val resolver: ContentResolver) {
     companion object {
         private fun getLong(cur: Cursor, columnName: String) : Long {

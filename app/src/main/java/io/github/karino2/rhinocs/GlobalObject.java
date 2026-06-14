@@ -177,7 +177,18 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     /*
-        Return FastFile of dir. You can use listFiles() and getUri().
+        FastFileを返す。
+        FastFileのJSからのインターフェースとしては
+
+        - getUri()
+        - getName()
+        - listFiles()
+        - getLastModified()
+        - getSize()
+        - isDirectory()
+        - isFile()
+
+        などがある。
      */
     public static Object open_dir(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
         verifyArgs(funcObj, args, new Class<?>[]{String.class});
