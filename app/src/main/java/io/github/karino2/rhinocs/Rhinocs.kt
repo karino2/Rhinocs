@@ -3,6 +3,7 @@ package io.github.karino2.rhinocs
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.annotation.Keep
+import io.github.karino2.fastfile.FastFile
 
 /**
  * Windowやミニバッファなどを持つモデル側の一番外側のクラス。

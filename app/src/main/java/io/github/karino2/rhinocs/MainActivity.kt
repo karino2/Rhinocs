@@ -20,10 +20,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import io.github.karino2.fastfile.FastFile
 import org.mozilla.javascript.EcmaError
 import org.mozilla.javascript.EvaluatorException
 import org.mozilla.javascript.WrappedException
-import java.io.FileOutputStream
 
 interface JSActivity {
     fun getContentResolver() : ContentResolver

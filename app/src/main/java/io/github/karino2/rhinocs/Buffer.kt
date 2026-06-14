@@ -3,6 +3,7 @@ package io.github.karino2.rhinocs
 import android.content.ContentResolver
 import android.net.Uri
 import androidx.annotation.Keep
+import io.github.karino2.fastfile.FastFile
 import kotlin.math.max
 import kotlin.math.min
 
@@ -250,7 +251,7 @@ class Buffer() {
 
     fun save(resolver: ContentResolver) : Boolean {
         return url?.let {
-            FastFile.fromDocUri(resolver, it)?.let {ff->
+            FastFile.fromDocUri(resolver, it)?.let { ff->
                 ff.writeText(toText())
                 savedRevision = undoStack.currentRevision
                 true

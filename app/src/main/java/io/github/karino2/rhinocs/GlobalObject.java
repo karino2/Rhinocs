@@ -11,8 +11,8 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 import java.util.ArrayList;
-import java.util.List;
 
+import io.github.karino2.fastfile.FastFile;
 import kotlin.Unit;
 
 

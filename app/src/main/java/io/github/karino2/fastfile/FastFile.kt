@@ -1,5 +1,4 @@
-package io.github.karino2.rhinocs
-
+package io.github.karino2.fastfile
 
 import android.content.ContentResolver
 import android.content.Context
@@ -9,7 +8,6 @@ import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import java.io.BufferedWriter
 import java.io.FileInputStream
-import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.util.Date
 import java.util.zip.GZIPInputStream
@@ -154,7 +152,7 @@ data class FastFile(val uri: Uri, val name: String, val lastModified: Long, val 
 
 
     fun findFile(targetDisplayName: String) = listFiles().find { it.name == targetDisplayName }
-    
+
     fun findFileRec(relativePath: String) : FastFile? {
         return relativePath.split("/").fold(this as FastFile?) { acc, disp -> acc?.findFile(disp) }
     }
