@@ -9,6 +9,13 @@ Place following js packages and set PackageRoot to this dir.
 
 [karino2/RhinocsJSPackage](https://github.com/karino2/RhinocsJSPackage)
 
+## How to Setup
+
+- Step 1: Install the APK from [Releases](https://github.com/karino2/Rhinocs/releases)
+- Step 2: Download [karino2/RhinocsJSPackage](https://github.com/karino2/RhinocsJSPackage) and place it somewhere in your device storage (SD card, etc.)
+- Step 3: Launch Rhinocs and run M-x setup
+- Step 4: Specify the directory from Step 2.
+
 ## Font Credits
 
 This application uses the **JetBrains Mono** font.
