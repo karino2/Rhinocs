@@ -112,15 +112,10 @@ class MainActivity : JSActivity, AppCompatActivity() {
         }
     }
 
-    private val getPackageDirUri = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri->
-        uri?.let {
-            contentResolver.takePersistableUriPermission(
-                it,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            )
-            writePackageDirUriStr(this, it.toString())
-            loadInitScript()
-        }
+    @Keep
+    fun setup_package_root_dir(uri: Uri) {
+        writePackageDirUriStr(this, uri.toString())
+        loadInitScript()
     }
 
     // reset可能なlazy getterみたいな事をしたい。
@@ -178,15 +173,6 @@ class MainActivity : JSActivity, AppCompatActivity() {
                 interpreter.setGlobalKey(keyStr)
                 runScript($$"onKeyDown($key);")
             }
-        }
-        findViewById<Button>(R.id.buttonDeb1).setOnClickListener {
-            getPackageDirUri.launch(null)
-        }
-        findViewById<Button>(R.id.buttonDeb2).setOnClickListener {
-            _interpreter = null
-            initInterpreter()
-            rhinocs.resetModeLineFormat()
-            showMessage("Interpreter reset.")
         }
         rview.requestFocus()
 

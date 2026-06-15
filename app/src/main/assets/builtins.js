@@ -911,6 +911,24 @@ function load_js(fname) {
   });
 }
 
+/**
+  エディタの初回セットアップ。一回やったらもうあまりやる事は無い。
+  device_idをセットしてpackage rootをセットする。
+*/
+function setup() {
+  const device_id = get_device_id();
+  const prompt = `Set DeviceId (${device_id}):`
+  read_string(prompt)
+    .then(di=> {
+      set_device_id(di);
+      message("Set package root dir.")
+      select_open_dir()
+        .then(dir=> {
+          global.activity.setup_package_root_dir(dir);
+        });
+    });
+}
+
 function is_minibuffer() {
   return selected_buffer().isMiniBuffer();
 }
