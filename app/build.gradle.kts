@@ -4,16 +4,12 @@ plugins {
 
 android {
     namespace = "io.github.karino2.rhinocs"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.github.karino2.rhinocs"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1"
 
