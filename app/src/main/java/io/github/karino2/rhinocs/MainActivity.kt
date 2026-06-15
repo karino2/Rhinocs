@@ -7,7 +7,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
-import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
@@ -55,6 +54,25 @@ class MainActivity : JSActivity, AppCompatActivity() {
 
         const val DIALOG_ID_TEXT = 1
     }
+
+    val initialContent = """
+        |Initial setup.
+        |Please run "M-x setup"
+        |
+        |The "setup" command sets up the following:
+        |
+        |PackageRoot dir:
+        |  Rhinocs JavaScript uses this dir as root.
+        |  init.js and other JS packages are loaded relative to this dir.
+        |  This dir is a local copy of https://github.com/karino2/RhinocsJSPackage or its variant.
+        |  Also, Rhinocs JS packages store data under this dir (under /storage).
+        |
+        |Device ID:
+        |  Rhinocs JS packages store device-specific data using this ID.
+        |  Device-specific data includes things like SKK user dict and file history.
+        |  If you only use Rhinocs on one device or you do not share the package root dir,
+        |  you do not need to set this ID. But setting this ID is harmless, so it is highly recommended.
+    """.trimMargin()
 
     fun showMessage(msg : String) = showMessage(this, msg)
 
@@ -133,7 +151,7 @@ class MainActivity : JSActivity, AppCompatActivity() {
 
     private fun Interpreter.loadBuiltin() {
         // buildins_override.jsがあればそちらを優先
-        val overwrite = packageDirUri?.let { FastFile.fromTreeUri(this@MainActivity, it).findFile("builtins_override.js")?.readText() }
+        val overwrite = readOverwrite()
         withExceptionHandling {
             overwrite?.let {
                 run(it, "/builtins_override.js")
@@ -141,6 +159,18 @@ class MainActivity : JSActivity, AppCompatActivity() {
             } ?: run(readAsset("builtins.js"), "builtins.js")
         }
 
+    }
+
+    private fun readOverwrite(): String? {
+        try {
+            return packageDirUri?.let {
+                FastFile.fromTreeUri(this, it).findFile("builtins_override.js")?.readText()
+            }
+        }catch(_: SecurityException) {
+            showMessage("Fail to load builtin_override.js, stail packageRootDir.")
+            resetPackageDirUriStr(this)
+            return null
+        }
     }
 
 
@@ -183,11 +213,14 @@ class MainActivity : JSActivity, AppCompatActivity() {
     private fun initInterpreter() {
         interpreter
         loadInitScript()
+        if (packageRootDir == null)
+        {
+            rhinocs.selectedWindow.insert(initialContent)
+            rhinocs.selectedWindow.gotoChar(0)
+        }
     }
 
-    private fun loadInitScript() {
-        loadPackageJS("/init.js", mayNotExist = true)
-    }
+    private fun loadInitScript() = loadPackageJS("/init.js", mayNotExist = true)
 
     fun loadPackageJS(absPath: String, mayNotExist: Boolean = false) : Boolean {
         val content = readFileContent(absPath)
