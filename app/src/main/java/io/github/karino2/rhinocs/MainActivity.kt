@@ -32,6 +32,7 @@ interface JSActivity {
     fun putPrefString(key: String, value: String)
     fun getPrefString(key: String, defaultValue: String) : String
     fun finish()
+    fun resetPackageRootDir()
 }
 
 class JSActivityWrapper(b: MainActivity) : JSActivity by b
@@ -87,6 +88,9 @@ class MainActivity : JSActivity, AppCompatActivity() {
     @Keep
     override fun getPrefString(key: String, defaultValue: String) : String = sharedPreferences(this).getString(key, defaultValue) ?: defaultValue
 
+    @Keep
+    override fun resetPackageRootDir() = resetPackageDirUriStr(this)
+
     val getOpenFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         callbackArg?.let {ca->
             uri?.let {
@@ -130,8 +134,16 @@ class MainActivity : JSActivity, AppCompatActivity() {
         }
     }
 
-    @Keep
-    fun setup_package_root_dir(uri: Uri) {
+    val getPackageDirUri = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            setupPackageRoot(it)
+        }
+    }
+    private fun setupPackageRoot(uri: Uri) {
         writePackageDirUriStr(this, uri.toString())
         loadInitScript()
     }
@@ -168,7 +180,7 @@ class MainActivity : JSActivity, AppCompatActivity() {
             }
         }catch(_: SecurityException) {
             showMessage("Fail to load builtin_override.js, stail packageRootDir.")
-            resetPackageDirUriStr(this)
+            resetPackageRootDir()
             return null
         }
     }

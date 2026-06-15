@@ -4,6 +4,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.net.Uri;
 
+import org.mozilla.javascript.BaseFunction;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ImporterTopLevel;
@@ -23,6 +24,7 @@ public class GlobalObject  extends ImporterTopLevel {
             "select_open_file_callback",
             "select_new_file_callback",
             "select_open_dir_callback",
+            "request_setup_package_root_dir",
             "open_dir",
             "create_uri",
             "show_toast",
@@ -173,6 +175,19 @@ public class GlobalObject  extends ImporterTopLevel {
             uri = Context.toString(args[2]);
 
         glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SELECT_OPEN_DIR, new DelayedRequest.Arg(uri, onSuccess, onFailure)));
+        return Context.getUndefinedValue();
+    }
+
+    /*
+        request_setup_package_root_dir()
+
+        この関数は特別で、非同期にpackageのdirを選択してinit.jsなどをロードする。
+        init.jsからさらに非同期に何かがloadされうるので、この終わりをpromiseで待つ事は出来ない事にする。
+     */
+    public static Object request_setup_package_root_dir(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        GlobalObject glob = getInstance(funcObj);
+        Function empty = new BaseFunction();
+        glob.pendingRequestQueue.add( new DelayedRequest(DelayedRequestType.SETUP_PACKAGE_ROOT_DIR, new DelayedRequest.Arg(null, empty, empty)));
         return Context.getUndefinedValue();
     }
 

@@ -7,6 +7,7 @@ enum class DelayedRequestType {
     SELECT_OPEN_FILE,
     SELECT_NEW_FILE,
     SELECT_OPEN_DIR,
+    SETUP_PACKAGE_ROOT_DIR,
     QUERY_TEXT_DIALOG,
     READ_KEY,
 }

@@ -113,6 +113,13 @@ class Interpreter {
                     global.activity.getOpenDirUriFromScript.launch(uri)
                     return
                 }
+                DelayedRequestType.SETUP_PACKAGE_ROOT_DIR-> {
+                    val larg = req.arg
+                    global.activity.callbackArg = larg
+                    global.activity.getPackageDirUri.launch(null)
+                    return
+
+                }
                 DelayedRequestType.LOAD_JS -> {
                     val larg = req.arg
                     try

@@ -920,12 +920,9 @@ function setup() {
   const prompt = `Set DeviceId (${device_id}):`
   read_string(prompt)
     .then(di=> {
-      set_device_id(di);
-      message("Set package root dir.")
-      select_open_dir()
-        .then(dir=> {
-          global.activity.setup_package_root_dir(dir);
-        });
+      if (di != "")
+        set_device_id(di);
+      request_setup_package_root_dir();
     });
 }
 
