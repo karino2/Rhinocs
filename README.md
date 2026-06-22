@@ -26,3 +26,9 @@ This application uses the **JetBrains Mono** font.
 - **Source**: [https://www.jetbrains.com/lp/mono/](https://www.jetbrains.com/lp/mono/)
 
 JetBrains Mono is an open-source typeface specifically designed for developers.
+
+## Diff code porting
+
+The file [DiffUtil.java](src/main/java/io/github/karino2/rhinocs/DiffUtil.java) is derived from DiffUtil of RecyclerView.
+
+- [recyclerview/recyclerview/src/main/java/androidx/recyclerview/widget/DiffUtil.java - platform/frameworks/support - Git at Google](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/recyclerview/recyclerview/src/main/java/androidx/recyclerview/widget/DiffUtil.java#236)

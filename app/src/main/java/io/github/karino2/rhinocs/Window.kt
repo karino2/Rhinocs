@@ -137,6 +137,12 @@ class Window(initBuf: Buffer) {
         // println("moveChar: $debPrev, ${point}, $delta")
     }
 
+    @Keep
+    fun bulkReplace(lines: List<String>) {
+        buffer.bulkReplace(lines)
+        resetGoalColumn()
+    }
+
     fun moveLineDelta(delta: Int) {
         // val debPrev = point
         resetGoalColumn()

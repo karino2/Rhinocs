@@ -370,4 +370,79 @@ class BufferTest {
         buf.undo()
         assertEquals("abc\ndef\nghi", buf.toText())
     }
+
+    @Test
+    fun bulkReplace_basic() {
+        val buf = BufferFromText("abc\ndef")
+        buf.bulkReplace(listOf("abc", "ghi"))
+        assertEquals("abc\nghi", buf.toText())
+    }
+
+    @Test
+    fun bulkReplace_insert() {
+        val buf = BufferFromText("abc\ndef")
+        buf.bulkReplace(listOf("abc", "123", "def"))
+        assertEquals("abc\n123\ndef", buf.toText())
+    }
+
+    @Test
+    fun bulkReplace_delete() {
+        val buf = BufferFromText("abc\ndef\nghi")
+        buf.bulkReplace(listOf("abc", "ghi"))
+        assertEquals("abc\nghi", buf.toText())
+    }
+
+    @Test
+    fun bulkReplace_undo() {
+        val original = "abc\ndef\nghi"
+        val buf = BufferFromText(original)
+        buf.bulkReplace(listOf("abc", "123", "ghi"))
+        assertEquals("abc\n123\nghi", buf.toText())
+
+        buf.undo()
+        assertEquals(original, buf.toText())
+    }
+
+    @Test
+    fun bulkReplace_redo() {
+        val original = "abc\ndef\nghi"
+        val buf = BufferFromText(original)
+        buf.bulkReplace(listOf("abc", "123", "ghi"))
+        val replaced = "abc\n123\nghi"
+        
+        buf.undo()
+        assertEquals(original, buf.toText())
+
+        buf.redo()
+        assertEquals(replaced, buf.toText())
+    }
+
+    @Test
+    fun bulkReplace_complex() {
+        // Line 0: same
+        // Line 1: removed
+        // Line 2: same
+        // Line 3: changed
+        // Line 4: same
+        val original = "L0\nL1\nL2\nL3\nL4"
+        val buf = BufferFromText(original)
+        
+        buf.bulkReplace(listOf("L0", "L2", "L3-new", "L4"))
+        assertEquals("L0\nL2\nL3-new\nL4", buf.toText())
+
+        buf.undo()
+        assertEquals(original, buf.toText())
+    }
+
+    @Test
+    fun bulkReplace_complex_redo() {
+        val original = "L0\nL1\nL2\nL3\nL4"
+        val buf = BufferFromText(original)
+        val replaced = "L0\nL2\nL3-new\nL4"
+
+        buf.bulkReplace(listOf("L0", "L2", "L3-new", "L4"))
+        buf.undo()
+        buf.redo()
+        assertEquals(replaced, buf.toText())
+    }
 }

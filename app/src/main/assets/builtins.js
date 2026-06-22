@@ -17,6 +17,25 @@ function selected_buffer() {
   return get_rhinocs().getSelectedBuffer();
 }
 
+/**
+ * 現在のバッファの内容を、1行1文字列の配列として返す。
+ * @returns String[]
+ */
+function selected_buffer_lines() {
+  return to_js_array(get_rhinocs().getSelectedBuffer().getLinesAsStrings()).map(l=>String(l));
+}
+
+/**
+ * 現在のバッファの中身をlinesで置き換える。
+ * 差分がundoバッファに積まれる。
+ * 
+ * @param {String[]} lines 
+ * @returns 
+ */
+function bulk_replace(lines) {
+  return selected_window().bulkReplace(lines);
+}
+
 function get_content_resolver() {
   return global.activity.getContentResolver();
 }
@@ -1080,7 +1099,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-Space", set_mark_command);
   keymap.defineKey("C-@", set_mark_command);
   keymap.defineKey(["C-x", "C-x"], exchange_point_and_mark);
-  keymap.defineKey("C-j", eval_region);
+  keymap.defineKey("M-j", eval_region); // C-jはSKKとかぶってるので。
   keymap.defineKey("M-w", copy_region);
   keymap.defineKey("C-w", kill_region);
   keymap.defineKey("C-k", kill_line);

@@ -57,6 +57,40 @@ class Buffer() {
         return lines.joinToString("\n")
     }
 
+    val linesAsStrings: List<String>
+        get() = lines.map { it.toString() }
+
+    fun bulkReplace(newLines: List<String>) {
+        val oldLines = linesAsStrings
+        val diff = Diff(oldLines, newLines)
+        val ops = diff.calculate()
+
+        val builder = CompositeUndoBuilder(toPoint(0, 0))
+
+        ops.forEach { op ->
+            when (op) {
+                is DiffOp.Insert -> {
+                    for (i in 0 until op.count) {
+                        val lineText = newLines[op.fromNewIndex+i]
+                        builder.pushInsert(op.toOldIndex+i, lineText)
+                        lines.add(op.toOldIndex+i, StringBuilder().apply{ append(lineText) } )
+                    }
+                }
+                is DiffOp.Remove -> {
+                    repeat(op.count) {
+                        val lineText = lines[op.index].toString()
+                        builder.pushDelete(op.index, lineText)
+                        lines.removeAt(op.index)
+                    }
+                }
+            }
+        }
+
+        mark.position = mark.position.coerceAtMost(positionMax)
+        builder.build()?.let { undoStack.push(it) }
+        notifyModified()
+    }
+
     fun getLine(linenum: Int) = lines[linenum].toString()
 
     fun adjustAfterInsert(at: Point, contentSize: Int) {
@@ -174,6 +208,8 @@ class Buffer() {
 
     // 何行目の何文字めか、からPointを作る。先頭から何文字めか数える必要があるのでBufferのメソッドで。
     fun toPoint(linenum: Int, offset: Int) : Point {
+        if (linenum == lines.size)
+            return toPoint(positionMax)
         assert(linenum < lines.size)
 
         if (linenum == 0)
@@ -315,35 +351,101 @@ class Buffer() {
         return searchBackward(toPoint(from), word, limit)?.position
     }
 
-    fun undo() : Point? {
-        val data = undoStack.popUndo() ?: return null
-        return when(data.utype) {
-            UndoType.INSERT -> {
-                deleteRegion(data.at.position, data.at.position + data.text.length, recordUndo = false)
-                undoStack.pushRedo(data)
-                data.at
+    private fun applyUndoChild(child: UndoLineOp) {
+        val index = child.index
+        val text = child.text
+
+        when (child) {
+            is UndoLineOp.LineInsert -> {
+                if (index < lines.size) {
+                    val pos = toPoint(index, 0).position
+                    val len = lines[index].length
+                    lines.removeAt(index)
+                    adjustAfterDelete(pos, len + 1L)
+                }
             }
-            UndoType.DELETE -> {
-                insert(data.at, data.text, recordUndo = false)
-                undoStack.pushRedo(data)
-                data.at
+            is UndoLineOp.LineDelete -> {
+                val pos = toPoint(index, 0).position
+                lines.add(index, StringBuilder(text))
+                adjustAfterInsert(toPoint(pos), text.length + 1)
             }
         }
     }
 
-    fun redo() : Point? {
-        val data = undoStack.popRedo() ?: return null
-        return when(data.utype) {
+    private fun applyRedoChild(child: UndoLineOp) {
+        val index = child.index
+        val text = child.text
+
+        when (child) {
+            is UndoLineOp.LineInsert -> {
+                val pos = toPoint(index, 0).position
+                lines.add(index, StringBuilder(text))
+                adjustAfterInsert(toPoint(pos), text.length + 1)
+            }
+            is UndoLineOp.LineDelete -> {
+                if (index < lines.size) {
+                    val pos = toPoint(index, 0).position
+                    val len = lines[index].length
+                    lines.removeAt(index)
+                    adjustAfterDelete(pos, len + 1L)
+                }
+            }
+        }
+    }
+
+    private fun applyUndo(data: UndoData): Point {
+        val pt = when (data.utype) {
+            UndoType.INSERT -> {
+                deleteRegion(data.at.position, data.at.position + data.text.length, recordUndo = false)
+                data.at
+            }
+            UndoType.DELETE -> {
+                insert(data.at, data.text, recordUndo = false)
+                data.at
+            }
+            UndoType.COMPOSITE -> {
+                data.children!!.reversed().forEach { child ->
+                    applyUndoChild(child)
+                }
+                data.at
+            }
+        }
+        notifyModified()
+        return pt
+    }
+
+    private fun applyRedo(data: UndoData): Point {
+        val pt = when (data.utype) {
             UndoType.INSERT -> {
                 insert(data.at, data.text, recordUndo = false)
-                undoStack.pushUndo(data)
                 data.at
             }
             UndoType.DELETE -> {
                 deleteRegion(data.at.position, data.at.position + data.text.length, recordUndo = false)
-                undoStack.pushUndo(data)
+                data.at
+            }
+            UndoType.COMPOSITE -> {
+                data.children!!.forEach { child ->
+                    applyRedoChild(child)
+                }
                 data.at
             }
         }
+        notifyModified()
+        return pt
+    }
+
+    fun undo(): Point? {
+        val data = undoStack.popUndo() ?: return null
+        val pt = applyUndo(data)
+        undoStack.pushRedo(data)
+        return pt
+    }
+
+    fun redo(): Point? {
+        val data = undoStack.popRedo() ?: return null
+        val pt = applyRedo(data)
+        undoStack.pushUndo(data)
+        return pt
     }
 }
