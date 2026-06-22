@@ -137,10 +137,20 @@ class Window(initBuf: Buffer) {
         // println("moveChar: $debPrev, ${point}, $delta")
     }
 
+    fun coercePointInsideWindow() {
+        if (point.linenum >=  buffer.numLines) {
+            point = buffer.toPoint(pointMax)
+        }
+        if(point.offset >= buffer.getLine(point.linenum).length) {
+            point = buffer.toPoint(point.linenum, buffer.getLine(point.linenum).length)
+        }
+    }
+
     @Keep
     fun bulkReplace(lines: List<String>) {
         buffer.bulkReplace(lines)
         resetGoalColumn()
+        coercePointInsideWindow()
     }
 
     fun moveLineDelta(delta: Int) {
