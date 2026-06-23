@@ -115,7 +115,7 @@ class Rhinocs {
                             "bufferName" -> selectedBuffer.name
                             "column" -> selectedWindow.point.offset + 1
                             "lineNum" -> selectedWindow.point.linenum + 1
-                            "bufferModified" -> if(selectedBuffer.isModified) "●" else " "
+                            "bufferModified" -> if(selectedBuffer.isModified && !selectedBuffer.isMiniBuffer) "●" else " "
                             else -> "\${$symbol}"
                         }
                         res.append(value)
