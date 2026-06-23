@@ -980,6 +980,9 @@ function read_string(prompt) {
 function execute_extended_command() {
   read_string("M-x ").then((cmd)=> {
     global[cmd]();
+  }).catch(e=> {
+    message("Execute command fail: " + e);
+    print("Execute command fail: " + e);
   });
 }
 
