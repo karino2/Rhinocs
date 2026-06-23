@@ -25,6 +25,12 @@ class UndoStack {
 
     var currentRevision = 0
 
+    fun clear() {
+        undoStack.clear()
+        redoStack.clear()
+        currentRevision = 0
+    }
+
     fun push(data: UndoData) {
         undoStack.add(data)
         redoStack.clear()

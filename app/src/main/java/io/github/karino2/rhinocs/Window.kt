@@ -237,4 +237,9 @@ class Window(initBuf: Buffer) {
             resetGoalColumn()
         }
     }
+
+    fun reloadBuffer(content: String) {
+        buffer.load(content)
+        coercePointInsideWindow()
+    }
 }

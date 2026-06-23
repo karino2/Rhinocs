@@ -85,6 +85,16 @@ class Rhinocs {
     }
 
     @Keep
+    fun reloadBuffer(resolver: ContentResolver) {
+        mainActiveWindow.buffer.url?.let {uri->
+            FastFile.fromDocUri(resolver, uri)?.let {
+                mainActiveWindow.reloadBuffer(it.readText())
+            }
+
+        }
+    }
+
+    @Keep
     fun setBufferUrl(resolver: ContentResolver, buf: Buffer, uri: Uri) : Boolean {
         return FastFile.fromDocUri(resolver, uri)?.let {
             buf.url = uri

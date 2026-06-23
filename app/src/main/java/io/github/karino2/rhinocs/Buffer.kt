@@ -44,6 +44,8 @@ class Buffer() {
 
     fun load(text: String) {
         lines.clear()
+        undoStack.clear()
+        mark.position = -1
         text.split("\n").forEach {line->
             StringBuilder().let {
                 it.append(line)

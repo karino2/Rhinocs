@@ -759,6 +759,14 @@ function new_file() {
   set_buffer(buf);
 }
 
+/**
+ * 現在のバッファを再読み込み。
+ * M-xから使うのでreload_bufferでは無く短くreloadにしておく。
+ */
+function reload() {
+  get_rhinocs().reloadBuffer(get_content_resolver());
+}
+
 function saveBuffer() {
   let buf = selected_buffer();
   if(buf.url)
