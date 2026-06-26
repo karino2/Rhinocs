@@ -759,14 +759,6 @@ function new_file() {
   set_buffer(buf);
 }
 
-/**
- * 現在のバッファを再読み込み。
- * M-xから使うのでreload_bufferでは無く短くreloadにしておく。
- */
-function reload() {
-  get_rhinocs().reloadBuffer(get_content_resolver());
-}
-
 function saveBuffer() {
   let buf = selected_buffer();
   if(buf.url)
@@ -1003,6 +995,30 @@ function switch_to_buffer() {
       set_buffer(buf);
      });
 }
+
+/*
+  M-xから使うように短い関数名にしたものたち。
+  一時的にここに置く。
+*/
+
+/**
+ * 現在のバッファを再読み込み。
+ * M-xから使うのでreload_bufferでは無く短くreloadにしておく。
+ */
+function reload() {
+  get_rhinocs().reloadBuffer(get_content_resolver());
+}
+
+/**
+ * printで出力したログを*print logs*バッファに表示する。
+ */
+function log() {
+  var lbuf = get_buffer_create("*print logs*");
+  set_buffer(lbuf);
+  delete_region(0, point_max(), false);
+  insert(get_rhinocs().getLogBuffer().toString(), false);
+}
+
 
 
 /*

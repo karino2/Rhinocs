@@ -32,6 +32,8 @@ class Rhinocs {
     val selectedBuffer : Buffer
         get() = selectedWindow.buffer
 
+    val logBuffer = StringBuilder()
+
     var numRows: Int
         get() = windowList.sumOf{ it.numRows }
         set(value) {

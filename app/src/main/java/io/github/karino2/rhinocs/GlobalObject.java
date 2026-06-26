@@ -222,12 +222,15 @@ public class GlobalObject  extends ImporterTopLevel {
     }
 
     public static Object print(Context ctx, Scriptable thisObj, Object[] args, Function funcObj) {
+        StringBuilder builder = new StringBuilder();
         for (int i = 0; i < args.length; i++) {
             if (i > 0)
-                System.out.print(" ");
-            System.out.print(Context.toString(args[i]));
+                builder.append(" ");
+            builder.append(Context.toString(args[i]));
         }
-        System.out.print("\n");
+        builder.append("\n");
+        System.out.print(builder);
+        getInstance(funcObj).getRhinocs().getLogBuffer().append(builder);
         return Context.getUndefinedValue();
     }
 
