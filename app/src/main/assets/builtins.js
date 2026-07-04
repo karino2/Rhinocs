@@ -1,4 +1,13 @@
 /*
+  console.logで出力出来るようにしておく。
+*/
+var console = {
+  log: function(msg) {
+    print(msg);
+  }
+};
+
+/*
   エディタのコアをラップするelisp類似のJSレイヤー
 */
 function get_rhinocs() {
@@ -746,11 +755,11 @@ function find_file_ff(fastFile) {
 
 function find_file() {
   select_open_file(["*/*"]).then((file)=> {
-    print(file.getUri());
+    // print(file.getUri());
     find_file_ff(file);
   }).catch(e=> {
-    print("fail sselect_open_file.");
-    print(e);
+    messsage("fail sselect_open_file.");
+    console.log(`FindFile Error: ${e}`);
   })
 }
 
@@ -833,13 +842,16 @@ function withRegion(f) {
   return f(Math.min(beg, end), Math.max(beg, end));
 }
 
-function eval_region() {
+function eval_region(withOutput = true) {
   withRegion((beg, end) => {
     let text = buffer_substring(beg, end);
     let res = eval_script(text);
 
     // ミニバッファに行く関数をevalした時とかは結果を挿入しない。
     if (is_minibuffer())
+      return;
+
+    if (!withOutput)
       return;
 
     insert("\n");
@@ -852,6 +864,13 @@ function eval_region() {
     insert(out);
     insert("\n");
   });
+}
+
+/*
+  M-xで実行する用。このケースはだいたい結果はいらないのでwithOutputをfalseに。
+*/
+function eval_region_cmd() {
+  eval_region(false);
 }
 
 function copy_region() {
@@ -977,15 +996,6 @@ function read_string(prompt) {
   return promise;
 }
 
-function execute_extended_command() {
-  read_string("M-x ").then((cmd)=> {
-    global[cmd]();
-  }).catch(e=> {
-    message("Execute command fail: " + e);
-    print("Execute command fail: " + e);
-  });
-}
-
 function switch_to_buffer() {
   let bufs = buffer_list();
   let names = bufs.map(b=>b.name);
@@ -1005,14 +1015,14 @@ function switch_to_buffer() {
  * 現在のバッファを再読み込み。
  * M-xから使うのでreload_bufferでは無く短くreloadにしておく。
  */
-function reload() {
+function reload_cmd() {
   get_rhinocs().reloadBuffer(get_content_resolver());
 }
 
 /**
  * printで出力したログを*print logs*バッファに表示する。
  */
-function log() {
+function log_cmd() {
   var lbuf = get_buffer_create("*print logs*");
   set_buffer(lbuf);
   delete_region(0, point_max(), false);
@@ -1131,7 +1141,6 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-w", kill_region);
   keymap.defineKey("C-k", kill_line);
   keymap.defineKey("C-y", yank);
-  keymap.defineKey("M-x", execute_extended_command);
   keymap.defineKey(["C-x", "2"], split_window);
   keymap.defineKey(["C-x", "0"], delete_window);
   keymap.defineKey(["C-x", "o"], other_window);
