@@ -953,7 +953,7 @@ function load_js(fname) {
   エディタの初回セットアップ。一回やったらもうあまりやる事は無い。
   device_idをセットしてpackage rootをセットする。
 */
-function setup() {
+function setup_cmd() {
   const device_id = get_device_id();
   const prompt = `Set DeviceId (${device_id}):`
   read_string(prompt)
