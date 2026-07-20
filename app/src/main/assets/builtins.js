@@ -711,6 +711,7 @@ function read_key(label) {
  * @prop {()=>String} getUri
  * @prop {()=>String} getName
  * @prop {()=>FastFile[]} listFiles
+ * @prop {(mimeTypes: String, displayName:String)=>FastFile?} createFile
  * @prop {()=>Number} getLastModified
  * @prop {()=>Number} getSize
  * @prop {()=>Boolean} isDirectory

@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import androidx.annotation.Keep
 import io.github.karino2.fastfile.FastFile
+import java.text.Normalizer
 import kotlin.math.max
 import kotlin.math.min
 
@@ -46,7 +47,8 @@ class Buffer() {
         lines.clear()
         undoStack.clear()
         mark.position = -1
-        text.split("\n").forEach {line->
+        // 「ぽ」が「ほ」と丸になる問題を正規化で解決
+        Normalizer.normalize(text, Normalizer.Form.NFC).split("\n").forEach { line->
             StringBuilder().let {
                 it.append(line)
                 lines.add(it)
