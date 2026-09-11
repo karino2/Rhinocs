@@ -91,6 +91,14 @@ class MainActivity : JSActivity, AppCompatActivity() {
     @Keep
     override fun resetPackageRootDir() = resetPackageDirUriStr(this)
 
+    // C-x C-sの時にbuiltinsから呼ばれる。
+    // キャッシュをクリアしておく。
+    @Keep
+    override fun finish() {
+        Cache.clear()
+        super.finish()
+    }
+
     val getOpenFileUriFromScript = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri->
         callbackArg?.let {ca->
             uri?.let {

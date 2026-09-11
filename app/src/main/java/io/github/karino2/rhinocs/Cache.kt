@@ -8,6 +8,11 @@ package io.github.karino2.rhinocs
     リセットなどは明示的に行う。
  */
 object Cache {
+    fun clear() {
+        _interpreter = null
+        _rhinocs = null
+    }
+
     private var _interpreter: Interpreter? = null
 
     val isInterPreterExists: Boolean
