@@ -1,14 +1,55 @@
 package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
+import android.os.Parcel
 import androidx.annotation.Keep
 
 class Window(initBuf: Buffer) {
+    companion object {
+        fun loadFrom(from: Parcel, bcol: BufferCollection) : Window {
+            val bname = from.readString()!!
+            val buf = bcol.getByName(bname)
+            val win = Window(buf)
+            win.isMiniBuffer = from.readBoolean()
+            win.point = Point.loadFrom(from)
+            win.isSelected = from.readBoolean()
+            win.isDrawCaret = from.readBoolean()
+            win.lastOffset = RowCol(from.readInt(), from.readInt())
+            win.numRows = from.readInt()
+            win.numCols = from.readInt()
+
+            val curPos = buf.toPoint(win.point.position)
+            // バッファが削除されてるとかで、pointの場所に戻れない
+            if (curPos != win.point) {
+                // 簡単のため0, 0に戻す。
+                win.resetPoint()
+            }
+            return win
+        }
+    }
+
     @Keep
     fun isEol() = buffer.isEol(point)
 
     @Keep
     fun isBol() = point.offset == 0
+
+    /*
+    Parcelへのロードとストア
+     */
+    fun saveTo(out: Parcel) {
+        out.writeString(buffer.name)
+        out.writeBoolean(isMiniBuffer)
+        point.saveTo(out)
+        out.writeBoolean(isSelected)
+        out.writeBoolean(isDrawCaret)
+        out.writeInt(lastOffset.row)
+        out.writeInt(lastOffset.col)
+        out.writeInt(numRows)
+        out.writeInt(numCols)
+        // goalColumnは保存しない
+    }
+
 
     var isMiniBuffer = false
 
@@ -17,10 +58,14 @@ class Window(initBuf: Buffer) {
         set(newBuf) {
             field = newBuf
 
-            lastOffset = RowCol(0, 0)
-            point = Point(0, 0, 0)
-            resetGoalColumn()
+            resetPoint()
         }
+
+    private fun resetPoint() {
+        lastOffset = RowCol(0, 0)
+        point = Point(0, 0, 0)
+        resetGoalColumn()
+    }
 
     var isSelected = true
     // isearchなどでミニバッファをアクティブにしつつキャレットを描きたい場合

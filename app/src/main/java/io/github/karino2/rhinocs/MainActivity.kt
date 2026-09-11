@@ -148,18 +148,14 @@ class MainActivity : JSActivity, AppCompatActivity() {
         loadInitScript()
     }
 
-    // reset可能なlazy getterみたいな事をしたい。
-    private var _interpreter: Interpreter? = null
+
     private val interpreter : Interpreter
-        get() {
-            if (_interpreter == null) {
-                _interpreter = Interpreter().apply {
-                    global.setup(this@MainActivity, rview)
-                    loadBuiltin()
-                }
-            }
-            return _interpreter!!
-        }
+        get() = Cache.getInterpreter(this, rview)
+
+    fun newInterpreter()  =  Interpreter().apply {
+            global.setup(this@MainActivity, rview)
+            loadBuiltin()
+    }
 
     private fun Interpreter.loadBuiltin() {
         // buildins_override.jsがあればそちらを優先
@@ -170,7 +166,6 @@ class MainActivity : JSActivity, AppCompatActivity() {
                 true
             } ?: run(readAsset("builtins.js"), "builtins.js")
         }
-
     }
 
     private fun readOverwrite(): String? {
@@ -195,6 +190,7 @@ class MainActivity : JSActivity, AppCompatActivity() {
         get() = packageDirUriStr(this)?.toUri()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val interpreterExists = Cache.isInterPreterExists
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -219,7 +215,8 @@ class MainActivity : JSActivity, AppCompatActivity() {
         rview.requestFocus()
 
         // loadBuiltinしておく
-        initInterpreter()
+        if (!interpreterExists)
+            initInterpreter()
     }
 
     private fun initInterpreter() {

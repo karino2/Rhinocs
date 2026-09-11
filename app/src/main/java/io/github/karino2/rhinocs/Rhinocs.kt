@@ -2,6 +2,7 @@ package io.github.karino2.rhinocs
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.os.Parcel
 import androidx.annotation.Keep
 import io.github.karino2.fastfile.FastFile
 
@@ -14,6 +15,34 @@ class Rhinocs {
     val windowList = ArrayList<Window>().apply{ add(Window(bufferCollection.getBufferCreate("*scratch*"))) }
 
     var lastMainActiveIndex = 0
+
+    /*
+    Parcelへのロードとストア。
+     */
+    fun saveTo(out: Parcel) {
+        bufferCollection.saveTo(out)
+        out.writeInt(windowList.size)
+        windowList.forEach {
+            it.saveTo(out)
+        }
+        out.writeInt(lastMainActiveIndex)
+        out.writeString(echoText)
+        out.writeString(modeLineFormat)
+    }
+
+    fun loadFrom(from: Parcel, resolver: ContentResolver) {
+        bufferCollection.clear()
+        windowList.clear()
+
+        bufferCollection.loadFrom(from, resolver)
+        val wnum = from.readInt()
+        repeat(wnum) {
+            windowList.add(Window.loadFrom(from, bufferCollection))
+        }
+        lastMainActiveIndex = from.readInt()
+        echoText = from.readString() ?: ""
+        modeLineFormat = from.readString() ?: defaultModeFmt
+    }
 
     /*
       基本的にはactiveはウィンドウを返すがminibufferにenterしている時は
@@ -79,11 +108,7 @@ class Rhinocs {
             mainActiveWindow.buffer = it
             return
         }
-        FastFile.fromDocUri(resolver, uri)?.let {
-            val buf = bufferCollection.newBuffer(it.name, uri)
-            buf.load(it.readText())
-            mainActiveWindow.buffer = buf
-        }
+        mainActiveWindow.buffer = bufferCollection.loadFromUri(uri, resolver) ?: return
     }
 
     @Keep

@@ -7,6 +7,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Parcel
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
@@ -17,7 +19,69 @@ class RView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-    val rhinocs = Rhinocs()
+    val rhinocs: Rhinocs
+        get() = Cache.rhinocs
+
+    /*
+        onSavedInstanceState, onRestoreInstanceStateでrhinocsのデータを
+        保存、復元する。
+     */
+    private class SavedState : BaseSavedState {
+        var rhinocsData: ByteArray? = null
+
+        constructor(superState: Parcelable?) : super(superState)
+        constructor(from: Parcel) : super(from) {
+            rhinocsData = from.createByteArray()
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeByteArray(rhinocsData)
+        }
+
+        companion object {
+            @JvmField
+            val CREATOR = object : Parcelable.Creator<SavedState> {
+                override fun createFromParcel(source: Parcel): SavedState = SavedState(source)
+                override fun newArray(size: Int): Array<SavedState?> = arrayOfNulls(size)
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        val superState = super.onSaveInstanceState()
+        val ss = SavedState(superState)
+        val p = Parcel.obtain()
+        try {
+            rhinocs.saveTo(p)
+            ss.rhinocsData = p.marshall()
+        } finally {
+            p.recycle()
+        }
+        return ss
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state !is SavedState) {
+            super.onRestoreInstanceState(state)
+            return
+        }
+        super.onRestoreInstanceState(state.superState)
+        if(!Cache.isRhinocsExists)
+        {
+            state.rhinocsData?.let { data ->
+                val p = Parcel.obtain()
+                try {
+                    p.unmarshall(data, 0, data.size)
+                    p.setDataPosition(0)
+                    rhinocs.loadFrom(p, context.contentResolver)
+                } finally {
+                    p.recycle()
+                }
+            }
+        }
+        invalidate()
+    }
 
     init {
         isFocusable = true

@@ -41,6 +41,12 @@ public class GlobalObject  extends ImporterTopLevel {
     public MainActivity activity;
     public RView rview;
 
+    public void reassign(MainActivity activity, RView rview) {
+        if (activity != this.activity || rview != this.rview) {
+            setup(activity, rview);
+        }
+    }
+
     public void setup(MainActivity activity, RView rview) {
         this.activity = activity;
         this.rview = rview;

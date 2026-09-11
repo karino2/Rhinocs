@@ -1,11 +1,46 @@
 package io.github.karino2.rhinocs
 
+import android.content.ContentResolver
 import android.net.Uri
+import android.os.Parcel
+import androidx.core.net.toUri
+import io.github.karino2.fastfile.FastFile
 
 class BufferCollection {
     val nameMap = mutableMapOf<String, Buffer>()
     // uriは存在しない場合はこのマップには入らない。
     val uriMap = mutableMapOf<Uri, Buffer>()
+
+    /*
+        Parcelへのロードとストア
+     */
+    fun saveTo(out: Parcel) {
+        out.writeInt(nameMap.size)
+        nameMap.forEach {
+            out.writeString(it.key)
+            // nullも書いていいらしい
+            out.writeString(it.value.url?.toString())
+        }
+    }
+
+    fun loadFrom(from: Parcel, resolver: ContentResolver) {
+        val bufNum = from.readInt()
+        for(i in 0 until bufNum) {
+            val name = from.readString()!!
+            val surl = from.readString()
+
+            val buf = Buffer(name)
+            nameMap[name] = buf
+            surl?.let {
+                val uri = surl.toUri()
+                uriMap[uri] = buf
+                buf.url = uri
+                FastFile.fromDocUri(resolver, uri)?.let {
+                    buf.load(it.readText())
+                }
+            }
+        }
+    }
 
     fun clear() {
         nameMap.clear()
@@ -41,6 +76,14 @@ class BufferCollection {
         return buf
     }
 
+    fun loadFromUri(uri: Uri, resolver: ContentResolver) : Buffer? {
+        return  FastFile.fromDocUri(resolver, uri)?.let {
+            val buf = newBuffer(it.name, uri)
+            buf.load(it.readText())
+            buf
+        }
+    }
+
     /*
       既にbufferMapにあるはずのbufの名前を変更する。
      */
@@ -61,6 +104,9 @@ class BufferCollection {
         nameMap[name] = buffer
         return buffer
     }
+
+    // 必ずnameがある前提のget。ロードとストアなどの特殊な用途
+    fun getByName(name: String) = nameMap[name]!!
 
     fun getByUri(uri: Uri) : Buffer? {
         return uriMap[uri]
