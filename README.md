@@ -2,6 +2,8 @@
 
 An Android text editor powered by [Rhino](https://rhino.github.io/).
 
+![Rhinocs icon](https://raw.githubusercontent.com/karino2/Rhinocs/main/rhinocs_icon_original.png)
+
 ## JS Package
 
 Rhinocs is hevily relied on js sources.
