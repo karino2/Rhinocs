@@ -185,6 +185,10 @@ class MainActivity : JSActivity, AppCompatActivity() {
             showMessage("Fail to load builtin_override.js, stail packageRootDir.")
             resetPackageRootDir()
             return null
+        }catch(_: IllegalArgumentException) {
+            showMessage("Fail to load builtin_override.js, stail packageRootDir.")
+            resetPackageRootDir()
+            return null
         }
     }
 
