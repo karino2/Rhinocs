@@ -981,7 +981,7 @@ function enumerate_command_names() {
     /*
     globalのメソッドで末尾が_cmdで終わっているものの一覧を返す。
     _cmdは取り除く。
-    ["reload_cmd", "switch_to_buffer", "calendar_cmd"] => ["reload", "switch_to_buffer", "calendar"]
+    ["reload_cmd", "switch_to_buffer", "calendar_cmd"] => ["reload", "calendar"]
     */
     let names = Object.getOwnPropertyNames(global);
     let cmdNames = names.filter(name => name.endsWith("_cmd"));
