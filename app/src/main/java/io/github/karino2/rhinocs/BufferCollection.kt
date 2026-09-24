@@ -49,7 +49,7 @@ class BufferCollection {
 
     fun removeBuffer(target: Buffer) {
         nameMap.remove(target.name)
-        uriMap.remove(target.url)
+        target.url?.let { uriMap.remove(it) }
     }
 
     val buffers: List<Buffer>
