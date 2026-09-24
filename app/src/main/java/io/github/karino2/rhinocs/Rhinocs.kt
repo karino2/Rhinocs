@@ -247,4 +247,28 @@ class Rhinocs {
     }
 
     val floatingList = FloatingList()
+
+    val Buffer.isScratch: Boolean
+        get() = this.name == "*scratch*"
+
+    @Keep
+    fun killBuffer(buf: Buffer) {
+        // ミニバッファはkillできない
+        if (buf.isMiniBuffer)
+            return
+
+        val isScratch = buf.isScratch
+        bufferCollection.removeBuffer(buf)
+        if(isScratch) {
+            // scratchはkillした瞬間に同名で作り直す
+            bufferCollection.newBuffer("*scratch*")
+        }
+        // *scratch*は必ずあるので必ず成功する
+        val alternate = bufferCollection.buffers.first()
+        windowList.forEach { win->
+            if(win.isMiniBuffer)
+                return@forEach
+            win.buffer = alternate
+        }
+    }
 }

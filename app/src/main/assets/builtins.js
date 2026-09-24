@@ -1055,6 +1055,10 @@ function switch_to_buffer() {
      });
 }
 
+function kill_buffer() {
+  get_rhinocs().killBuffer(selected_buffer());
+}
+
 /*
   M-xから使うように短い関数名にしたものたち。
   一時的にここに置く。
@@ -1195,6 +1199,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey(["C-x", "o"], other_window);
   keymap.defineKey(["C-x", "1"], delete_other_windows);
   keymap.defineKey(["C-x", "b"], switch_to_buffer);
+  keymap.defineKey(["C-x", "k"], kill_buffer);
   keymap.defineKey("C-s", isearch_forward);
   keymap.defineKey("C-r", isearch_backward);
   keymap.defineKey(["C-x", "u"], undo);

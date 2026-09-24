@@ -47,6 +47,11 @@ class BufferCollection {
         uriMap.clear()
     }
 
+    fun removeBuffer(target: Buffer) {
+        nameMap.remove(target.name)
+        uriMap.remove(target.url)
+    }
+
     val buffers: List<Buffer>
         get() = nameMap.values.toList()
 
