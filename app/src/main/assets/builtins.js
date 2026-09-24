@@ -764,7 +764,7 @@ function find_file() {
   })
 }
 
-function new_file() {
+function new_file_cmd() {
   let buf = generate_new_buffer("Untitled");
   set_buffer(buf);
 }
@@ -1012,6 +1012,7 @@ global.execute_command = execute_command;
 
 })();
 
+
 function is_minibuffer() {
   return selected_buffer().isMiniBuffer();
 }
@@ -1019,7 +1020,6 @@ function is_minibuffer() {
 function global_set_key(keyPat, func) {
     g_keyMapHandler.keyMapStack.currentKeyMap().defineKey(keyPat, func);
 }
-
 
 /*
 minibufferのキーマップにセット
@@ -1177,7 +1177,7 @@ function CreateDefaultKeyMap() {
   keymap.defineKey("C-d", delete_char);
   keymap.defineKey(["C-x", "C-s"], saveBuffer);
   keymap.defineKey(["C-x", "C-f"], find_file);
-  keymap.defineKey(["C-x", "C-n"], new_file);
+  keymap.defineKey(["C-x", "C-n"], new_file_cmd);
   keymap.defineKey("M->", end_of_buffer);
   keymap.defineKey("M-<", beginning_of_buffer);
   keymap.defineKey("C-v", next_page)
