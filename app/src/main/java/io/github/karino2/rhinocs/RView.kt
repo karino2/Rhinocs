@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
+import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -490,6 +491,7 @@ class RView @JvmOverloads constructor(
         val prefix = prefixStr(event)
         // 文字じゃない奴は特別扱い。
         specialMap[keyCode]?.let { srep ->
+            println("special: ${prefix+srep}")
             return prefix+srep
         }
 
@@ -524,40 +526,72 @@ class RView @JvmOverloads constructor(
          */
     }
 
+
+    fun handleKeyStr(strRep: String) {
+        keyDownHandler?.let {
+            it(strRep)
+        }
+    }
+
+    /*
+      もし処理出来るキーなら処理してtrueを、そうでなければfalseを返す。
+      UPかDOWNかなどは呼ぶ側でチェックしておくこと。
+     */
+    fun mayHandleKey(keyCode: Int, event:KeyEvent) : Boolean {
+        val strRep = keyEventToString(keyCode, event)
+        if (strRep.isEmpty())
+            return false
+
+        handleKeyStr(strRep)
+        return true
+    }
+
+
     override fun onKeyPreIme(keyCode: Int, event: KeyEvent?): Boolean {
         event?.let { ev->
-            // some device take over C-Space. For those device, treat C-Space keyup as keydown.
-            if(event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_SPACE && ev.action == KeyEvent.ACTION_UP)
-            {
-                val strRep = keyEventToString(keyCode, event)
-                if(lastKeyRep != strRep)
+            debPrint(keyCode, ev)
+            if(Build.MANUFACTURER == "Supernote") {
+                /*
+                SupernoteではonKeyDownは来ないでIMEが横取りして流してくれないっぽい。
+                そこでonKeyPreImeのACTION_DOWNをonKeyDownの代わりに使ってしまう。
+
+                SupernoteでもCtrl+SpaceはUpしか来ないのでCtrl+Spaceは特別に処理する。
+                 */
+                if(ev.action == KeyEvent.ACTION_DOWN || isCtrlSpaceUp(event, keyCode, ev))
                 {
-                    keyDownHandler?.let {
-                        lastKeyRep = strRep
-                        it(strRep)
-                    }
+                    if (mayHandleKey(keyCode, event))
+                        return true
 
+                    return super.onKeyPreIme(keyCode, event)
                 }
+            }
+            else if(isCtrlSpaceUp(event, keyCode, ev))
+            {
+                // some device take over C-Space. For those device, treat C-Space keyup as keydown.
+                if (mayHandleKey(keyCode, event))
+                    return true
 
+                return super.onKeyPreIme(keyCode, event)
             }
         }
-        debPrint(keyCode, event!!)
         return super.onKeyPreIme(keyCode, event)
     }
 
-    var lastKeyRep = ""
+    /*
+    Ctrl+SpaceだけBOOXやSupernoteはDOWNを握りつぶしてこっちまで送ってくれないので、Upで処理する。
+     */
+    private fun isCtrlSpaceUp(
+        event: KeyEvent,
+        keyCode: Int,
+        ev: KeyEvent
+    ): Boolean =
+        event.isCtrlPressed && keyCode == KeyEvent.KEYCODE_SPACE && ev.action == KeyEvent.ACTION_UP
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         // debPrint(keyCode, event)
 
-        val strRep = keyEventToString(keyCode, event)
-        if (strRep.isEmpty())
-            return super.onKeyDown(keyCode, event)
-
-        keyDownHandler?.let {
-            lastKeyRep = strRep
-            it(strRep)
-        }
-        return true
+        if (mayHandleKey(keyCode, event))
+            return true
+        return super.onKeyDown(keyCode, event)
     }
 }
