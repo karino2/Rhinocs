@@ -10,8 +10,8 @@ android {
         applicationId = "io.github.karino2.rhinocs"
         minSdk = 29
         targetSdk = 37
-        versionCode = 7
-        versionName = "7"
+        versionCode = 8
+        versionName = "8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
