@@ -54,6 +54,7 @@ class RView @JvmOverloads constructor(
         val ss = SavedState(superState)
         val p = Parcel.obtain()
         try {
+            p.writeFloat(fontSize)
             rhinocs.saveTo(p)
             ss.rhinocsData = p.marshall()
         } finally {
@@ -75,6 +76,7 @@ class RView @JvmOverloads constructor(
                 try {
                     p.unmarshall(data, 0, data.size)
                     p.setDataPosition(0)
+                    fontSize = p.readFloat()
                     rhinocs.loadFrom(p, context.contentResolver)
                 } finally {
                     p.recycle()
