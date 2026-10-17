@@ -810,7 +810,10 @@ function end_of_buffer() {
  }
 
 function next_page() {
-  scroll_window(Math.floor(window_height()-2))
+  let delta = Math.floor(window_height()-2);
+  if(!scroll_window(delta)) {
+    next_line(delta);
+  }
 }
 
 function previous_page() {
