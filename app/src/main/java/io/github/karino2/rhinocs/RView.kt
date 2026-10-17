@@ -60,6 +60,7 @@ class RView @JvmOverloads constructor(
         } finally {
             p.recycle()
         }
+        Cache.fontSize = fontSize
         return ss
     }
 
@@ -69,8 +70,10 @@ class RView @JvmOverloads constructor(
             return
         }
         super.onRestoreInstanceState(state.superState)
-        if(!Cache.isRhinocsExists)
-        {
+        Cache.fontSize?.let {
+            fontSize = it
+        }
+        if(!Cache.isRhinocsExists) {
             state.rhinocsData?.let { data ->
                 val p = Parcel.obtain()
                 try {

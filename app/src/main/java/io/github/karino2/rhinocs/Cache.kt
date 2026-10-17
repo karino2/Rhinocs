@@ -4,6 +4,7 @@ package io.github.karino2.rhinocs
     キーボードなどのデバイスコンフィグレーションの変化でActivityがリサイクルされる時に、
     それをまたいで保持して欲しいものを置く。
     ただしプロセスがkillされるケースでは無くなる事はあるので、getは無ければnewと振る舞う。
+    fontSizeだけはちょっと特殊な扱いとしてnullをそのまま見せる。
 
     リセットなどは明示的に行う。
  */
@@ -11,6 +12,7 @@ object Cache {
     fun clear() {
         _interpreter = null
         _rhinocs = null
+        fontSize = null
     }
 
     private var _interpreter: Interpreter? = null
@@ -36,6 +38,8 @@ object Cache {
             _rhinocs = Rhinocs()
             return _rhinocs!!
         }
+
+    var fontSize: Float? = null
 
     val isRhinocsExists: Boolean
         get() = _rhinocs != null
