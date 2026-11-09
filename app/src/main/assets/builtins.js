@@ -323,7 +323,7 @@ function get_font_size() {
   - minibuffer_modified_hook
   - enter_minibuffer_hook
   - exit_minibuffer_hook
-  - find_file_hook(file)
+  - find_file_hook(file, isTemp)
 */
 function RunHook() {
   this.hooks = [];
@@ -745,12 +745,14 @@ function select_open_dir(defUri=undefined) {
 /**
  *  fastFileを開いてset_bufferする。
  *  Emacsなどに合わせてfind_fileという名前にしておく。
+ *  URLがtemporaryのもの（インテント経由など）の場合はisTempがtrueとなる。undefinedの場合はfalseとして扱う。
  * 
  * @param {FastFile} fastFile 
+ * @param {Boolean} isTemp
  */
-function find_file_ff(fastFile) {
+function find_file_ff(fastFile, isTemp) {
     open_uri(fastFile.getUri());
-    g_hooks.runHook("find_file_hook", fastFile);
+    g_hooks.runHook("find_file_hook", fastFile, isTemp);
 
 }
 

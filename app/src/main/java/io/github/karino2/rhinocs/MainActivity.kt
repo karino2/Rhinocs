@@ -229,6 +229,51 @@ class MainActivity : JSActivity, AppCompatActivity() {
         // loadBuiltinしておく
         if (!interpreterExists)
             initInterpreter()
+
+        handleIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private val canReceiveLoadRequest: Boolean
+        get()
+        {
+            if (rhinocs.selectedBuffer.isMiniBuffer)
+                return false
+            if(interpreter.global.hasPendingRequest())
+                return false
+            return true
+        }
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.let {
+            val action = it.action
+            val data = it.data
+            if ((action == Intent.ACTION_VIEW || action == Intent.ACTION_EDIT) && data != null) {
+                if (action == Intent.ACTION_VIEW && it.flags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION == 0) {
+                    showMessage("Writable permission is required")
+                    finish()
+                    return
+                }
+
+                if(!canReceiveLoadRequest) {
+                    showMessage("Not receivable state")
+                    finish()
+                    return
+                }
+
+                handleLoadUriRequest(data)
+            }
+        }
+    }
+
+    private fun handleLoadUriRequest(uri: Uri) {
+        val ff = FastFile.fromDocUri(contentResolver, uri)
+        interpreter.callJSFunc("find_file_ff", arrayOf(ff, true))
     }
 
     private fun initInterpreter() {

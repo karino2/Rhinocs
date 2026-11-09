@@ -157,6 +157,15 @@ class Interpreter {
         }
     }
 
+    fun callJSFunc(funcName: String, args: Array<Any?>) : Any {
+        return withContext {
+            val fn = ScriptableObject.getProperty(global, funcName)
+            if (fn !is Function)
+                throw Exception("not a function: $funcName")
+            fn.call(it, global, global, args)
+        }
+    }
+
 
 
 }
